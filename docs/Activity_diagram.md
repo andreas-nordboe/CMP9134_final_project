@@ -1,4 +1,4 @@
-‘‘‘mermaid
+```mermaid
 stateDiagram-v2
 [*] --> ReceiveRequest
 ReceiveRequest --> CheckRole
@@ -10,5 +10,5 @@ RejectCommand --> [*]
 SendToRobot --> [*]
 SendToRobot --> check_api
 check_api --> LogSuccess : API is responsive
-check_api --> LogError : API is unresponsive
-‘‘‘
+check_api --> LogError : API is unresponsive 
+```

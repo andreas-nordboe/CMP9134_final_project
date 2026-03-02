@@ -1,4 +1,4 @@
-‘‘‘mermaid
+```mermaid
 flowchart LR
 %% Define Actors
 C[Commander]
@@ -17,4 +17,6 @@ C --> Status
 V --> Status
 C --> ResetRobot
 A --> ViewLogs
-‘‘‘
+
+%% Note: There should also be added complexity, such as the auditor viewing the logs and notifying the commander to reset the robot.
+```
