@@ -1,4 +1,9 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RobotManagementSystem.Services.FailureHandling;
+using RobotManagementSystem.Services.Security;
 
 namespace RobotManagementSystem;
 
@@ -26,6 +31,33 @@ public class Program
             });
         });
 
+        builder.Services.AddScoped<ITokenService, TokenService>();
+        builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
+        
+        // Setup Authentication (JWT Token for now, this might be replaced with OIDC later)
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer("JwtBearer", jwtBearerOptions =>
+            {
+                jwtBearerOptions.RequireHttpsMetadata = false;
+                jwtBearerOptions.SaveToken = true;
+                jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTSettings:SecretKey"] ?? string.Empty)), // Falls back to empty string if JWT is missing to avoid crashes
+                    ValidIssuer = builder.Configuration["JWTConfiguration:Issuer"],
+                    ValidAudience = builder.Configuration["JWTConfiguration:Audience"],
+                    ClockSkew = TimeSpan.Zero,
+                    ValidateLifetime = true,
+                };
+            });
+
+        builder.Services.AddAuthorization();
+        
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -42,6 +74,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
 
