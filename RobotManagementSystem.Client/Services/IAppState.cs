@@ -12,5 +12,6 @@ public interface IAppState
     event Action? OnDarkModeChanged;
     void SetLoggedInUser(User user);
     void ClearUser();
+    void ToggleDarkMode();
     
 }

@@ -22,6 +22,12 @@ public class AppState : IAppState
         NotifyUserChanged();
     }
 
+    public void ToggleDarkMode()
+    {
+        IsDarkMode = !IsDarkMode;
+        OnDarkModeChanged?.Invoke();
+    }
+
     private void NotifyUserChanged()
     {
         OnUserChanged?.Invoke();

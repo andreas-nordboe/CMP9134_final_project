@@ -9,25 +9,35 @@ public partial class MainLayout
 {
     private bool _sidebarOpen = true; // open by default
     
-    [Inject]
-    IAppState Appstate { get; set; }
-
+    [Inject] private IAppState Appstate { get; set; }
+    
+    [Inject] private NavigationManager NavigationManager { get; set; }
+    
     protected override Task OnInitializedAsync()
     {
         Appstate.OnUserChanged += StateHasChanged;
-        
-        // Create dummy user for testing until database persistence is in place
-        User dummyUser = new User
+        Appstate.OnDarkModeChanged += StateHasChanged;
+
+        if (Appstate.CurrentUser is null || Appstate.CurrentUser.IsLoggedIn)
         {
-            UserId = Guid.NewGuid().ToString(),
-            FirstName = "Andreas",
-            LastName = "Nordboe",
-            Role = UserRole.Commander,
-            IsLoggedIn = true
-        };
-        Appstate.SetLoggedInUser(dummyUser);
+            NavigationManager.NavigateTo("/login");
+        }
+        
+        
+        var isDarkMode = localStorage.GetItemAsync<bool>("IsDarkMode");
+        if (isDarkMode.IsCompleted)
+        {
+            Appstate.IsDarkMode = isDarkMode.Result;
+            //Appstate.OnDarkModeChanged?.Invoke();
+        }
         
         return Task.CompletedTask;
+    }
+
+    async void ToggleDarkMode()
+    {
+        Appstate.IsDarkMode = !Appstate.IsDarkMode;
+        await localStorage.SetItemAsync("IsDarkMode", Appstate.IsDarkMode);
     }
 
     void ToggleSidebar()
@@ -38,5 +48,6 @@ public partial class MainLayout
     public void Dispose()
     {
         Appstate.OnUserChanged -= StateHasChanged;
+        Appstate.OnDarkModeChanged -= StateHasChanged;
     }
 }

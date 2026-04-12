@@ -17,7 +17,8 @@ public partial class NavMenu
 
     private void LogoutUser()
     {
-        NavigationManager.NavigateTo("/");
+        AppState.ClearUser();
+        NavigationManager.NavigateTo("/login"); // Navigating to login for now just to test layout
     }
     
 }

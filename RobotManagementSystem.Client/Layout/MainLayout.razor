@@ -1,21 +1,29 @@
 ﻿@inherits LayoutComponentBase
-<PageTitle>Home</PageTitle>
-<MudThemeProvider />
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<PageTitle>Ground Control Station</PageTitle>
+<MudThemeProvider IsDarkMode="@Appstate.IsDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())" />
-        <MudSpacer />
-        <MudText  Typo="Typo.h4">Ground Control Station</MudText>
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+        @if (Appstate.CurrentUser != null && Appstate.CurrentUser.IsLoggedIn)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())"/>
+        }
+        <MudSpacer/>
+        <MudText Typo="Typo.h4">Ground Control Station</MudText>
+        <MudSpacer/>
+        <MudIconButton @onclick="Appstate.ToggleDarkMode" Icon="@(Appstate.IsDarkMode ? @Icons.Material.Filled.DarkMode : @Icons.Material.Filled.WbSunny)" Color="Color.Inherit" Edge="Edge.End"/>
     </MudAppBar>
-    <MudDrawer Variant="DrawerVariant.Persistent" Open="@_sidebarOpen" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="5">
-        <NavMenu/>
-    </MudDrawer>
+    @if (Appstate.CurrentUser != null && Appstate.CurrentUser.IsLoggedIn)
+    {
+        <MudDrawer Variant="DrawerVariant.Persistent" Open="@_sidebarOpen" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="5">
+            <NavMenu/>
+        </MudDrawer>
+    }
     <MudMainContent>
         @Body
     </MudMainContent>
