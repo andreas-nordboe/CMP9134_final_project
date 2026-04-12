@@ -1,4 +1,33 @@
 ﻿@inherits LayoutComponentBase
+<PageTitle>Home</PageTitle>
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())" />
+        <MudSpacer />
+        <MudText  Typo="Typo.h4">Ground Control Station</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+    </MudAppBar>
+    
+    <MudMainContent>
+        <MudDrawer Variant="DrawerVariant.Persistent" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="2">
+            <MudDrawerHeader Style="mt-2">
+                <MudText>
+                    <b>Menu</b>
+                </MudText>
+            </MudDrawerHeader>
+            <NavMenu/>
+        </MudDrawer>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<!---
 <div class="page">
     <div class="sidebar">
         <NavMenu/>
@@ -14,3 +43,5 @@
         </article>
     </main>
 </div>
+
+--->
