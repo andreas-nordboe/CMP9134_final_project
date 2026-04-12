@@ -15,7 +15,7 @@ public class Program
         builder.Services.AddMudServices();
 
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-        builder.Services.AddSingleton<IAppState, AppState>();
+        builder.Services.AddScoped<IAppState, AppState>();
         
         await builder.Build().RunAsync();
     }

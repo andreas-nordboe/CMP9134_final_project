@@ -1,2 +1,14 @@
 @page "/login"
 @using MudBlazor;
+
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height: 100vh">
+    <MudPaper>
+        <MudForm>
+            <MudText Typo="Typo.h5" Class="mb-4">Login</MudText>
+            <MudTextField T="string" Label="Username" Required="true"></MudTextField>
+            <MudTextField T="string" Label="Password" Required="true" InputType="InputType.Password"></MudTextField>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-6">Sign In</MudButton>
+        </MudForm>
+    </MudPaper>
+</MudContainer>

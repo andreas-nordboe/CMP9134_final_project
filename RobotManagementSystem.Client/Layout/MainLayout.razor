@@ -13,35 +13,10 @@
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
-    
+    <MudDrawer Variant="DrawerVariant.Persistent" Open="@_sidebarOpen" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="5">
+        <NavMenu/>
+    </MudDrawer>
     <MudMainContent>
-        <MudDrawer Variant="DrawerVariant.Persistent" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="2">
-            <MudDrawerHeader Style="mt-2">
-                <MudText>
-                    <b>Menu</b>
-                </MudText>
-            </MudDrawerHeader>
-            <NavMenu/>
-        </MudDrawer>
         @Body
     </MudMainContent>
 </MudLayout>
-
-<!---
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="/" target="_blank">Logout</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-
---->

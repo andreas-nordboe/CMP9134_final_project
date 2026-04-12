@@ -1,5 +1,65 @@
-<h3>GridComponent</h3>
+@page "/grid-component"
 
-@code {
+<div style="display: flex; justify-content: center; align-items: center;">
+    <div style="display: grid;
+    grid-template-columns: repeat(21, 42px);
+    grid-template-rows: repeat(21, 42px);
+    gap: 2px;
+    width: fit-content;
+    background-color: #bdbdb0;
+    padding: 5px;">
+        @foreach (var tile in Tiles)
+        {
+            <MudPaper Style="width: 42px;
+        height: 42px;
+        border: 1px solid #ccc;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        user-select: none;
+        cursor: pointer;
+        font-size: 10px;
+        text-align: center;" Class="@($"robot-tile {GetTileCssClass(tile)}")"
+                      Elevation="1" Square="true" @onclick="() => OnTileClicked(tile)">
+                @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
+                {
+                    <img src="@tile.ImageUrl" class="tile-image"/>
+                }
+                else
+                {
+                    <div class="tile-text">
+                        <div>@tile.VectorPosition.X,@tile.VectorPosition.Y</div>
+                    </div>
+                }
+            </MudPaper>
+        }
+    </div>
+</div>
+
+
+
+@*
+<MudPaper Class="pa-4 mt-4">
+    <MudText Typo="Typo.h6">Controls</MudText>
     
-}
+    <MudStack Row="true" Spacing="2" Class="mt-2">
+        <MudButton Variant="Variant.Filled" OnClick="@CenterRobot">
+            CenterRobot
+        </MudButton>
+        
+        <MudButton Variant="Variant.Filled" OnClick="@() => PlaceObstacle(5,5)">
+            Place Random Obstacle Test
+        </MudButton>
+        
+        <MudButton Variant="Variant.Filled" OnClick="@() => MoveRobot(1,0)">
+            Move Robot Right
+        </MudButton>
+        
+        <MudButton Variant="Variant.Filled" OnClick="@ClearGrid">
+            Clear Grid
+        </MudButton>
+    </MudStack>
+</MudPaper>*@
+
