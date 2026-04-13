@@ -29,7 +29,10 @@ public partial class MainLayout
         {
             Appstate.IsDarkMode = isDarkMode.Result;
             //Appstate.OnDarkModeChanged?.Invoke();
+            StateHasChanged();
         }
+
+        Appstate.IsDarkMode = true; // Easier on the eyes while developing 
         
         return Task.CompletedTask;
     }

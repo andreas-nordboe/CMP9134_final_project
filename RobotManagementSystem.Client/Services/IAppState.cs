@@ -6,7 +6,7 @@ namespace RobotManagementSystem.Client.Services;
 public interface IAppState
 {
     User? CurrentUser { get; }
-    public bool IsDarkMode { get; set; }
+    public bool IsDarkMode { get; set; } 
 
     event Action? OnUserChanged;
     event Action? OnDarkModeChanged;
