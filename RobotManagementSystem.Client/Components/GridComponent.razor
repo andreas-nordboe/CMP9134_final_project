@@ -5,7 +5,6 @@
             grid-template-rows: repeat(21, 42px);
             gap: 2px;
             width: fit-content;
-            background-color: #bdbdb0;
             padding: 5px;">
             @foreach (var tile in Tiles)
             {
@@ -26,23 +25,14 @@
                     {
                         <img src="@tile.ImageUrl" class="tile-image"/>
                     }
-                    else
-                    {
-                        <div class="tile-text">
-                            <div>@tile.VectorPosition.X,@tile.VectorPosition.Y</div>
-                        </div>
-                    }
+                    <div class="tile-text">
+                        <div>@tile.VectorPosition.X,@tile.VectorPosition.Y</div>
+                    </div>
                 </MudPaper>
             }
         </div>
     </MudPaper>
 </MudContainer>
-
-<div style="display: flex; justify-content: center; align-items: center;">
-    
-</div>
-
-
 
 @*
 <MudPaper Class="pa-4 mt-4">
