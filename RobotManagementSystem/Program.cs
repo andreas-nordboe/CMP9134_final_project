@@ -1,7 +1,9 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RobotManagementSystem.Data;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Services.Security;
 
@@ -35,7 +37,7 @@ public class Program
         builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
         
         // Setup Authentication (JWT Token for now, this might be replaced with OIDC later)
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+        //builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
         builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -56,9 +58,18 @@ public class Program
                 };
             });
 
+        builder.Services.AddDbContext<RobotApiDbContext>(options =>
+            options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
         builder.Services.AddAuthorization();
         
         var app = builder.Build();
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RobotApiDbContext>();
+            db.Database.Migrate(); // auto migrates on startup
+        }
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

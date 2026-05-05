@@ -6,6 +6,11 @@
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - robot_data:/app/data
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:8080
       - ASPNETCORE_ENVIRONMENT=Development
+  
+volumes:
+  robot_data:
