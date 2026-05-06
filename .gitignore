@@ -272,3 +272,10 @@ __pycache__/
 # tools/
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore
+
+# SQLite database
+*.db
+*.sqlite
+*.sqlite3
+*-wal
+*-shm
