@@ -10,4 +10,5 @@ namespace RobotManagementSystem.Services.Security;
 public interface ITokenService
 {
     public string GenerateJWTToken(AuthenticationTokenDTO generateTokenRequest);
+    public DateTime GetAccessTokenExpiryTime();
 }

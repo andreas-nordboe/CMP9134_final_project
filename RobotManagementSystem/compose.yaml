@@ -11,6 +11,9 @@
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:8080
       - ASPNETCORE_ENVIRONMENT=Development
+        
+      # SQLite connection string
+      - ConnectionStrings__Default=Data Source=data/robotmanagementsystem.db
   
 volumes:
   robot_data:

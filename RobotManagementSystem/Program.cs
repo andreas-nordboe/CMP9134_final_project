@@ -6,6 +6,7 @@ using Microsoft.OpenApi;
 using RobotManagementSystem.Data;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Services.Security;
+using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem;
 
@@ -51,6 +52,8 @@ public class Program
                 jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTSettings:SecretKey"] ?? string.Empty)), // Falls back to empty string if JWT is missing to avoid crashes
                     ValidIssuer = builder.Configuration["JWTConfiguration:Issuer"],
                     ValidAudience = builder.Configuration["JWTConfiguration:Audience"],
@@ -68,8 +71,24 @@ public class Program
         
         using (var scope = app.Services.CreateScope())
         {
-            var db = scope.ServiceProvider.GetRequiredService<RobotApiDbContext>();
-            db.Database.Migrate(); // auto migrates on startup
+            var dbContext = scope.ServiceProvider.GetRequiredService<RobotApiDbContext>();
+            var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+            dbContext.Database.Migrate(); // auto migrates on startup
+
+            if (!dbContext.Users.Any(user => user.Role == UserRole.Admin))
+            {
+                var administrator = new UserAccount
+                {
+                    Username = builder.Configuration["SeedAdminUser:Username"]!,
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    PasswordHash = passwordService.HashPassword(builder.Configuration["SeedAdminUser:Password"]!),
+                    Role = UserRole.Admin
+                };
+                
+                dbContext.Users.Add(administrator);
+                dbContext.SaveChanges();
+            }
         }
 
         // Configure the HTTP request pipeline.
