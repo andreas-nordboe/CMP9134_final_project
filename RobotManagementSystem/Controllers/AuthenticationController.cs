@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RobotManagementSystem.Data;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Services.Security;
 using RobotManagementSystem.Shared.Models.Authentication;
@@ -20,11 +22,13 @@ public class AuthenticationController : ControllerBase
 {
     private readonly ITokenService _tokenService;
     private readonly IAPIFailureService _apiFailureService;
+    private readonly RobotApiDbContext _dbContext;
     
-    public AuthenticationController(ITokenService tokenService, IAPIFailureService apiFailureService)
+    public AuthenticationController(ITokenService tokenService, IAPIFailureService apiFailureService, RobotApiDbContext dbContext)
     {
         _tokenService = tokenService;
         _apiFailureService = apiFailureService;
+        _dbContext = dbContext;
     }
     
     [HttpPost("login")]
@@ -40,6 +44,17 @@ public class AuthenticationController : ControllerBase
         
         try
         {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username) == null;
+
+            if (user == null)
+                return Unauthorized("Invalid user login credentials");
+            
+            // TODO: hash request.password and return hased variable
+            var hashedPassword = "TODO";
+            
+            if(request.Password != hashedPassword)
+                return Unauthorized("Invalid user login credentials");
+                
             // TODO: FR-02 This currently creates a new dummy userId but once persistence
             // has been implemented the UserId will be retrieved from the database
             accessToken = _tokenService.GenerateJWTToken(new AuthenticationTokenDTO
@@ -85,6 +100,19 @@ public class AuthenticationController : ControllerBase
     {
         // TODO: FR-02 Verify and persist user details in a database
         // returning user was registered message for now
+        
+        if(await _dbContext.Users.AnyAsync(u => u.Username == request.Username))
+            return BadRequest(_apiFailureService.CreateApiError(0, "Username already exists."));
+
+        UserAccount newUser = new UserAccount
+        {
+            Username = request.Username,
+            PasswordHash = "HashPasswordLater",
+            Role = UserRole.None
+        };
+
+        _dbContext.Add(newUser);
+        await _dbContext.SaveChangesAsync();
         
         // Validate user input
         if (request.Password.Length < 6)

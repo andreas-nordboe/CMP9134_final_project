@@ -20,15 +20,21 @@ public class TokenService : ITokenService
         try
         {
             // Gets the secret key from AppSettings.json
-            string? secretKey = _configuration["JWTConfiguration:SecretKey"];
+            string secretKey = _configuration["JWTConfiguration:SecretKey"];
             var key = Encoding.ASCII.GetBytes(secretKey);
 
             // Create Claims
             var claimUserName = new Claim(ClaimTypes.Email, generateTokenRequest.UserId);
             var claimNameIdentifier = new Claim(ClaimTypes.NameIdentifier, generateTokenRequest.UserId);
+            var claimRole = new Claim(ClaimTypes.Role, generateTokenRequest.Role.ToString());
 
             // Create claimsIdentity
-            var claimsIdentity = new ClaimsIdentity(new[] { claimUserName, claimNameIdentifier, }, "JWTAuth");
+            var claimsIdentity = new ClaimsIdentity(new[]
+            {
+                claimUserName, 
+                claimNameIdentifier,
+                claimRole
+            }, "JWTAuth");
 
             // Generate token that is valid for 15 minutes
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -38,9 +44,11 @@ public class TokenService : ITokenService
                 Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("JWTConfiguration:AccessTokenExpiryTimeInMins")),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature),
+                Issuer = _configuration["JWTConfiguration:Issuer"],
+                Audience = _configuration["JWTConfiguration:Audience"]
             };
 
-            // Create a  token handler
+            // Create a token handler
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             
