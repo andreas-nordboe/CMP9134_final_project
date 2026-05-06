@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using RobotManagementSystem.Client.Helpers;
+using RobotManagementSystem.Client.Services.Authentication;
 using RobotManagementSystem.Shared.Models.Users;
 using RobotManagementSystem.Shared.Services;
 
@@ -11,6 +12,8 @@ public partial class Login : ComponentBase
     public LoginDetails LoginDetails { get; set; } = new LoginDetails();
     [Inject] 
     private NavigationManager NavigationManager { get; set; }
+    [Inject]
+    IAuthenticationService AuthenticationService { get; set; }
 
     private async void LoginUser()
     {
@@ -24,9 +27,9 @@ public partial class Login : ComponentBase
             UserId = Guid.NewGuid().ToString()
         };*/
 
-        var authresponse = await authenticationService.LoginUserAsync(LoginDetails);
+        var authResponse = await AuthenticationService.LoginUserAsync(LoginDetails);
 
-        appState.SetLoggedInUser(UserHelper.ToUser(authresponse));
+        appState.SetLoggedInUser(UserHelper.ToUser(authResponse));
         
         NavigationManager.NavigateTo("/");
         StateHasChanged();
