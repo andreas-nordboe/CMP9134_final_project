@@ -22,7 +22,9 @@ public class AuthenticationService : IAuthenticationService
             Password = loginDetails.Password
         });
 
-        response.EnsureSuccessStatusCode();
+        if(!response.IsSuccessStatusCode){
+            return null;
+        }
 
         return  await response.Content.ReadFromJsonAsync<AuthenticationResponse>() 
                 ?? throw new Exception("Failed to deserialise response");

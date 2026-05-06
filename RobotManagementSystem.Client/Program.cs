@@ -16,8 +16,10 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddMudServices();
         builder.Services.AddBlazoredLocalStorage();
-        builder.Services.AddHttpClient("API",
-            client => client.BaseAddress = new Uri("http://localhost:5085/"));
+        builder.Services.AddHttpClient("API", client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:5085/");
+        });
         
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddScoped<IAppState, AppState>();

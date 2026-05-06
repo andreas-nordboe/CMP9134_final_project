@@ -22,6 +22,14 @@ public class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("Frontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:5116").AllowAnyHeader().AllowAnyMethod();
+            });
+        });
+        
         // Add Swagger
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
@@ -104,6 +112,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseCors("Frontend");
 
         app.UseAuthentication();
         app.UseAuthorization();
