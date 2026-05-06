@@ -35,6 +35,7 @@ public class Program
 
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
+        builder.Services.AddScoped<IPasswordService, PasswordService>();
         
         // Setup Authentication (JWT Token for now, this might be replaced with OIDC later)
         //builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
