@@ -1,0 +1,26 @@
+@page "/"
+@using RobotManagementSystem.Client.Components
+
+<MudSpacer/>
+<MudGrid Class="my-6 mx-6">
+    <MudItem xs="6">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-4" Style="min-height: 1000px">
+            <GridComponent/>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
+                    <RobotTelemetry/>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12">
+                <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
+                    <CommanderControls/>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+<MudSpacer/>
