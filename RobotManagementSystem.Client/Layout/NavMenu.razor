@@ -1,4 +1,5 @@
-﻿<MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Dashboard</MudNavLink>
+﻿@using RobotManagementSystem.Shared.Models.Users
+<MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Dashboard</MudNavLink>
 <MudNavLink Href="/mission-log" Icon="@Icons.Material.Filled.Notes">Mission Log</MudNavLink>
 <MudNavLink Href="system-status" Icon="@Icons.Material.Filled.QueryStats">System Status</MudNavLink>
 <MudNavLink Href="user-account" Icon="@Icons.Material.Filled.ManageAccounts">User Account</MudNavLink>
@@ -8,4 +9,8 @@
     <MudText>@AppState.CurrentUser.FirstName</MudText>
     <MudText>@AppState.CurrentUser.LastName</MudText>
     <MudText>@AppState.CurrentUser.Role.ToString()</MudText>
+    @if (AppState.CurrentUser.Role == UserRole.Admin)
+    {
+        <MudNavLink Href="admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin User Manager</MudNavLink>
+    }
 }

@@ -13,5 +13,6 @@ public interface IAppState
     void SetLoggedInUser(User user);
     void ClearUser();
     void ToggleDarkMode();
+    bool IsUserLoggedIn();
     
 }

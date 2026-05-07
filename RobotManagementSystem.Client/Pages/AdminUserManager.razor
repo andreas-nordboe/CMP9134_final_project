@@ -1,0 +1,22 @@
+@page "/admin"
+
+<MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full mx-4 my-4">
+    <MudTable Class="d-flex align-center justify-center mud-width-full mud-height-full" Items="@UserAccounts.Take(1)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingUserAccounts" LoadingProgressColor="Color.Info">
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>Username</MudTh>
+            <MudTh>First Name</MudTh>
+            <MudTh>Last Name</MudTh>
+            <MudTh>Role</MudTh>
+            <MudTh>Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Username">@context.Username</MudTd>
+            <MudTd DataLabel="First Name">@context.Role.ToString()</MudTd>
+            <MudTd DataLabel="Last Name">@context.LastName</MudTd> 
+            <MudTd DataLabel="Role">@context.Role</MudTd>
+            <MudButton Color="Color.Error" IconClass="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteUserAccount(context))"></MudButton>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>

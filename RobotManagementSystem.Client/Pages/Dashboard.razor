@@ -1,7 +1,17 @@
 @page "/"
 @using RobotManagementSystem.Client.Components
+@using RobotManagementSystem.Client.Services
+@inject IAppState AppState
 
 <MudSpacer/>
+
+@if (AppState.IsUserLoggedIn())
+{
+    <MudText Align="Align.Center" Typo="Typo.h3">
+        Welcome, @AppState.CurrentUser?.FirstName!
+    </MudText>
+}
+
 <MudGrid Class="my-6 mx-6">
     <MudItem xs="6">
         <MudPaper Class="d-flex align-center justify-center mud-width-full py-4" Style="min-height: 1000px">

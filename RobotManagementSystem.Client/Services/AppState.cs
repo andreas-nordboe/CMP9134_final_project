@@ -16,6 +16,11 @@ public class AppState : IAppState
         NotifyUserChanged();
     }
 
+    public bool IsUserLoggedIn()
+    {
+        return CurrentUser != null && CurrentUser.IsLoggedIn;
+    }
+
     public void ClearUser()
     {
         CurrentUser = null;

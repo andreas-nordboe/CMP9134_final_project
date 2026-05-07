@@ -15,8 +15,8 @@
             <MudTextField @bind-Value="@UserDetails.Username" Class="my-3" T="string" Variant="Variant.Outlined" Label="Enter Username"></MudTextField>
             <MudTextField @bind-Value="@UserDetails.Password" Class="my-3" T="string" Variant="Variant.Outlined" Label="Enter Password" Required="true" InputType="InputType.Password"></MudTextField>
             <MudTextField @bind-Value="@UserDetails.RepeatPassword" Class="my-3" T="string" Variant="Variant.Outlined" Label="Repeat Password" Required="true" InputType="InputType.Password"></MudTextField>
-            <MudButton OnClick="RegisterUser" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-6">Register User</MudButton>
-            <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-6">Back</MudButton>
+            <MudButton OnClick="RegisterUser" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" FullWidth="true" Class="mt-6">Register User</MudButton>
+            <MudButton Href="/login" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" FullWidth="true" Class="mt-6">Back</MudButton>
         </MudForm>
     </MudPaper>
 </MudContainer>

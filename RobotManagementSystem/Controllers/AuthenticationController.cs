@@ -132,7 +132,7 @@ public class AuthenticationController : ControllerBase
             FirstName = request.FirstName,
             LastName = request.LastName,
             PasswordHash = _passwordService.HashPassword(request.Password),
-            Role = UserRole.None
+            Role = UserRole.NoRole
         };
 
         _dbContext.Add(newUser);
