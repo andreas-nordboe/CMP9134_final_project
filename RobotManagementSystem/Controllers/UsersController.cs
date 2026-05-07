@@ -44,9 +44,9 @@ public class UsersController : ControllerBase
         return Ok(UserMapper.ToDto(user));
     }
     
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:int}")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<UserAccountDto>> GetUser(Guid userId)
+    public async Task<ActionResult<UserAccountDto>> GetUser(int userId)
     {
         var user = await _dbContext.Users.FindAsync(userId);
 
@@ -58,9 +58,9 @@ public class UsersController : ControllerBase
         return Ok(UserMapper.ToDto(user));
     }
     
-    [HttpPatch("{userId}/role")]
+    [HttpPatch("{userId:int}/role")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<UserAccountDto>> UpdateUserRole(Guid userId, [FromBody] UserRole newRole)
+    public async Task<ActionResult<UserAccountDto>> UpdateUserRole(int userId, [FromBody] UserRole newRole)
     {
         var user = await _dbContext.Users.FindAsync(userId);
         
@@ -82,9 +82,9 @@ public class UsersController : ControllerBase
         return Ok(UserMapper.ToDto(user));
     }
     
-    [HttpDelete("{userId}")]
+    [HttpDelete("{userId:int}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteUser(Guid userId)
+    public async Task<IActionResult> DeleteUser(int userId)
     {
         var user = await _dbContext.Users.FindAsync(userId);
         
