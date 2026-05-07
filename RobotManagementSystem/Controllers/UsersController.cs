@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RobotManagementSystem.Data;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Shared.Models.Errors;
 using RobotManagementSystem.Shared.Models.Users;
 using RobotManagementSystem.Mappers;
+using Microsoft.EntityFrameworkCore;
 
 namespace RobotManagementSystem.Controllers;
 
@@ -56,6 +58,20 @@ public class UsersController : ControllerBase
         }
 
         return Ok(UserMapper.ToDto(user));
+    }
+    
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<List<UserAccountDto>>> GetAllUsers()
+    {
+        var users = await _dbContext.Users.ToListAsync();
+
+        if (users.Count == 0)
+        {
+            return NotFound(_apiFailureService.CreateApiError(ErrorCodes.UsersNotFound, ErrorMessages.UsersNotFound));
+        }
+
+        return Ok(users.Select(UserMapper.ToDto).ToList());
     }
     
     [HttpPatch("{userId:int}/role")]

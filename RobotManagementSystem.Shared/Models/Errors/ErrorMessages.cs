@@ -10,6 +10,7 @@ public static class ErrorMessages
     public const string PasswordNotStrongEnough = "Password is not strong enough.";
     public const string PasswordsDoNotMatch = "Passwords do not match.";
     public const string InvalidUsername = "Username is invalid.";
+    public const string UsersNotFound = "Users not found.";
     
     // Internal (1500-1599)
     public const string InternalServerError = "Internal server error occurred.";

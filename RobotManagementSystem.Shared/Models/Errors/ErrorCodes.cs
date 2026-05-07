@@ -10,6 +10,7 @@ public static class ErrorCodes
     public const int PasswordNotStrongEnough = 1004;
     public const int PasswordsDoNotMatch = 1005;
     public const int InvalidUsername = 1006;
+    public const int UsersNotFound = 1007;
     
     // Internal (1500-1599)
     public const int InternalServerError = 1500;
