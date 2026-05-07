@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RobotManagementSystem.Data;
+using RobotManagementSystem.Services.Authentication;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Services.Security;
 using RobotManagementSystem.Shared.Models.Authentication;
@@ -26,14 +27,16 @@ public class AuthenticationController : ControllerBase
     private readonly RobotApiDbContext _dbContext;
     private readonly IPasswordService _passwordService;
     private readonly ILogger<AuthenticationController> _logger;
+    private readonly IAuthenticationService _authenticationService;
     
-    public AuthenticationController(ITokenService tokenService, IAPIFailureService apiFailureService, RobotApiDbContext dbContext, IPasswordService passwordService, ILogger<AuthenticationController> logger)
+    public AuthenticationController(ITokenService tokenService, IAPIFailureService apiFailureService, RobotApiDbContext dbContext, IPasswordService passwordService, ILogger<AuthenticationController> logger, IAuthenticationService authenticationService)
     {
         _tokenService = tokenService;
         _apiFailureService = apiFailureService;
         _dbContext = dbContext;
         _passwordService = passwordService;
         _logger = logger;
+        _authenticationService = authenticationService;
     }
     
     [HttpPost("login")]
@@ -54,36 +57,7 @@ public class AuthenticationController : ControllerBase
         
         try
         {
-            // FR-02 fetch user data from database
-            var dbUserAccount = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-
-            if (dbUserAccount == null)
-                return Unauthorized("Invalid user login credentials");
-            
-            // Hash request password
-            if (!_passwordService.VerifyPassword(request.Password, dbUserAccount.PasswordHash))
-            {
-                return Unauthorized("Invalid user login credentials");
-            }
-                
-            // FR-02 return response with JWT token to the client
-            var accessToken = _tokenService.GenerateJWTToken(new AuthenticationTokenDTO
-            {
-                UserId = dbUserAccount.Id.ToString(),
-                Username =  dbUserAccount.Username,
-                Role = dbUserAccount.Role
-            });
-            
-            // Return response to the client
-            var response = new AuthenticationResponse()
-            {
-                UserId = dbUserAccount.Id.ToString(),
-                Username =  dbUserAccount.Username,
-                AccessToken = accessToken,
-                Expires = _tokenService.GetAccessTokenExpiryTime(),
-                Role = dbUserAccount.Role.ToString()
-            };
-
+            var response = await _authenticationService.LoginAsync(request);
             return Ok(response);
             
         }

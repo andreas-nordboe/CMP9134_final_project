@@ -7,6 +7,6 @@ namespace RobotManagementSystem.Services.Authentication;
 
 public interface IAuthenticationService
 {
-    Task<AuthenticationResponse> LoginAsync(LoginRequest loginRequest);
-    Task<AuthenticationResponse> RegisterAsync(RegisterRequest registerRequest);
+    Task<AuthenticationResponse> LoginAsync(AuthenticationRequest loginRequest);
+    Task<AuthenticationResponse> RegisterAsync(RegisterUserRequest registerRequest);
 }
