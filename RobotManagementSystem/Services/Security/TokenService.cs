@@ -25,7 +25,7 @@ public class TokenService : ITokenService
 
             // Create Claims
             var claimUserName = new Claim(ClaimTypes.Name, generateTokenRequest.Username);
-            var claimNameIdentifier = new Claim(ClaimTypes.NameIdentifier, generateTokenRequest.UserId);
+            var claimNameIdentifier = new Claim(ClaimTypes.NameIdentifier, generateTokenRequest.UserId.ToString());
             var claimRole = new Claim(ClaimTypes.Role, generateTokenRequest.Role.ToString());
 
             // Create claimsIdentity
@@ -34,7 +34,7 @@ public class TokenService : ITokenService
                 claimUserName, 
                 claimNameIdentifier,
                 claimRole
-            }, "JWTAuth");
+            });
 
             // Generate an access token that is valid for 15 minutes
             var tokenDescriptor = new SecurityTokenDescriptor

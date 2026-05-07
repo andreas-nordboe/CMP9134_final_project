@@ -20,20 +20,38 @@ public class Program
 
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi(options =>
+        {
+            options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0; // I had some issues with default JSON content on the Swagger UI, so I downgraded from 3.1 to 3.0
+            options.AddDocumentTransformer((document, context, cancellationToken) =>
+            {
+                document.Components ??= new OpenApiComponents();
+                document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+
+                document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    BearerFormat = "JWT",
+                    Description = "Enter JWT Access Token"
+                };
+
+                document.Security ??= new List<OpenApiSecurityRequirement>();
+                
+                document.Security.Add(new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                });
+
+                return Task.CompletedTask;
+            });
+            
+        });
         
         // Add Swagger
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(options =>
-        {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Version = "v1",
-                Title = "Robot Management System API",
-                Description = "An ASP.NET Core Web API for controlling an autonomous robot",
-            });
-        });
-
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
@@ -45,7 +63,7 @@ public class Program
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer("JwtBearer", jwtBearerOptions =>
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtBearerOptions =>
             {
                 jwtBearerOptions.RequireHttpsMetadata = false;
                 jwtBearerOptions.SaveToken = true;
@@ -54,7 +72,7 @@ public class Program
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTSettings:SecretKey"] ?? string.Empty)), // Falls back to empty string if JWT is missing to avoid crashes
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTConfiguration:SecretKey"] ?? string.Empty)), // Falls back to empty string if JWT is missing to avoid crashes
                     ValidIssuer = builder.Configuration["JWTConfiguration:Issuer"],
                     ValidAudience = builder.Configuration["JWTConfiguration:Audience"],
                     ClockSkew = TimeSpan.Zero,
@@ -95,10 +113,9 @@ public class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Robot Management System");
+                options.SwaggerEndpoint("/openapi/v1.json", "Robot Management System");
                 options.RoutePrefix = string.Empty;
             });
         }

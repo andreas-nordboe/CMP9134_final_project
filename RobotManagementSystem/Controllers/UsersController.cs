@@ -29,7 +29,7 @@ public class UsersController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        if (!int.TryParse(userIdClaim, out var userId))
         {
             return Unauthorized(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, ErrorMessages.InvalidRequest));
         }
