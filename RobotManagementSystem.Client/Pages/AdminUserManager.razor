@@ -16,7 +16,7 @@
             <MudTd DataLabel="First Name">@context.Role.ToString()</MudTd>
             <MudTd DataLabel="Last Name">@context.LastName</MudTd> 
             <MudTd DataLabel="Role">@context.Role</MudTd>
-            <MudButton Color="Color.Error" IconClass="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteUserAccount(context))"></MudButton>
+            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteUserAccount(context))"></MudIconButton>
         </RowTemplate>
     </MudTable>
 </MudPaper>
