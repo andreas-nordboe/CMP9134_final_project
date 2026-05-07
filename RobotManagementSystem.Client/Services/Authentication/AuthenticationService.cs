@@ -1,6 +1,9 @@
 using RobotManagementSystem.Shared.Models.Authentication;
 using RobotManagementSystem.Shared.Models.Users;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using RobotManagementSystem.Shared.Utils;
 
 namespace RobotManagementSystem.Client.Services.Authentication;
 
@@ -24,7 +27,10 @@ public class AuthenticationService : IAuthenticationService
                 Username = loginDetails.Username,
                 Password = loginDetails.Password
             });
-
+            
+            // Check for error first
+            // TODO parse ApiError and return it to the user
+            
             if (!response.IsSuccessStatusCode)
             {
                 return null;

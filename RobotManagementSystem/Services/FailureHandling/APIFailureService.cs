@@ -1,4 +1,6 @@
+using Newtonsoft.Json;
 using RobotManagementSystem.Shared.Models.Authentication;
+using RobotManagementSystem.Shared.Models.Errors;
 
 namespace RobotManagementSystem.Services.FailureHandling;
 

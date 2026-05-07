@@ -22,6 +22,7 @@ public class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         
+        // Allow frontend to send HTTP requests with the backend
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("Frontend", policy =>

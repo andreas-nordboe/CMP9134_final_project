@@ -79,6 +79,8 @@ public class AuthenticationController : ControllerBase
             {
                 UserId = dbUserAccount.Id.ToString(),
                 Username =  dbUserAccount.Username,
+                FirstName =  dbUserAccount.FirstName,
+                LastName =  dbUserAccount.LastName,
                 AccessToken = accessToken,
                 Expires = _tokenService.GetAccessTokenExpiryTime(),
                 Role = dbUserAccount.Role.ToString()
@@ -149,6 +151,8 @@ public class AuthenticationController : ControllerBase
         {
             UserId = newUser.Id.ToString(),
             Username =  newUser.Username,
+            FirstName =  newUser.FirstName,
+            LastName =  newUser.LastName,
             AccessToken = accessToken,
             Expires = _tokenService.GetAccessTokenExpiryTime(),
             Role = newUser.Role.ToString()

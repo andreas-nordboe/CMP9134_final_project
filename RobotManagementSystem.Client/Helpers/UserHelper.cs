@@ -11,6 +11,8 @@ public static class UserHelper
         {
             UserId = authenticationResponse.UserId,
             Username = authenticationResponse.Username,
+            FirstName = authenticationResponse.FirstName,
+            LastName = authenticationResponse.LastName,
             Role = Enum.Parse<UserRole>(authenticationResponse.Role),
             IsLoggedIn = !string.IsNullOrEmpty(authenticationResponse.AccessToken) && authenticationResponse.Expires > DateTime.UtcNow
         };

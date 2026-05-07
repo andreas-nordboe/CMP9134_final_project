@@ -17,21 +17,18 @@ public partial class Login : ComponentBase
 
     private async void LoginUser()
     {
-        // This is just for testing the frontend state and navigation
-        /*User dummyUser = new User
+        try
         {
-            FirstName = "Andreas",
-            LastName = "Robotics",
-            IsLoggedIn = true,
-            Role = UserRole.Viewer,
-            UserId = Guid.NewGuid().ToString()
-        };*/
-
-        var authResponse = await AuthenticationService.LoginUserAsync(LoginDetails);
-
-        appState.SetLoggedInUser(UserHelper.ToUser(authResponse));
+            var authResponse = await AuthenticationService.LoginUserAsync(LoginDetails);
+            AppState.SetLoggedInUser(UserHelper.ToUser(authResponse));
         
-        NavigationManager.NavigateTo("/");
-        StateHasChanged();
+            NavigationManager.NavigateTo("/");
+            StateHasChanged();
+            
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message);
+        }
     }
 }
