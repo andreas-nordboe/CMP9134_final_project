@@ -11,10 +11,18 @@ public static class ErrorMessages
     public const string PasswordsDoNotMatch = "Passwords do not match.";
     public const string InvalidUsername = "Username is invalid.";
     public const string UsersNotFound = "Users not found.";
+    public const string PasswordIsEmpty = "Password cannot be empty.";
+    public const string UsernameLengthInvalid = "Username invalid, it must be at least 5 characters long.";
+    public const string PasswordLengthInvalid = "Password must be at least 6 characters long.";
+    public const string UsernameAlreadyExists = "Username already used.";
+    public const string InvalidToken = "Invalid token.";
+    public const string TokenExpired = "Token is expired.";
     
     // Internal (1500-1599)
     public const string InternalServerError = "Internal server error occurred.";
     public const string InvalidRequest = "Invalid request.";
+    public const string EmptyRequest = "Request cannot be empty.";
+
     
     // Robot Command Codes (2000-2099)
 }

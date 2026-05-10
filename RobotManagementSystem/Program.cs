@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using RobotManagementSystem.Data;
+using RobotManagementSystem.Services.Authentication;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Services.Security;
 using RobotManagementSystem.Shared.Models.Users;
@@ -55,6 +56,7 @@ public class Program
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
+        builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         
         // Setup Authentication (JWT Token for now, this might be replaced with OIDC later)
         //builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);

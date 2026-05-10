@@ -1,3 +1,4 @@
+using System.Security.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RobotManagementSystem.Data;
@@ -43,28 +44,28 @@ public class AuthenticationController : ControllerBase
     public async Task<ActionResult<AuthenticationResponse>> Login(AuthenticationRequest? request)
     {
         if (request == null)
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, "Request cannot be empty."));
-        
-        // Validate user input
-        if (string.IsNullOrWhiteSpace(request.Username) || request.Username.Length < 5)
-        {
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.InvalidUsername, "Username invalid, it must be at least 5 characters long."));
-        }
-        
-        // Check that the password is not empty
-        if (string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.PasswordNotStrongEnough, "Password cannot be empty."));
-        
+            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.EmptyRequest, ErrorMessages.EmptyRequest));
+
         try
         {
             var response = await _authenticationService.LoginAsync(request);
             return Ok(response);
-            
+
+        }
+        catch (BadHttpRequestException badHttpRequestException)
+        {
+            _logger.LogError(badHttpRequestException, badHttpRequestException.Message);
+            return BadRequest(badHttpRequestException.Message);
+        }
+        catch (InvalidCredentialException invalidCredentialException)
+        {
+            _logger.LogError(invalidCredentialException, invalidCredentialException.Message);
+            return Unauthorized(invalidCredentialException.Message);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error occurred during login");
-            return StatusCode(StatusCodes.Status500InternalServerError, _apiFailureService.CreateApiError(ErrorCodes.InternalServerError, "Internal server error."));
+            return StatusCode(StatusCodes.Status500InternalServerError, _apiFailureService.CreateApiError(ErrorCodes.InternalServerError, ErrorMessages.InternalServerError));
         }
     }
     
@@ -72,62 +73,27 @@ public class AuthenticationController : ControllerBase
     public async Task<ActionResult<AuthenticationResponse>> Register(RegisterUserRequest? request)
     {
         if (request == null)
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, "Request cannot be empty."));
-        
-        // FR-02 Verify and persist user details in a database
-        // returning user was registered message for now
-        
-        // Validate user input
-        
-        if(string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.ConfirmPassword))
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.PasswordNotStrongEnough, "Passwords cannot be empty."));
-        
-        if(request.Password != request.ConfirmPassword)
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.PasswordsDoNotMatch, "Passwords do not match."));
-        
-        if (string.IsNullOrWhiteSpace(request.Username) || request.Username.Length < 5)
-        {
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.InvalidUsername, "Username invalid, it must be at least 5 characters long."));
-        }
-        
-        if (request.Password.Length < 6)
-        {
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.PasswordNotStrongEnough, "Password must be at least 6 characters long."));
-        }
-        
-        if(await _dbContext.Users.AnyAsync(u => u.Username == request.Username))
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.UserAlreadyExists, "Username already exists."));
+            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.EmptyRequest, ErrorMessages.EmptyRequest));
 
-        UserAccount newUser = new UserAccount
+        try
         {
-            Username = request.Username,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            PasswordHash = _passwordService.HashPassword(request.Password),
-            Role = UserRole.None
-        };
-
-        _dbContext.Add(newUser);
-        await _dbContext.SaveChangesAsync();
-        
-        // FR-02 return response with JWT token to the client
-        var accessToken = _tokenService.GenerateJWTToken(new AuthenticationTokenDTO
+            var response = await _authenticationService.RegisterAsync(request);
+            return Ok(response);
+        }
+        catch (BadHttpRequestException badHttpRequestException)
         {
-            UserId = newUser.Id.ToString(), // SQLite fills this in automatically
-            Username =  request.Username,
-            Role = newUser.Role
-        });
-        
-        // Return response to the client
-        var response = new AuthenticationResponse()
+            _logger.LogError(badHttpRequestException, badHttpRequestException.Message);
+            return BadRequest(badHttpRequestException.Message);
+        }
+        catch (InvalidCredentialException invalidCredentialException)
         {
-            UserId = newUser.Id.ToString(),
-            Username =  newUser.Username,
-            AccessToken = accessToken,
-            Expires = _tokenService.GetAccessTokenExpiryTime(),
-            Role = newUser.Role.ToString()
-        };
-        
-        return Ok(response);
+            _logger.LogError(invalidCredentialException, invalidCredentialException.Message);
+            return Unauthorized(invalidCredentialException.Message);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error occurred during user registration");
+            return StatusCode(StatusCodes.Status500InternalServerError, _apiFailureService.CreateApiError(ErrorCodes.InternalServerError, ErrorMessages.InternalServerError));
+        }
     }
 }
