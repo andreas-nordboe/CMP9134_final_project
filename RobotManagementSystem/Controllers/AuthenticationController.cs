@@ -23,19 +23,13 @@ namespace RobotManagementSystem.Controllers;
 [Route("auth/")]
 public class AuthenticationController : ControllerBase
 {
-    private readonly ITokenService _tokenService;
     private readonly IAPIFailureService _apiFailureService;
-    private readonly RobotApiDbContext _dbContext;
-    private readonly IPasswordService _passwordService;
     private readonly ILogger<AuthenticationController> _logger;
     private readonly IAuthenticationService _authenticationService;
     
     public AuthenticationController(ITokenService tokenService, IAPIFailureService apiFailureService, RobotApiDbContext dbContext, IPasswordService passwordService, ILogger<AuthenticationController> logger, IAuthenticationService authenticationService)
     {
-        _tokenService = tokenService;
         _apiFailureService = apiFailureService;
-        _dbContext = dbContext;
-        _passwordService = passwordService;
         _logger = logger;
         _authenticationService = authenticationService;
     }
