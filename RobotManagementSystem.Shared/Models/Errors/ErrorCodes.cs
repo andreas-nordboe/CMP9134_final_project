@@ -24,4 +24,5 @@ public static class ErrorCodes
     public const int EmptyRequest = 1502;
     
     // Robot Command Codes (2000-2099)
+    public const int RobotApiNotAvailable = 2000;
 }

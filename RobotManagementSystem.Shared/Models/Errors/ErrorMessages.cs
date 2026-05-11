@@ -25,4 +25,5 @@ public static class ErrorMessages
 
     
     // Robot Command Codes (2000-2099)
+    public const string RobotApiNotAvailable = "Robot API not available.";
 }

@@ -7,7 +7,13 @@ public class RobotApiService : IRobotApiService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<RobotApiService> _logger;
-    
+
+    public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+    }
+
     public async Task<RobotStatusResponse?> GetRobotStatusAsync()
     {
         try
@@ -84,7 +90,7 @@ public class RobotApiService : IRobotApiService
             return new RobotCommandResponse
             {
                 Success = response.IsSuccessStatusCode,
-                Message = response.IsSuccessStatusCode ? "Robot has been successfully reset." : $"Reset command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                Message = response.IsSuccessStatusCode ? "Robot was successfully reset." : $"Reset robot command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
             };
         }
         catch (Exception e)
