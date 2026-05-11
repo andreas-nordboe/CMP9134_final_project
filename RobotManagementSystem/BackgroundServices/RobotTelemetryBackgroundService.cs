@@ -2,6 +2,8 @@ using System.Net.WebSockets;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using RobotManagementSystem.Hubs;
+using System.Text.Json;
+using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.BackgroundServices;
 
@@ -46,12 +48,27 @@ public class RobotTelemetryBackgroundService : BackgroundService
                         break;
 
                     var jsonResponse = Encoding.UTF8.GetString(buffer, 0, response.Count);
+
+                    RobotTelemetry? robotTelemetry;
                     
-                    // TODO deserialise data usin DTO
+                    try
+                    {
+                        robotTelemetry = JsonSerializer.Deserialize<RobotTelemetry>(jsonResponse);
+                    }
+                    catch (JsonException e)
+                    {
+                        _logger.LogWarning("Failed to parse robot telemetry JSON.");
+                        continue;
+                    }
+                    
+                    if(robotTelemetry == null)
+                        continue;
+                    
+                    // TODO
                     // add mapping service to update from telemetry (inclde sensor data)
                     // send TelemetryUpdated AND MapUdated back to all clients
 
-                    await _hubContext.Clients.All.SendCoreAsync("TelemetryUpdated", new object[] { jsonResponse },
+                    await _hubContext.Clients.All.SendCoreAsync("TelemetryUpdated", new object[] { robotTelemetry },
                         stoppingToken);
                 }
 
