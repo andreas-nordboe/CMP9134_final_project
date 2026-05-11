@@ -16,32 +16,27 @@ public partial class Register : ComponentBase
     [Inject]
     IAuthenticationService AuthenticationService { get; set; }
 
-    private async void RegisterUser()
+    private async Task RegisterUser()
     {
-        // TODO Refactor to use RegisterUserRequest on the frontend instead and remove this DTO class
-        try
+        var registerUserResponse = await AuthenticationService.RegisterUserAsync(new RegisterUserRequest
         {
-            var registerUserResponse = await AuthenticationService.RegisterUserAsync(new RegisterUserRequest
-            {
-                FirstName = UserDetails.FirstName,
-                LastName = UserDetails.LastName,
-                Username = UserDetails.Username,
-                Password = UserDetails.Password,
-                ConfirmPassword = UserDetails.RepeatPassword
-            });
-            
-            // TODO improve handling and put it into a static helper class that checks token validity
-            // the returned JWT access token is signed so if client tampers with the token, it will be rejected on the backend
-            if (!string.IsNullOrWhiteSpace(registerUserResponse.AccessToken))
-            {
-                AppState.SetLoggedInUser(UserHelper.ToUser(registerUserResponse));
-                NavigationManager.NavigateTo("/");
-            }
+            FirstName = UserDetails.FirstName,
+            LastName = UserDetails.LastName,
+            Username = UserDetails.Username,
+            Password = UserDetails.Password,
+            ConfirmPassword = UserDetails.RepeatPassword
+        });
+
+        if (registerUserResponse != null)
+        {
+            NavigationManager.NavigateTo("/");
+            StateHasChanged();
         }
-        catch (Exception e)
+        else
         {
             SnackBar.Add("Failed to register user. Please try again.", Severity.Error);
         }
+        
     }
 
     private void LoginUser()

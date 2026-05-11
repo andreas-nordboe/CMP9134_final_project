@@ -17,18 +17,17 @@ public partial class Login : ComponentBase
 
     private async void LoginUser()
     {
-        try
-        {
-            var authResponse = await AuthenticationService.LoginUserAsync(LoginDetails);
-            AppState.SetLoggedInUser(UserHelper.ToUser(authResponse));
         
+        var authResponse = await AuthenticationService.LoginUserAsync(LoginDetails);
+
+        if (authResponse != null)
+        {
             NavigationManager.NavigateTo("/");
             StateHasChanged();
-            
         }
-        catch (Exception e)
+        else
         {
-            Snackbar.Add(e.Message);
+            AppState.SetLoggedInUser(UserHelper.ToUser(authResponse));
         }
     }
 }

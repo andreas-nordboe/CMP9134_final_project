@@ -2,7 +2,10 @@ using RobotManagementSystem.Shared.Models.Authentication;
 using RobotManagementSystem.Shared.Models.Users;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
+using RobotManagementSystem.Client.Helpers;
+using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Utils;
 
 namespace RobotManagementSystem.Client.Services.Authentication;
@@ -11,10 +14,15 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient _httpClient;
+    private readonly RobotHubCommunication _robotHubCommunication;
+    private readonly IAppState _appState;
     //private readonly ILogger _logger;
 
-    public AuthenticationService(IHttpClientFactory httpClientFactory)
+    public AuthenticationService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState)
     {
+        _httpClientFactory = httpClientFactory;
+        _robotHubCommunication = robotHubCommunication;
+        _appState = appState;
         _httpClient = httpClientFactory.CreateClient("API");
     }
 
@@ -28,16 +36,18 @@ public class AuthenticationService : IAuthenticationService
                 Password = loginDetails.Password
             });
             
-            // Check for error first
-            // TODO parse ApiError and return it to the user
-            
             if (!response.IsSuccessStatusCode)
-            {
                 return null;
-            }
-
-            return await response.Content.ReadFromJsonAsync<AuthenticationResponse>()
-                   ?? throw new Exception("Failed to deserialise response");
+            
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
+            
+            if(authResponse == null || string.IsNullOrWhiteSpace(authResponse.AccessToken))
+                return null;
+            
+            _appState.SetLoggedInUser(UserHelper.ToUser(authResponse));
+            await _robotHubCommunication.StartAsync();
+            
+            return authResponse;
         }
         catch (Exception e)
         {
@@ -50,27 +60,52 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("auth/register", new RegisterUserRequest()
+            try
             {
-                Username = registerUserDetails.Username,
-                FirstName = registerUserDetails.FirstName,
-                LastName = registerUserDetails.LastName,
-                Password = registerUserDetails.Password,
-                ConfirmPassword = registerUserDetails.ConfirmPassword
-            });
+                var response = await _httpClient.PostAsJsonAsync("auth/register", new RegisterUserRequest()
+                {
+                    Username = registerUserDetails.Username,
+                    FirstName = registerUserDetails.FirstName,
+                    LastName = registerUserDetails.LastName,
+                    Password = registerUserDetails.Password,
+                    ConfirmPassword = registerUserDetails.ConfirmPassword
+                });
 
-            if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                var registerUserResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
+
+                // TODO improve handling and put it into a static helper class that checks token validity
+                // the returned JWT access token is signed so if client tampers with the token, it will be rejected on the backend
+
+                if (registerUserResponse == null || string.IsNullOrWhiteSpace(registerUserResponse.AccessToken))
+                    return null;
+
+                _appState.SetLoggedInUser(UserHelper.ToUser(registerUserResponse));
+                await _robotHubCommunication.StartAsync();
+
+                return registerUserResponse;
+            }
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 return null;
             }
-
-            return await response.Content.ReadFromJsonAsync<AuthenticationResponse>()
-                   ?? throw new Exception("Failed to deserialise response");
+            
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             return null;
         }
+    }
+
+    public async Task LogoutUserAsync()
+    {
+        _appState.ClearUser();
+        await _robotHubCommunication.DisposeAsync();
     }
 }

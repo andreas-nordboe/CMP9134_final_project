@@ -17,7 +17,7 @@ public partial class MainLayout
         Appstate.OnUserChanged += StateHasChanged;
         Appstate.OnDarkModeChanged += StateHasChanged;
 
-        if (Appstate.CurrentUser is null || Appstate.CurrentUser.IsLoggedIn)
+        if (Appstate.CurrentUser is null || !Appstate.CurrentUser.IsLoggedIn)
         {
             NavigationManager.NavigateTo("/login");
         }
