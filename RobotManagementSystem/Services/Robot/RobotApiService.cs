@@ -16,7 +16,7 @@ public class RobotApiService : IRobotApiService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Could not get robot status.");
+            _logger.LogWarning(e, "Could not get robot status.");
             return null;
         }
     }
@@ -65,7 +65,7 @@ public class RobotApiService : IRobotApiService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Robot move command failed.");
+            _logger.LogWarning(e, "Robot move command failed.");
             
             return new RobotCommandResponse
             {
@@ -75,8 +75,26 @@ public class RobotApiService : IRobotApiService
         }
     }
 
-    public Task<RobotCommandResponse?> ResetAsync()
+    public async Task<RobotCommandResponse?> ResetAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            var response = await _httpClient.PostAsync("/api/reset", null);
+            
+            return new RobotCommandResponse
+            {
+                Success = response.IsSuccessStatusCode,
+                Message = response.IsSuccessStatusCode ? "Robot has been successfully reset." : $"Reset command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Robot move command failed.");
+            return new RobotCommandResponse
+            {
+                Success = false,
+                Message = "Robot move command failed."
+            };
+        }
     }
 }

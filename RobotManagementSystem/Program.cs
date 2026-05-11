@@ -58,7 +58,14 @@ public class Program
         builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-        builder.Services.AddScoped<IRobotApiService, RobotApiService>();
+
+        // Adds a Httpclient using the IRobotApi service to interact with the external RobotApi
+        builder.Services.AddHttpClient<IRobotApiService, RobotApiService>(client =>
+        {
+            client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException()); // TODO this stops the backend from working if the RobotApi is missing, imrpove with bette error handling and logging later
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+        builder.Services.AddSignalR();
         
         // Setup Authentication (JWT Token for now, this might be replaced with OIDC later)
         //builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
