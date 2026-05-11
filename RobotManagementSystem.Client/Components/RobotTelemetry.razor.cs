@@ -13,7 +13,7 @@ public partial class RobotTelemetry : ComponentBase
 
     protected override void OnInitialized()
     {
-        RobotHubCommunication.ConnectionStatusChanged += OnTelemetryUpdated;
+        RobotHubCommunication.ConnectionStatusChanged += OnConnectionStatusChanged;
         RobotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
     }
 
