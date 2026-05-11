@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RobotManagementSystem.Controllers;
 using RobotManagementSystem.Services;
-using RobotManagementSystem.Services.Authentication;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Shared.Models.Authentication;
 using RobotManagementSystem.Shared.Models.Errors;
