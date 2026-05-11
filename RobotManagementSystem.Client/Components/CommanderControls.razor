@@ -1,0 +1,54 @@
+<MudStack Class="flex-row">
+    <MudPaper Class="d-flex flex-column align-center justify-center mud-width-full py-8"
+              Style="min-height: 50px; min-width: 300px">
+        <MudText Align="Align.Center">Robot Telemetry</MudText>
+    </MudPaper>
+    <MudTabs @bind-ActivePanelIndex="UsesAdvancedControls" Outlined="true">
+        <MudTabPanel Text="Simple Controls" Icon="@Icons.Material.Filled.Api"/>
+        <MudTabPanel Text="Advanced Controls" Icon="@Icons.Material.Filled.Build"/>
+    </MudTabs>
+    @if (UsesAdvancedControls == 0)
+    {
+        <MudGrid Justify="Justify.Center">
+            
+            <MudItem xs="12" Class="d-flex justify-center">
+                <MudPaper Class="pa-2">
+                    <MudIconButton OnClick="MoveRobotUp" Icon="@Icons.Material.Filled.ArrowUpward" aria-label="delete" />
+                </MudPaper>
+            </MudItem>
+            
+            <MudItem xs="4" Class="d-flex justify-end">
+                <MudPaper Class="pa-2">
+                    <MudIconButton OnClick="MoveRobotLeft"Icon="@Icons.Material.Filled.ArrowBack" aria-label="delete"/>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="4" Class="d-flex justify-center">
+                @*Empty Center*@
+            </MudItem>
+
+            <MudItem xs="4" Class="d-flex justify-start">
+                <MudPaper Class="pa-2">
+                    <MudIconButton OnClick="MoveRobotRight" Icon="@Icons.Material.Filled.ArrowForward" aria-label="delete"/>
+                </MudPaper>
+            </MudItem>
+            
+            <MudItem xs="12" Class="d-flex justify-center">
+                <MudPaper Class="pa-2">
+                    <MudIconButton OnClick="MoveRobotDown" Icon="@Icons.Material.Filled.ArrowDownward" aria-label="delete" />
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+    }
+    else
+    {
+        <MudStack Row="true">
+            <MudNumericField Immediate="false" Label="X Coordinate" T="int" @bind-Value="@InputVector.X" HelperText="Robot X"/>
+            <MudNumericField Immediate="false" Label="Y Coordinate" T="int" @bind-Value="@InputVector.Y" HelperText="Robot Y"/>
+        </MudStack>
+        <MudButton OnClick="MoveRobot" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Start" Color="Color.Primary">Move Robot</MudButton>
+        <MudButton OnClick="EmergencyStop" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.RemoveCircleOutline" Color="Color.Error">Emergency Stop</MudButton>
+    }
+</MudStack>
+

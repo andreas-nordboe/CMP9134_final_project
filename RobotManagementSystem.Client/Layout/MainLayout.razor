@@ -1,0 +1,31 @@
+﻿@inherits LayoutComponentBase
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<PageTitle>Ground Control Station</PageTitle>
+<MudThemeProvider IsDarkMode="@Appstate.IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        @if (Appstate.CurrentUser != null && Appstate.CurrentUser.IsLoggedIn)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())"/>
+        }
+        <MudSpacer/>
+        <MudText Typo="Typo.h4">Ground Control Station</MudText>
+        <MudSpacer/>
+        <MudIconButton @onclick="Appstate.ToggleDarkMode" Icon="@(Appstate.IsDarkMode ? @Icons.Material.Filled.DarkMode : @Icons.Material.Filled.WbSunny)" Color="Color.Inherit" Edge="Edge.End"/>
+    </MudAppBar>
+    @if (Appstate.CurrentUser != null && Appstate.CurrentUser.IsLoggedIn)
+    {
+        <MudDrawer Variant="DrawerVariant.Persistent" Open="@_sidebarOpen" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="5">
+            <NavMenu/>
+        </MudDrawer>
+    }
+    <MudAlert Class="mud-width-full" Severity="Severity.Warning" Variant="Variant.Outlined">WARNING: Signal Lost. Reconnecting</MudAlert>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>

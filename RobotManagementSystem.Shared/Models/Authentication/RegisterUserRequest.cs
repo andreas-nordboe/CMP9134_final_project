@@ -20,7 +20,7 @@ public class RegisterUserRequest
     public string LastName { get; set; } = string.Empty;
     
     [Required]
-    [MinLength(8)]
+    //[MinLength(8)] TODO remove this validator or retrieve description from auth service
     [MaxLength(50)]
     public string Password { get; set; } = string.Empty;
     

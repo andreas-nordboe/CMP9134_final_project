@@ -4,6 +4,8 @@ public class AuthenticationResponse
 {
     public string UserId { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
     public string AccessToken { get; set; } = string.Empty;
     public DateTime Expires { get; set; }
     public string Role { get; set; } = string.Empty;

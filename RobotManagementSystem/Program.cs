@@ -24,6 +24,16 @@ public class Program
 
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        
+        // Allow frontend to send HTTP requests with the backend
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("Frontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:5116").AllowAnyHeader().AllowAnyMethod();
+            });
+        });
+        
         builder.Services.AddOpenApi(options =>
         {
             options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0; // I had some issues with default JSON content on the Swagger UI, so I downgraded from 3.1 to 3.0
@@ -135,6 +145,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseCors("Frontend");
 
         app.UseAuthentication();
         app.UseAuthorization();
