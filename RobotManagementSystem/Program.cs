@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RobotManagementSystem.BackgroundServices;
 using RobotManagementSystem.Data;
+using RobotManagementSystem.Hubs;
 using RobotManagementSystem.Services;
 using RobotManagementSystem.Services.Authentication;
 using RobotManagementSystem.Services.FailureHandling;
@@ -58,6 +60,7 @@ public class Program
         builder.Services.AddScoped<IAPIFailureService, APIFailureService>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddHostedService<RobotTelemetryBackgroundService>();
 
         // Adds a Httpclient using the IRobotApi service to interact with the external RobotApi
         builder.Services.AddHttpClient<IRobotApiService, RobotApiService>(client =>
@@ -138,6 +141,7 @@ public class Program
 
 
         app.MapControllers();
+        app.MapHub<RobotTelemetryHub>("/hubs/robot-telemetry");
 
         app.Run();
     }

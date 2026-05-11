@@ -59,7 +59,7 @@ public class RobotCommandsController : ControllerBase
     }
     
     [HttpPost("reset")]
-    [Authorize(Roles = "Admin, Commander")]
+    [Authorize(Roles = "Admin,Commander")]
     public async Task<IActionResult> ResetRobot()
     {
         return Ok(await _robotApiService.ResetAsync());
