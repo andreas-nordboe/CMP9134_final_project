@@ -46,6 +46,10 @@ public class RobotTelemetryBackgroundService : BackgroundService
                         break;
 
                     var jsonResponse = Encoding.UTF8.GetString(buffer, 0, response.Count);
+                    
+                    // TODO deserialise data usin DTO
+                    // add mapping service to update from telemetry (inclde sensor data)
+                    // send TelemetryUpdated AND MapUdated back to all clients
 
                     await _hubContext.Clients.All.SendCoreAsync("TelemetryUpdated", new object[] { jsonResponse },
                         stoppingToken);
