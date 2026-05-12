@@ -71,6 +71,7 @@ public class Program
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddHostedService<RobotTelemetryBackgroundService>();
+        builder.Services.AddSingleton<IRobotApiStatusStore, RobotApiStatusStore>();
 
         // Adds a Httpclient using the IRobotApi service to interact with the external RobotApi
         builder.Services.AddHttpClient<IRobotApiService, RobotApiService>(client =>
