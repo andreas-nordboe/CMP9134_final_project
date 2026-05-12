@@ -27,7 +27,7 @@ public partial class Login : ComponentBase
         }
         else
         {
-            AppState.SetLoggedInUser(UserHelper.ToUser(authResponse));
+            AppState.SetLoggedInUserFromAuthentication(authResponse);
         }
     }
 }

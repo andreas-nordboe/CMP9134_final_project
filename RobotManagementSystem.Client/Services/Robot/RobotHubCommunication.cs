@@ -11,11 +11,14 @@ public class RobotHubCommunication : IAsyncDisposable
     
     public event Action<string>? ConnectionStatusChanged;
     public event Action<RobotTelemetry>? TelemetryUpdated;
+    
+    private readonly ILogger<RobotHubCommunication> _logger;
 
-    public RobotHubCommunication(IConfiguration configuration, IAppState appState)
+    public RobotHubCommunication(IConfiguration configuration, IAppState appState, ILogger<RobotHubCommunication> logger)
     {
         _configuration = configuration;
         _appState = appState;
+        _logger = logger;
     }
     
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
@@ -26,6 +29,8 @@ public class RobotHubCommunication : IAsyncDisposable
             return;
         
         var apiBaseAddress = _configuration["ApiSettings:HubAddress"];
+        
+        _logger.LogInformation($"Connecting to hub at {apiBaseAddress}");
         
         if (string.IsNullOrEmpty(apiBaseAddress))
             throw new InvalidOperationException("ApiSettings:HubAddress is not set or missing");

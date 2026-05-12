@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Authentication;
+using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
 
 namespace RobotManagementSystem.Client;
@@ -16,16 +17,19 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddMudServices();
+        builder.Services.AddTransient<JWtAuthorisationHandler>();
         builder.Services.AddBlazoredLocalStorage();
         builder.Services.AddHttpClient("API", client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseAddress"]!);
-        });
+        }).AddHttpMessageHandler<JWtAuthorisationHandler>();
         
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+        builder.Services.AddScoped(serviceProvider => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddScoped<IAppState, AppState>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddScoped<RobotHubCommunication>();
+        builder.Services.AddScoped<IRobotCommanderService, RobotCommanderService>();
+        builder.Services.AddScoped<IDataStoreService, DataStoreServiceService>();
         
         await builder.Build().RunAsync();
     }

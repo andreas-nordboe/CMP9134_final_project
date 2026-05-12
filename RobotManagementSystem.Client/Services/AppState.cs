@@ -1,4 +1,7 @@
+using Blazored.LocalStorage;
+using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Pages;
+using RobotManagementSystem.Shared.Models.Authentication;
 using RobotManagementSystem.Shared.Models.Users;
 using RobotManagementSystem.Shared.Models.Robot;
 
@@ -6,15 +9,24 @@ namespace RobotManagementSystem.Client.Services;
 
 public class AppState : IAppState
 {
+    private readonly ILocalStorageService _localStorage;
+
+    public AppState(ILocalStorageService localStorage)
+    {
+        _localStorage = localStorage;
+    }
+
     public User? CurrentUser { get; private set; }
     public bool IsDarkMode { get; set; }
     public string ApiStatus { get; set; } = RobotApiStatus.Disconnected;
+    public AuthenticationResponse? AuthenticationDetails { get; set; }
     public event Action? OnUserChanged;
     public event Action? OnDarkModeChanged;
 
-    public void SetLoggedInUser(User user)
+    public async void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse)
     {
-        CurrentUser = user;
+        CurrentUser = UserHelper.ToUser(authenticationResponse);
+        AuthenticationDetails = authenticationResponse;
         NotifyUserChanged();
     }
 

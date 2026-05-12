@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
 using RobotManagementSystem.Client.Helpers;
+using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Utils;
 
@@ -16,13 +17,14 @@ public class AuthenticationService : IAuthenticationService
     private readonly HttpClient _httpClient;
     private readonly RobotHubCommunication _robotHubCommunication;
     private readonly IAppState _appState;
-    //private readonly ILogger _logger;
+    private readonly IDataStoreService _dataStoreService;
 
-    public AuthenticationService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState)
+    public AuthenticationService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState, IDataStoreService dataStoreService)
     {
         _httpClientFactory = httpClientFactory;
         _robotHubCommunication = robotHubCommunication;
         _appState = appState;
+        _dataStoreService = dataStoreService;
         _httpClient = httpClientFactory.CreateClient("API");
     }
 
@@ -43,8 +45,9 @@ public class AuthenticationService : IAuthenticationService
             
             if(authResponse == null || string.IsNullOrWhiteSpace(authResponse.AccessToken))
                 return null;
-            
-            _appState.SetLoggedInUser(UserHelper.ToUser(authResponse));
+
+            await _dataStoreService.StoreAuthenticationDetailsAsync(authResponse);
+            _appState.SetLoggedInUserFromAuthentication(authResponse);
             await _robotHubCommunication.StartAsync();
             
             return authResponse;
@@ -83,8 +86,9 @@ public class AuthenticationService : IAuthenticationService
 
                 if (registerUserResponse == null || string.IsNullOrWhiteSpace(registerUserResponse.AccessToken))
                     return null;
-
-                _appState.SetLoggedInUser(UserHelper.ToUser(registerUserResponse));
+                
+                await _dataStoreService.StoreAuthenticationDetailsAsync(registerUserResponse);
+                _appState.SetLoggedInUserFromAuthentication(registerUserResponse);
                 await _robotHubCommunication.StartAsync();
 
                 return registerUserResponse;
@@ -105,6 +109,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task LogoutUserAsync()
     {
+        await _dataStoreService.ClearAuthenticationDetailsAsync();
         _appState.ClearUser();
         await _robotHubCommunication.DisposeAsync();
     }
