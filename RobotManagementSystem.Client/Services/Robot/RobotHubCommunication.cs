@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Client.Services.Robot;
 
@@ -9,7 +9,7 @@ public class RobotHubCommunication : IAsyncDisposable
     private HubConnection? _connection;
     
     public event Action<string>? ConnectionStatusChanged;
-    public event Action<string>? TelemetryUpdated;
+    public event Action<RobotTelemetry>? TelemetryUpdated;
 
     public RobotHubCommunication(IConfiguration configuration)
     {
@@ -38,9 +38,9 @@ public class RobotHubCommunication : IAsyncDisposable
             ConnectionStatusChanged?.Invoke(status);
         });
         
-        _connection.On<string>("TelemetryUpdated", telemetryJson =>
+        _connection.On<RobotTelemetry>("TelemetryUpdated", telemetryData =>
         {
-            TelemetryUpdated?.Invoke(telemetryJson);
+            TelemetryUpdated?.Invoke(telemetryData);
         });
 
         await _connection.StartAsync();

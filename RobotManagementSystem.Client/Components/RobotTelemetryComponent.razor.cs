@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using RobotManagementSystem.Client.Services.Robot;
+using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Client.Components;
 
-public partial class RobotTelemetry : ComponentBase
+public partial class RobotTelemetryComponent : ComponentBase
 {
-    [Inject] 
-    public RobotHubCommunication RobotHubCommunication { get; set; }
+    [Inject] public RobotHubCommunication RobotHubCommunication { get; set; } = default!;
     
     private string ConnectionStatus { get; set; } = "Disconnected";
-    private string LatestTelemetry { get; set; } = string.Empty;
+    private RobotTelemetry? LatestTelemetry { get; set; }
 
     protected override void OnInitialized()
     {
@@ -23,7 +23,7 @@ public partial class RobotTelemetry : ComponentBase
         await InvokeAsync(StateHasChanged);
     }
 
-    private async void OnTelemetryUpdated(string telemetryJson)
+    private async void OnTelemetryUpdated(RobotTelemetry telemetryJson)
     {
         LatestTelemetry = telemetryJson;
         await InvokeAsync(StateHasChanged);

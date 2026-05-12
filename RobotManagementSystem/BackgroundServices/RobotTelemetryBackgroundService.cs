@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using RobotManagementSystem.Hubs;
 using System.Text.Json;
+using Newtonsoft.Json.Serialization;
 using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.BackgroundServices;
@@ -53,7 +54,12 @@ public class RobotTelemetryBackgroundService : BackgroundService
                     
                     try
                     {
-                        robotTelemetry = JsonSerializer.Deserialize<RobotTelemetry>(jsonResponse);
+                        var jsonParseOptions = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        };
+
+                        robotTelemetry = JsonSerializer.Deserialize<RobotTelemetry>(jsonResponse, jsonParseOptions);
                     }
                     catch (JsonException e)
                     {
