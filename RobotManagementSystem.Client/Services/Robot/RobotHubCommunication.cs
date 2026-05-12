@@ -33,9 +33,10 @@ public class RobotHubCommunication : IAsyncDisposable
             .WithAutomaticReconnect()
             .Build();
         
-        _connection.On<string>("ConnectionStatus", status =>
+        _connection.On<string>(RobotApiStatus.StatusMethod, status =>
         {
             ConnectionStatusChanged?.Invoke(status);
+            Console.WriteLine($"Connection status changed: {status}");
         });
         
         _connection.On<RobotTelemetry>("TelemetryUpdated", telemetryData =>
