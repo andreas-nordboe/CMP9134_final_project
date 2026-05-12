@@ -20,7 +20,7 @@ public class RobotTelemetryHub : Hub
         _logger.LogInformation($"Client connected: {Context.ConnectionId}");
         
         // This sends the current robot status to the client when they connect so that they can correctly display the robot status
-        await Clients.Caller.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { _robotApiStatusStore });
+        await Clients.Caller.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { _robotApiStatusStore.CurrentApiStatus });
         await base.OnConnectedAsync();
     }
     
