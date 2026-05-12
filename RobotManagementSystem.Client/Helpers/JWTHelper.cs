@@ -9,8 +9,8 @@ public static class JWTHelper
         if (string.IsNullOrWhiteSpace(accessToken))
             return true;
         
-        // 1 minute buffer to log user out early so requests won't fail
-        return GetTokenExpiryTime(accessToken) < DateTime.UtcNow.AddMinutes(1); 
+        
+        return GetTokenExpiryTime(accessToken) < DateTime.UtcNow; 
     }
     
     public static DateTime GetTokenExpiryTime(string accessToken)

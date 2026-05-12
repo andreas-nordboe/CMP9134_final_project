@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
+using RobotManagementSystem.Client.Services.Sessions;
 using RobotManagementSystem.Shared.Utils;
 
 namespace RobotManagementSystem.Client.Services.Authentication;
@@ -18,13 +19,15 @@ public class AuthenticationService : IAuthenticationService
     private readonly RobotHubCommunication _robotHubCommunication;
     private readonly IAppState _appState;
     private readonly IDataStoreService _dataStoreService;
+    private readonly IUserSessionService _userSessionService;
 
-    public AuthenticationService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState, IDataStoreService dataStoreService)
+    public AuthenticationService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState, IDataStoreService dataStoreService, IUserSessionService userSessionService)
     {
         _httpClientFactory = httpClientFactory;
         _robotHubCommunication = robotHubCommunication;
         _appState = appState;
         _dataStoreService = dataStoreService;
+        _userSessionService = userSessionService;
         _httpClient = httpClientFactory.CreateClient("API");
     }
 
@@ -48,6 +51,8 @@ public class AuthenticationService : IAuthenticationService
 
             await _dataStoreService.StoreAuthenticationDetailsAsync(authResponse);
             _appState.SetLoggedInUserFromAuthentication(authResponse);
+            _userSessionService.MonitorUserSession(authResponse);
+            
             await _robotHubCommunication.StartAsync();
             
             return authResponse;

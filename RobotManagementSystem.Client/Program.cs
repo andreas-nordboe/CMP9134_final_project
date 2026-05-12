@@ -6,6 +6,7 @@ using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Authentication;
 using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
+using RobotManagementSystem.Client.Services.Sessions;
 
 namespace RobotManagementSystem.Client;
 
@@ -30,6 +31,7 @@ public class Program
         builder.Services.AddScoped<RobotHubCommunication>();
         builder.Services.AddScoped<IRobotCommanderService, RobotCommanderService>();
         builder.Services.AddScoped<IDataStoreService, DataStoreServiceService>();
+        builder.Services.AddScoped<IUserSessionService, UserSessionService>();
         
         await builder.Build().RunAsync();
     }
