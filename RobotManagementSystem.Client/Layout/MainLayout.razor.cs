@@ -1,7 +1,9 @@
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.DataStore;
+using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Layout;
@@ -16,15 +18,17 @@ public partial class MainLayout
     
     [Inject] private IDataStoreService DataStore { get; set; }
     [Inject] private IAppState AppState { get; set; }
+    [Inject] private RobotHubCommunication RobotHubCommunication { get; set; }
     
     protected override async Task OnInitializedAsync()
     {
-        // Check for login
+        // Check for login from localstorage
         var auth = await DataStore.LoadAuthenticationDetailsAsync();
 
-        if (auth != null && JWTHelper.IsAccessTokenExpired(auth.AccessToken))
+        if (auth != null && !JWTHelper.IsAccessTokenExpired(auth.AccessToken))
         {
             AppState.SetLoggedInUserFromAuthentication(auth);
+            await RobotHubCommunication.StartAsync();
         }
         else
         {

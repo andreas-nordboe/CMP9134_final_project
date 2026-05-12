@@ -23,10 +23,19 @@ public class RobotHubCommunication : IAsyncDisposable
     
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
     
+    
     public async Task StartAsync()
     {
-        if (_connection != null)
+        _logger.LogInformation("Starting SignalR connection");
+        
+        if (_connection?.State == HubConnectionState.Connected || _connection?.State == HubConnectionState.Reconnecting || _connection?.State == HubConnectionState.Connecting)
             return;
+
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync();
+            _connection = null;
+        }
         
         var apiBaseAddress = _configuration["ApiSettings:HubAddress"];
         
@@ -39,6 +48,35 @@ public class RobotHubCommunication : IAsyncDisposable
             .WithUrl(apiBaseAddress)
             .WithAutomaticReconnect()
             .Build();
+
+        _connection.Reconnecting += error =>
+        {
+            ConnectionStatusChanged?.Invoke(RobotApiStatus.Reconnecting);
+            return Task.CompletedTask;
+        };
+        
+        _connection.Reconnected += error =>
+        {
+            ConnectionStatusChanged?.Invoke(RobotApiStatus.Connected);
+            return Task.CompletedTask;
+        };
+
+        _connection.Closed += async error =>
+        {
+            ConnectionStatusChanged?.Invoke(RobotApiStatus.Disconnected);
+
+            await Task.Delay(3000);
+
+            try
+            {
+                await StartAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e, "Failed to reconnect to SignalR");
+            }
+        };
         
         _connection.On<string>(RobotApiStatus.StatusMethod, status =>
         {
