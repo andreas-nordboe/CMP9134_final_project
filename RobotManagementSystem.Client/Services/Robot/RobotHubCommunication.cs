@@ -7,13 +7,15 @@ public class RobotHubCommunication : IAsyncDisposable
 {
     private readonly IConfiguration _configuration;
     private HubConnection? _connection;
+    private IAppState _appState;
     
     public event Action<string>? ConnectionStatusChanged;
     public event Action<RobotTelemetry>? TelemetryUpdated;
 
-    public RobotHubCommunication(IConfiguration configuration)
+    public RobotHubCommunication(IConfiguration configuration, IAppState appState)
     {
         _configuration = configuration;
+        _appState = appState;
     }
     
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
@@ -35,6 +37,7 @@ public class RobotHubCommunication : IAsyncDisposable
         
         _connection.On<string>(RobotApiStatus.StatusMethod, status =>
         {
+            _appState.ApiStatus = status;
             ConnectionStatusChanged?.Invoke(status);
             Console.WriteLine($"Connection status changed: {status}");
         });

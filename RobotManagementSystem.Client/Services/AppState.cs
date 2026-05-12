@@ -1,5 +1,6 @@
 using RobotManagementSystem.Client.Pages;
 using RobotManagementSystem.Shared.Models.Users;
+using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Client.Services;
 
@@ -7,6 +8,7 @@ public class AppState : IAppState
 {
     public User? CurrentUser { get; private set; }
     public bool IsDarkMode { get; set; }
+    public string ApiStatus { get; set; } = RobotApiStatus.Disconnected;
     public event Action? OnUserChanged;
     public event Action? OnDarkModeChanged;
 
