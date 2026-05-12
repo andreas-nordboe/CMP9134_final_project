@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
+using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services;
+using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Layout;
@@ -12,8 +14,24 @@ public partial class MainLayout
     
     [Inject] private NavigationManager NavigationManager { get; set; }
     
-    protected override Task OnInitializedAsync()
+    [Inject] private IDataStoreService DataStore { get; set; }
+    [Inject] private IAppState AppState { get; set; }
+    
+    protected override async Task OnInitializedAsync()
     {
+        // Check for login
+        var auth = await DataStore.LoadAuthenticationDetailsAsync();
+
+        if (auth != null && JWTHelper.IsAccessTokenExpired(auth.AccessToken))
+        {
+            AppState.SetLoggedInUserFromAuthentication(auth);
+        }
+        else
+        {
+            await DataStore.ClearAuthenticationDetailsAsync();
+            AppState.ClearUser();
+        }
+        
         Appstate.OnUserChanged += StateHasChanged;
         Appstate.OnDarkModeChanged += StateHasChanged;
 
@@ -32,8 +50,6 @@ public partial class MainLayout
         }
 
         Appstate.IsDarkMode = true; // Easier on the eyes while developing 
-        
-        return Task.CompletedTask;
     }
 
     async void ToggleDarkMode()
