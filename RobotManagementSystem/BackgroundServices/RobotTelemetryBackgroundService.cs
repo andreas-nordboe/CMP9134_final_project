@@ -36,6 +36,7 @@ public class RobotTelemetryBackgroundService : BackgroundService
                     (new Uri(_configuration["RobotApi:TelemetryAddress"] ?? throw new InvalidOperationException("RobotApi:TelemetryAddress is empty or missing.")), 
                         stoppingToken);
 
+                _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Connected;
                 await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Connected },
                     stoppingToken);
 
@@ -49,6 +50,7 @@ public class RobotTelemetryBackgroundService : BackgroundService
 
                     if (response.MessageType == WebSocketMessageType.Close)
                     {
+                        _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Disconnected;
                         await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Disconnected },
                             stoppingToken);
                         break;
@@ -86,6 +88,7 @@ public class RobotTelemetryBackgroundService : BackgroundService
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
+                _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Disconnected;
                 await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Disconnected },
                     stoppingToken);
                 
@@ -95,6 +98,7 @@ public class RobotTelemetryBackgroundService : BackgroundService
             {
                 _logger.LogWarning(e, "Robot Telemetry Websocket was disconnected.");
 
+                _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Reconnecting;
                 await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[]{RobotApiStatus.Reconnecting}, stoppingToken);
                 
                 await Task.Delay(TimeSpan.FromMilliseconds(2500), stoppingToken);
