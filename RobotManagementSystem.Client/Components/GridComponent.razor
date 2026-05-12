@@ -8,7 +8,7 @@
             padding: 5px;">
             @foreach (var tile in Tiles)
             {
-                <MudPaper Style="width: 42px;
+                <MudPaper @onclick="() => OnTileClicked(tile)" Style="width: 42px;
                 height: 42px;
                 border: 1px solid #ccc;
                 background: white;
@@ -20,10 +20,10 @@
                 cursor: pointer;
                 font-size: 10px;
                 text-align: center;" Class="@($"robot-tile {GetTileCssClass(tile)}")"
-                          Elevation="1" Square="true" @onclick="() => OnTileClicked(tile)">
+                          Elevation="1" Square="true" >
                     @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
                     {
-                        <img src="@tile.ImageUrl" class="tile-image"/>
+                        <img src="@tile.ImageUrl" style="width: 36px; height: 36px; object-fit: contain;"/>
                     }
                     @*<div class="tile-text">
                         <MudText>@tile.VectorPosition.X,@tile.VectorPosition.Y</MudText>

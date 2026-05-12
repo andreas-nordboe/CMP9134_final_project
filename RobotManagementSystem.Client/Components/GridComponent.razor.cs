@@ -1,19 +1,39 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Models.Components;
+using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Client.Components;
 
-public partial class GridComponent : ComponentBase
+public partial class GridComponent : ComponentBase, IDisposable
 {
     private const int GridWidth = 21;
     private const int GridHeight = 21;
 
+    [Inject] private RobotHubCommunication _robotHubCommunication { get; set; } = default!;
+    [Inject] private IRobotCommanderService _robotCommanderService { get; set; }
+
     protected List<TileState> Tiles { get; set; } = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         SetupGrid();
+
+        _robotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
+
+        await _robotHubCommunication.StartAsync();
+    }
+
+    private void OnTelemetryUpdated(RobotTelemetry robotTelemetry)
+    {
+        InvokeAsync(() =>
+        {
+            MoveRobot((int)robotTelemetry.Position.X, (int)robotTelemetry.Position.Y);
+            StateHasChanged();
+        });
+        
+       
     }
 
     private void SetupGrid()
@@ -57,9 +77,14 @@ public partial class GridComponent : ComponentBase
         return "";
     }
 
-    protected void OnTileClicked(TileState tile)
+    protected async void OnTileClicked(TileState tile)
     {
-        tile.ContentType = GridTileType.Obstacle;
+        await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+        {
+            X = tile.VectorPosition.X,
+            Y = tile.VectorPosition.Y
+        });
+        
         StateHasChanged();
     }
 
@@ -73,13 +98,15 @@ public partial class GridComponent : ComponentBase
         // todo
     }
 
-    protected void PlaceRobot(int x, int y, string? imageUrl = "/images/robot-icon.png")
+    protected void PlaceRobot(int x, int y, string? imageUrl = "/images/robot-image.png")
     {
+        MoveRobot(x, y);
+        
         var targetTile = GetTileState(x, y);
         if(targetTile is null) return;
         
         targetTile.ContentType = GridTileType.Robot;
-        targetTile.ImageUrl = null;
+        targetTile.ImageUrl = imageUrl;
         StateHasChanged();
     }
     
@@ -90,12 +117,22 @@ public partial class GridComponent : ComponentBase
 
     protected void CenterRobot()
     {
-        PlaceRobot((GridWidth / 2), (GridHeight / 2), null);
+        PlaceRobot((GridWidth / 2), (GridHeight / 2));
     }
 
     protected void MoveRobot(int x, int y)
     {
+        foreach (var tile in Tiles.Where(t => t.ContentType == GridTileType.Robot))
+        {
+            tile.ContentType = GridTileType.FreeSpace;
+            tile.ImageUrl = null;
+        }
         
+        var targetTile = GetTileState(x, y);
+        if(targetTile is null) return;
+        
+        targetTile.ContentType = GridTileType.Robot;
+        targetTile.ImageUrl = "/images/robot-image.jpg";
     }
 
     protected void ClearGrid()
@@ -108,5 +145,10 @@ public partial class GridComponent : ComponentBase
         }
         
         StateHasChanged();
+    }
+    
+    public void Dispose()
+    {
+        _robotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
     }
 }
