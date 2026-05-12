@@ -65,6 +65,8 @@ public class AuthenticationService : IAuthenticationService
         {
             UserId = dbUserAccount.Id.ToString(),
             Username =  dbUserAccount.Username,
+            FirstName = dbUserAccount.FirstName,
+            LastName = dbUserAccount.LastName,
             AccessToken = accessToken,
             Expires = _tokenService.GetAccessTokenExpiryTime(),
             Role = dbUserAccount.Role.ToString()
