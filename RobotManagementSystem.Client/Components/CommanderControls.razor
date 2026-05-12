@@ -44,8 +44,8 @@
     else
     {
         <MudStack Row="true">
-            <MudNumericField Immediate="false" Label="X Coordinate" T="int" @bind-Value="@InputVector.X" HelperText="Robot X"/>
-            <MudNumericField Immediate="false" Label="Y Coordinate" T="int" @bind-Value="@InputVector.Y" HelperText="Robot Y"/>
+            <MudNumericField Immediate="false" Min="0" Max="20" Label="X Coordinate" T="int" @bind-Value="@InputVector.X" HelperText="Robot X"/>
+            <MudNumericField Immediate="false" Min="0" Max="20" Label="Y Coordinate" T="int" @bind-Value="@InputVector.Y" HelperText="Robot Y"/>
         </MudStack>
         <MudButton OnClick="MoveRobot" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Start" Color="Color.Primary">Move Robot</MudButton>
         <MudButton OnClick="EmergencyStop" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.RemoveCircleOutline" Color="Color.Error">Emergency Stop</MudButton>

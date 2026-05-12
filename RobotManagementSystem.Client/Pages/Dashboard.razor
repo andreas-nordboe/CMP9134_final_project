@@ -8,7 +8,7 @@
 @if (AppState.IsUserLoggedIn())
 {
     <MudText Align="Align.Center" Typo="Typo.h3">
-        Welcome, @AppState.CurrentUser?.FirstName!
+        Welcome, @AppState.AuthenticationDetails?.FirstName
     </MudText>
 }
 
