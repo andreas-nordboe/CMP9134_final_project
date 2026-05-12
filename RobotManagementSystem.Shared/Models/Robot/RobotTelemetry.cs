@@ -4,8 +4,8 @@ namespace RobotManagementSystem.Shared.Models.Robot;
 
 public class RobotTelemetry
 {
-    public Vector2D Position { get; set; }
-    public int Battery { get; set; }
-    public string Status { get; set; }
-    public Sensors Sensors { get; set; }
+    public Vector2D Position { get; set; } = new Vector2D();
+    public double Battery { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public Sensors Sensors { get; set; } = new Sensors();
 }
