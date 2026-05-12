@@ -74,6 +74,8 @@ public class RobotTelemetryBackgroundService : BackgroundService
 
                     await _hubContext.Clients.All.SendCoreAsync("TelemetryUpdated", new object[] { robotTelemetry },
                         stoppingToken);
+
+                    _logger.LogInformation("Telemetry sent to clients.");
                 }
 
             }
