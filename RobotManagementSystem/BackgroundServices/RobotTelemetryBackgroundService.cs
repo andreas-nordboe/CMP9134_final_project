@@ -53,7 +53,11 @@ public class RobotTelemetryBackgroundService : BackgroundService
                     
                     try
                     {
-                        robotTelemetry = JsonSerializer.Deserialize<RobotTelemetry>(jsonResponse);
+                        robotTelemetry = JsonSerializer.Deserialize<RobotTelemetry>(jsonResponse,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
                     }
                     catch (JsonException e)
                     {
