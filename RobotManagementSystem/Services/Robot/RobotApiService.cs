@@ -41,6 +41,19 @@ public class RobotApiService : IRobotApiService
         }
     }
 
+    public async Task<SensorData?> GetSensorDataAsync()
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<SensorData>("/api/sensor");
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Failed to retrieve sensor data.");
+            return null;
+        }
+    }
+
     public async Task<RobotCommandResponse?> MoveRobotAsync(RobotNavigationRequest request)
     {
         // Validate coordinates so they don't go out of bounds (TODO move this to helper later)

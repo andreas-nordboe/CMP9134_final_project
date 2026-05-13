@@ -7,5 +7,5 @@ public class RobotTelemetry
     public Vector2D Position { get; set; } = new Vector2D();
     public double Battery { get; set; }
     public string Status { get; set; } = string.Empty;
-    public Sensors Sensors { get; set; } = new Sensors();
+    public SensorData SensorData { get; set; } = new SensorData();
 }
