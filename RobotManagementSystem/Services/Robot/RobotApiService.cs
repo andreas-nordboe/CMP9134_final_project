@@ -1,4 +1,5 @@
 using RobotManagementSystem.Shared.Models.Components;
+using RobotManagementSystem.Shared.Models.Map;
 using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Services;
@@ -22,7 +23,20 @@ public class RobotApiService : IRobotApiService
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not get robot status.");
+            _logger.LogWarning(e, "Failed to retrieve robot status.");
+            return null;
+        }
+    }
+
+    public async Task<MapResponse?> GetMapAsync()
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<MapResponse>("/api/map");
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Failed to retrieve map information.");
             return null;
         }
     }
