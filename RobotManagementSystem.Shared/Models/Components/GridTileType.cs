@@ -5,5 +5,6 @@ public enum GridTileType
     FreeSpace,
     Obstacle,
     Robot,
-    LidarHit
+    LidarHit,
+    LidarVisibility
 }

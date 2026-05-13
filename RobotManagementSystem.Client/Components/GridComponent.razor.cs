@@ -72,10 +72,9 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         InvokeAsync(() =>
         {
-            MoveRobot((int)robotTelemetry.Position.X, (int)robotTelemetry.Position.Y);
-
             ClearOldLidarHits();
-
+            MoveRobot((int)robotTelemetry.Position.X, (int)robotTelemetry.Position.Y);
+            
             if (robotTelemetry.Sensors.Lidar.Count > 0)
             {
                 for (int angle = 0; angle < robotTelemetry.Sensors.Lidar.Count; angle++)
@@ -92,7 +91,8 @@ public partial class GridComponent : ComponentBase, IDisposable
                     int hitX = (int)Math.Round(robotTelemetry.Position.X + (distance * Math.Cos((angleRadius))));
                     int hitY = (int)Math.Round(robotTelemetry.Position.Y + (distance * Math.Sin((angleRadius))));
                 
-                    OnLidarHit(hitX, hitY);
+                    //OnLidarHit(hitX, hitY);
+                    VisualiseLidarSensor(robotTelemetry.Position.X, robotTelemetry.Position.Y, angle, distance);
                 }
             }
             
@@ -102,18 +102,47 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     private void ClearOldLidarHits()
     {
-        var oldHits = Tiles.Where(t => t.ContentType == GridTileType.LidarHit).ToList();
+        var oldHits = Tiles.Where(t => t.ContentType == GridTileType.LidarHit || t.ContentType == GridTileType.LidarVisibility).ToList();
         foreach (var hit in oldHits)
         {
-            hit.ContentType = GridTileType.FreeSpace;
+            hit.ContentType = GridTileType.FreeSpace; // todo fix bug that turns obstacle into free space
             hit.Label = null;
+        }
+    }
+
+    private void VisualiseLidarSensor(int startX, int startY, int angle, double distance)
+    {
+        double angleRadians = angle * Math.PI / 180;
+
+        for (double step = 0.5; step < distance; step += 0.5)
+        {
+            int x = (int)Math.Round(startX + (step * Math.Cos(angleRadians)));
+            int y = (int)Math.Round(startY + (step * Math.Sin(angleRadians)));
+            
+            var targetTile = GetTileState(x, y);
+            if (targetTile != null && targetTile.ContentType == GridTileType.FreeSpace)
+            {
+                targetTile.ContentType = GridTileType.LidarVisibility;
+            }
+        }
+        
+        if (distance < 10)
+        {
+            int hitX = (int)Math.Round(startX + (distance * Math.Cos(angleRadians)));
+            int hitY = (int)Math.Round(startY + (distance * Math.Sin(angleRadians)));
+            OnLidarHit(hitX, hitY);
         }
     }
     
     private void OnLidarHit(int x, int y)
     {
         var targetTile = GetTileState(x, y);
-        if (targetTile != null && targetTile.ContentType != GridTileType.Robot)
+        
+        if(targetTile == null)
+            return;
+        
+        if (targetTile.ContentType != GridTileType.FreeSpace ||
+            targetTile.ContentType != GridTileType.LidarVisibility)
         {
             targetTile.ContentType = GridTileType.LidarHit;
         }
