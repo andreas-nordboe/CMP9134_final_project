@@ -10,8 +10,10 @@
             @foreach (var tile in Tiles)
             {
                 <MudPaper @onclick="() => OnTileClicked(tile)" 
-                          Style="@($"width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; " + 
-                                 (tile.ContentType == GridTileType.Obstacle ? "background-color: #424242; color: white;" : "background-color: --mud-palette-primary-lighten; color: black;"))" 
+                          Style="@($"width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; " +
+                                 (tile.ContentType == GridTileType.Obstacle ? "background-color: #424242; color: white;" :
+                                     tile.ContentType == GridTileType.LidarHit ? "background-color: red; color: white;" :
+                                     "background-color: var(--mud-palette-primary-lighten); color: black;"))" 
                           Elevation="1" 
                           Square="true">
                     @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))

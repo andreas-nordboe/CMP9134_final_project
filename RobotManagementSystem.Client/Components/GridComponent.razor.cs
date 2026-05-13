@@ -73,10 +73,50 @@ public partial class GridComponent : ComponentBase, IDisposable
         InvokeAsync(() =>
         {
             MoveRobot((int)robotTelemetry.Position.X, (int)robotTelemetry.Position.Y);
+
+            ClearOldLidarHits();
+
+            if (robotTelemetry.Sensors.Lidar.Count > 0)
+            {
+                for (int angle = 0; angle < robotTelemetry.Sensors.Lidar.Count; angle++)
+                {
+                    double distance = robotTelemetry.Sensors.Lidar[angle];
+
+                    if (distance <= 0 || distance > 10)
+                    {
+                        continue;
+                    }
+                    
+                    double angleRadius = angle * Math.PI / 180;
+
+                    int hitX = (int)Math.Round(robotTelemetry.Position.X + (distance * Math.Cos((angleRadius))));
+                    int hitY = (int)Math.Round(robotTelemetry.Position.Y + (distance * Math.Sin((angleRadius))));
+                
+                    OnLidarHit(hitX, hitY);
+                }
+            }
+            
             StateHasChanged();
         });
-        
-       
+    }
+
+    private void ClearOldLidarHits()
+    {
+        var oldHits = Tiles.Where(t => t.ContentType == GridTileType.LidarHit).ToList();
+        foreach (var hit in oldHits)
+        {
+            hit.ContentType = GridTileType.FreeSpace;
+            hit.Label = null;
+        }
+    }
+    
+    private void OnLidarHit(int x, int y)
+    {
+        var targetTile = GetTileState(x, y);
+        if (targetTile != null && targetTile.ContentType != GridTileType.Robot)
+        {
+            targetTile.ContentType = GridTileType.LidarHit;
+        }
     }
     
     private async void HandleResetGrid()
@@ -137,6 +177,8 @@ public partial class GridComponent : ComponentBase, IDisposable
                 return "obstacle";
             case GridTileType.Robot:
                 return "robot";
+            case GridTileType.LidarHit:
+                return "lidar-hit";
         }
         return "";
     }

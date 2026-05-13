@@ -4,5 +4,6 @@ public enum GridTileType
 {
     FreeSpace,
     Obstacle,
-    Robot
+    Robot,
+    LidarHit
 }
