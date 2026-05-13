@@ -6,14 +6,14 @@ namespace RobotManagementSystem.Client.Services.Robot;
 
 public class RobotCommanderService : IRobotCommanderService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient _httpClient;
     private readonly ILogger<RobotCommanderService> _logger;
+    private readonly IAppState _appState;
 
-    public RobotCommanderService(IHttpClientFactory httpClientFactory, ILogger<RobotCommanderService> logger)
+    public RobotCommanderService(IHttpClientFactory httpClientFactory, ILogger<RobotCommanderService> logger, IAppState appState)
     {
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _appState = appState;
         _httpClient = httpClientFactory.CreateClient("API");
     }
 
@@ -76,6 +76,11 @@ public class RobotCommanderService : IRobotCommanderService
         try
         {
             var response = await _httpClient.PostAsync("/robot/commands/reset", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _appState.NotifyRobotReset();
+            }
             
             return new RobotCommandResponse
             {

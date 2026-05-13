@@ -1,28 +1,71 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using RobotManagementSystem.Client.Services;
+using RobotManagementSystem.Client.Services.Map;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Models.Components;
+using RobotManagementSystem.Shared.Models.Map;
 using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Client.Components;
 
 public partial class GridComponent : ComponentBase, IDisposable
 {
-    private const int GridWidth = 21;
-    private const int GridHeight = 21;
+    private int GridWidth;
+    private int GridHeight;
 
     [Inject] private RobotHubCommunication _robotHubCommunication { get; set; } = default!;
     [Inject] private IRobotCommanderService _robotCommanderService { get; set; }
+    [Inject] private IMapService _mapService { get; set; } = default!;
+    [Inject] private IAppState _appState { get; set; }
 
     protected List<TileState> Tiles { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        SetupGrid();
+        var map = await _mapService.GetMapAsync();
 
+        if (map != null)
+        {
+            Console.WriteLine(map);
+            
+            GridWidth = map.Width;
+            GridHeight = map.Height;
+            LoadGridFromMapData(map);
+        }
+        else
+        {
+            SetupGrid(); // empty grid fallback
+        }
+        
         _robotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
+        await _robotHubCommunication.StartAsync(); // TODO this might be a bug as it could start multiple socket connections
 
-        await _robotHubCommunication.StartAsync();
+        _appState.OnRobotReset += HandleResetGrid;
+    }
+
+    private void LoadGridFromMapData(MapResponse map)
+    {
+        Tiles.Clear();
+
+        for (int i = 0; i < map.Height; i++)
+        {
+            for (int j = 0; j < map.Width; j++)
+            {
+                bool isObstacle = map.Grid[i][j] == 1;
+                
+                Tiles.Add(new TileState
+                {
+                    VectorPosition = new Vector2D
+                    {
+                        X = j,
+                        Y = i
+                    },
+                    ContentType = isObstacle ? GridTileType.Obstacle : GridTileType.FreeSpace
+                });
+            }
+        }
+        StateHasChanged(); // refreshes the grid
     }
 
     private void OnTelemetryUpdated(RobotTelemetry robotTelemetry)
@@ -34,6 +77,27 @@ public partial class GridComponent : ComponentBase, IDisposable
         });
         
        
+    }
+    
+    private async void HandleResetGrid()
+    {
+        await InvokeAsync(async () =>
+        {
+            await ResetGrid();
+            StateHasChanged();
+        });
+    }
+
+    protected async Task ResetGrid()
+    {
+        var newMap = await _mapService.GetMapAsync();
+        if (newMap != null)
+        {
+            GridWidth = newMap.Width;
+            GridHeight = newMap.Height;
+            LoadGridFromMapData(newMap);
+            StateHasChanged();
+        }
     }
 
     private void SetupGrid()
@@ -150,5 +214,6 @@ public partial class GridComponent : ComponentBase, IDisposable
     public void Dispose()
     {
         _robotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
+        _appState.OnRobotReset -= HandleResetGrid;
     }
 }

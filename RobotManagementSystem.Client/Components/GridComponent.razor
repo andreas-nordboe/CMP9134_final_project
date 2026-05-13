@@ -1,3 +1,4 @@
+@using RobotManagementSystem.Shared.Models.Components
 <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height: 100vh">
     <MudPaper Elevation="3">
         <div style="display: grid;
@@ -8,19 +9,11 @@
             padding: 5px;">
             @foreach (var tile in Tiles)
             {
-                <MudPaper @onclick="() => OnTileClicked(tile)" Style="width: 42px;
-                height: 42px;
-                border: 1px solid #ccc;
-                background: --mud-palette-primary-lighten;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-                user-select: none;
-                cursor: pointer;
-                font-size: 10px;
-                text-align: center;" Class="@($"robot-tile {GetTileCssClass(tile)}")"
-                          Elevation="1" Square="true" >
+                <MudPaper @onclick="() => OnTileClicked(tile)" 
+                          Style="@($"width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; " + 
+                                 (tile.ContentType == GridTileType.Obstacle ? "background-color: #424242; color: white;" : "background-color: --mud-palette-primary-lighten; color: black;"))" 
+                          Elevation="1" 
+                          Square="true">
                     @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
                     { 
                         <img src="@tile.ImageUrl" style="width: 36px; height: 36px; object-fit: contain;"/>

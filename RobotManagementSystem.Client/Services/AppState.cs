@@ -22,6 +22,7 @@ public class AppState : IAppState
     public AuthenticationResponse? AuthenticationDetails { get; set; }
     public event Action? OnUserChanged;
     public event Action? OnDarkModeChanged;
+    public event Action? OnRobotReset;
 
     public async void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse)
     {
@@ -33,6 +34,11 @@ public class AppState : IAppState
     public bool IsUserLoggedIn()
     {
         return CurrentUser != null && CurrentUser.IsLoggedIn;
+    }
+
+    public void NotifyRobotReset()
+    {
+        OnRobotReset?.Invoke();
     }
 
     public void ClearUser()

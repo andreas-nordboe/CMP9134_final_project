@@ -38,6 +38,7 @@ public partial class MainLayout
         
         Appstate.OnUserChanged += StateHasChanged;
         Appstate.OnDarkModeChanged += StateHasChanged;
+        Appstate.OnUserChanged += StateHasChanged;
 
         if (Appstate.CurrentUser is null || !Appstate.CurrentUser.IsLoggedIn)
         {
