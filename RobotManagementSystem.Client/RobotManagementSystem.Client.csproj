@@ -23,10 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Modals\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Reference Include="Microsoft.Extensions.Http">
         <HintPath>..\..\..\..\..\.dotnet\packs\Microsoft.AspNetCore.App.Ref\10.0.5\ref\net10.0\Microsoft.Extensions.Http.dll</HintPath>
       </Reference>

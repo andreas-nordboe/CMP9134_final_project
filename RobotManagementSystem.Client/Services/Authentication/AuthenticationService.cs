@@ -14,7 +14,6 @@ namespace RobotManagementSystem.Client.Services.Authentication;
 
 public class AuthenticationService : IAuthenticationService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient _httpClient;
     private readonly RobotHubCommunication _robotHubCommunication;
     private readonly IAppState _appState;
@@ -23,7 +22,6 @@ public class AuthenticationService : IAuthenticationService
 
     public AuthenticationService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState, IDataStoreService dataStoreService, IUserSessionService userSessionService)
     {
-        _httpClientFactory = httpClientFactory;
         _robotHubCommunication = robotHubCommunication;
         _appState = appState;
         _dataStoreService = dataStoreService;

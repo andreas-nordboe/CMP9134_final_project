@@ -73,7 +73,6 @@ public class RobotHubCommunication : IAsyncDisposable
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
                 _logger.LogError(e, "Failed to reconnect to SignalR");
             }
         };

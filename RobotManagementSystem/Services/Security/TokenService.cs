@@ -51,8 +51,6 @@ public class TokenService : ITokenService
             // Create a token handler
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            
-            Console.WriteLine(token);
 
             // Return the token back to the caller
             return tokenHandler.WriteToken(token);

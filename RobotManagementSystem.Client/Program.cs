@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using RobotManagementSystem.Client.Services;
+using RobotManagementSystem.Client.Services.Admin;
 using RobotManagementSystem.Client.Services.Authentication;
 using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
@@ -32,6 +33,7 @@ public class Program
         builder.Services.AddScoped<IRobotCommanderService, RobotCommanderService>();
         builder.Services.AddScoped<IDataStoreService, DataStoreServiceService>();
         builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+        builder.Services.AddScoped<IAdminUserManagementService, AdminUserManagementService>();
         
         await builder.Build().RunAsync();
     }

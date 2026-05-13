@@ -11,7 +11,7 @@
                 <MudPaper @onclick="() => OnTileClicked(tile)" Style="width: 42px;
                 height: 42px;
                 border: 1px solid #ccc;
-                background: white;
+                background: --mud-palette-primary-lighten;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -22,7 +22,7 @@
                 text-align: center;" Class="@($"robot-tile {GetTileCssClass(tile)}")"
                           Elevation="1" Square="true" >
                     @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
-                    {
+                    { 
                         <img src="@tile.ImageUrl" style="width: 36px; height: 36px; object-fit: contain;"/>
                     }
                     @*<div class="tile-text">

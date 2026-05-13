@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services.Authentication;
 using RobotManagementSystem.Shared.Models.Users;
@@ -27,7 +28,7 @@ public partial class Login : ComponentBase
         }
         else
         {
-            AppState.SetLoggedInUserFromAuthentication(authResponse);
+            Snackbar.Add("Login Failed, please try again.", Severity.Error); // TODO provide clearer error to user
         }
     }
 }
