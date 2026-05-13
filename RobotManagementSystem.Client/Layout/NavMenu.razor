@@ -3,7 +3,6 @@
 <MudNavLink Href="/mission-log" Icon="@Icons.Material.Filled.Notes">Mission Log</MudNavLink>
 <MudNavLink Href="system-status" Icon="@Icons.Material.Filled.QueryStats">System Status</MudNavLink>
 <MudNavLink Href="user-account" Icon="@Icons.Material.Filled.ManageAccounts">User Account</MudNavLink>
-<MudNavLink OnClick="@LogoutUser" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
 @if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
 {   
     @if (AppState.CurrentUser.Role == UserRole.Admin)
@@ -11,3 +10,4 @@
         <MudNavLink Href="admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin User Manager</MudNavLink>
     }
 }
+<MudNavLink OnClick="@LogoutUser" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>

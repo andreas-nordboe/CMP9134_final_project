@@ -110,7 +110,7 @@ public class AuthenticationService : IAuthenticationService
             FirstName = registerRequest.FirstName,
             LastName = registerRequest.LastName,
             PasswordHash = _passwordService.HashPassword(registerRequest.Password),
-            Role = UserRole.None
+            Role = UserRole.NoRole
         };
 
         _dbContext.Add(newUser);
