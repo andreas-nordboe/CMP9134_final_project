@@ -3,6 +3,7 @@ using MudBlazor;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Map;
 using RobotManagementSystem.Client.Services.Robot;
+using RobotManagementSystem.Client.Services.Sessions;
 using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Map;
 using RobotManagementSystem.Shared.Models.Robot;
@@ -18,6 +19,7 @@ public partial class GridComponent : ComponentBase, IDisposable
     [Inject] private IRobotCommanderService _robotCommanderService { get; set; }
     [Inject] private IMapService _mapService { get; set; } = default!;
     [Inject] private IAppState _appState { get; set; }
+    [Inject] private IUserSessionService _userSessionService { get; set; }
 
     protected List<TileState> Tiles { get; set; } = new();
 
@@ -53,6 +55,7 @@ public partial class GridComponent : ComponentBase, IDisposable
             for (int j = 0; j < map.Width; j++)
             {
                 bool isObstacle = map.Grid[i][j] == 1;
+                var tileType = isObstacle ? GridTileType.Obstacle : GridTileType.FreeSpace;
                 
                 Tiles.Add(new TileState
                 {
@@ -61,7 +64,8 @@ public partial class GridComponent : ComponentBase, IDisposable
                         X = j,
                         Y = i
                     },
-                    ContentType = isObstacle ? GridTileType.Obstacle : GridTileType.FreeSpace
+                    ContentType = tileType,
+                    OriginalContentType = tileType
                 });
             }
         }
@@ -105,7 +109,7 @@ public partial class GridComponent : ComponentBase, IDisposable
         var oldHits = Tiles.Where(t => t.ContentType == GridTileType.LidarHit || t.ContentType == GridTileType.LidarVisibility).ToList();
         foreach (var hit in oldHits)
         {
-            hit.ContentType = GridTileType.FreeSpace; // todo fix bug that turns obstacle into free space
+            hit.ContentType = hit.OriginalContentType; // todo fix bug that turns obstacle into free space
             hit.Label = null;
         }
     }
@@ -214,6 +218,11 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     protected async void OnTileClicked(TileState tile)
     {
+        if (tile.OriginalContentType != GridTileType.Obstacle)
+        {
+            sna
+        }
+        
         await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
         {
             X = tile.VectorPosition.X,
