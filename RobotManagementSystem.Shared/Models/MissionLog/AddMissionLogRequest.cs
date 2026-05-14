@@ -1,13 +1,10 @@
-using System.ComponentModel.DataAnnotations;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Shared.Models.MissionLog;
 
-public class MissionLog
+public class AddMissionLogRequest
 {
-    [Key]
-    public int Id { get; set; }
     public int UserId { get; set; }
     public DateTime Timestamp { get; set; }
     public UserRole Role { get; set; }

@@ -18,6 +18,11 @@ public static class ErrorCodes
     public const int InvalidToken = 1012;
     public const int TokenExpired = 1013;
     
+    // Mission Logs (2000-2099)
+    public const int FailedToCreateMissionLog = 2000;
+    public const int FailedToListMissionLogs = 2001;
+    
+    
     // Internal (1500-1599)
     public const int InternalServerError = 1500;
     public const int InvalidRequest = 1501;

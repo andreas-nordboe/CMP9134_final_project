@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RobotManagementSystem.Data;
 
@@ -10,9 +11,11 @@ using RobotManagementSystem.Data;
 namespace RobotManagementSystem.Migrations
 {
     [DbContext(typeof(RobotApiDbContext))]
-    partial class RobotApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514205020_AddMissionLogId")]
+    partial class AddMissionLogId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -39,6 +42,8 @@ namespace RobotManagementSystem.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("MissionLogs");
                 });
@@ -71,6 +76,43 @@ namespace RobotManagementSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("RobotManagementSystem.Shared.Models.Users.UserAccountDto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserAccountDto");
+                });
+
+            modelBuilder.Entity("RobotManagementSystem.Shared.Models.MissionLog.MissionLog", b =>
+                {
+                    b.HasOne("RobotManagementSystem.Shared.Models.Users.UserAccountDto", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

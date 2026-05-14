@@ -9,6 +9,7 @@ using RobotManagementSystem.Hubs;
 using RobotManagementSystem.Services;
 using RobotManagementSystem.Services.Authentication;
 using RobotManagementSystem.Services.FailureHandling;
+using RobotManagementSystem.Services.MissionLogs;
 using RobotManagementSystem.Services.Security;
 using RobotManagementSystem.Shared.Models.Users;
 
@@ -72,6 +73,7 @@ public class Program
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddHostedService<RobotTelemetryBackgroundService>();
         builder.Services.AddSingleton<IRobotApiStatusStore, RobotApiStatusStore>();
+        builder.Services.AddScoped<IMissionLogsService, MissionLogsService>();
 
         // Adds a Httpclient using the IRobotApi service to interact with the external RobotApi
         builder.Services.AddHttpClient<IRobotApiService, RobotApiService>(client =>

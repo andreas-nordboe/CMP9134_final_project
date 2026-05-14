@@ -18,6 +18,11 @@ public static class ErrorMessages
     public const string InvalidToken = "Invalid token.";
     public const string TokenExpired = "Token is expired.";
     
+    // Mission Logs (2000-2099)
+    public const string FailedToCreateMissionLog = "Failed to add mission log.";
+    public const string FailedToListMissionLogs = "Failed to list mission logs.";
+
+    
     // Internal (1500-1599)
     public const string InternalServerError = "Internal server error occurred.";
     public const string InvalidRequest = "Invalid request.";

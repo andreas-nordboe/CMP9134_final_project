@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace RobotManagementSystem.Controllers;
 
 // POST /telemetry/latest
@@ -5,6 +7,8 @@ namespace RobotManagementSystem.Controllers;
 
 // Task: Ask telemetry service and return DTO
 
+[ApiController]
+[Route("telemetry")]
 public class TelemetryController
 {
     
