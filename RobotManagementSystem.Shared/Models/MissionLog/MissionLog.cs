@@ -5,7 +5,7 @@ namespace RobotManagementSystem.Shared.Models.MissionLog;
 
 public class MissionLog
 {
-    public UserAccount User { get; set; } = new UserAccount();
+    public UserAccountDto User { get; set; } = new UserAccountDto();
     public DateTime Timestamp { get; set; }
     public UserRole Role { get; set; }
     public RobotCommand Command { get; set; }

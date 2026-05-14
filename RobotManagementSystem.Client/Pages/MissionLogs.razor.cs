@@ -15,7 +15,7 @@ public partial class MissionLogs : ComponentBase
         // Feed in data to showcase UI functionality
         MissionLog dummyMissionLog = new MissionLog
         {
-            User = new UserAccount
+            User = new UserAccountDto
             {
                 FirstName = "Andreas",
                 LastName = "Nordboe",
