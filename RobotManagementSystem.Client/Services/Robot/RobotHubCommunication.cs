@@ -13,6 +13,8 @@ public class RobotHubCommunication : IAsyncDisposable
     public event Action<RobotTelemetry>? TelemetryUpdated;
     
     private readonly ILogger<RobotHubCommunication> _logger;
+    
+    public RobotTelemetry? LatestTelemetry { get; private set; }
 
     public RobotHubCommunication(IConfiguration configuration, IAppState appState, ILogger<RobotHubCommunication> logger)
     {
@@ -86,6 +88,7 @@ public class RobotHubCommunication : IAsyncDisposable
         
         _connection.On<RobotTelemetry>("TelemetryUpdated", telemetryData =>
         {
+            LatestTelemetry = telemetryData;
             TelemetryUpdated?.Invoke(telemetryData);
         });
 

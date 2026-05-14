@@ -20,7 +20,9 @@ public partial class GridComponent : ComponentBase, IDisposable
     [Inject] private IMapService _mapService { get; set; } = default!;
     [Inject] private IAppState _appState { get; set; }
     [Inject] private IUserSessionService _userSessionService { get; set; }
-
+    [Inject] private ISnackbar _snackbar { get; set; }
+    
+    
     protected List<TileState> Tiles { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
@@ -145,7 +147,7 @@ public partial class GridComponent : ComponentBase, IDisposable
         if(targetTile == null)
             return;
         
-        if (targetTile.ContentType != GridTileType.FreeSpace ||
+        if (targetTile.ContentType != GridTileType.FreeSpace &&
             targetTile.ContentType != GridTileType.LidarVisibility)
         {
             targetTile.ContentType = GridTileType.LidarHit;
@@ -218,16 +220,52 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     protected async void OnTileClicked(TileState tile)
     {
-        if (tile.OriginalContentType != GridTileType.Obstacle)
+        // TODO Refactor these into a service or robot movement safety handler later
+        // I'm just doing client side validation here as well but the request could still be sent to the backend
+        // however, from testing it seems like the backend handles this safely
+
+        if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
         {
-            sna
+            _snackbar.Add("Robot is already moving!", Severity.Info);
+            return;
+        }
+
+        if (_robotHubCommunication.LatestTelemetry?.Battery <= 0)
+        {
+            _snackbar.Add("Robot battery is empty!", Severity.Error);
+            return;
         }
         
-        await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+        if (_robotHubCommunication.LatestTelemetry?.Battery <= 10)
         {
-            X = tile.VectorPosition.X,
-            Y = tile.VectorPosition.Y
-        });
+            _snackbar.Add("Robot battery is critically low! Please return to the charging station!", Severity.Warning);
+        }
+        
+        if (_robotHubCommunication.LatestTelemetry?.Battery <= 25)
+        {
+            _snackbar.Add("Robot battery is low! Please return to the charging station!", Severity.Warning);
+        }
+        
+        if (tile.ContentType == GridTileType.Obstacle 
+            || tile.OriginalContentType == GridTileType.Obstacle
+            || tile.ContentType == GridTileType.LidarHit)
+        {
+            _snackbar.Add("You can't move there!", Severity.Warning);
+            return;
+        }
+        
+        try
+        {
+            await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+            {
+                X = tile.VectorPosition.X,
+                Y = tile.VectorPosition.Y
+            });
+        }
+        catch (Exception e)
+        {
+            _snackbar.Add("Could not send move command to robot! There simulation may currently be unavailable.", Severity.Error);
+        }
         
         StateHasChanged();
     }
