@@ -54,7 +54,7 @@ public class RobotCommandsController : ControllerBase
         var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var userRoleValue = User.FindFirstValue(ClaimTypes.Role);
         
-        if(!int.TryParse(userRoleValue, out var userId))
+        if(!int.TryParse(userIdValue, out var userId))
         {
             // TODO return user id not found in token?
             return Unauthorized(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, ErrorMessages.InvalidRequest));
