@@ -37,7 +37,7 @@ public class MissionLogsService : IMissionLogsService
         MissionLog newMissionLog = new MissionLog
         {
             UserId = missionLog.UserId,
-            Timestamp = missionLog.Timestamp == default ? DateTime.UtcNow : missionLog.Timestamp,
+            Timestamp = DateTime.UtcNow,
             Role = missionLog.Role,
             Command =  missionLog.Command,
             CommandResult =  missionLog.CommandResult

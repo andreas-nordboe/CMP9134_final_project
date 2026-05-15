@@ -7,6 +7,7 @@ using RobotManagementSystem.Client.Services.Admin;
 using RobotManagementSystem.Client.Services.Authentication;
 using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Map;
+using RobotManagementSystem.Client.Services.MissionLogs;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Client.Services.Sessions;
 
@@ -36,6 +37,7 @@ public class Program
         builder.Services.AddScoped<IUserSessionService, UserSessionService>();
         builder.Services.AddScoped<IAdminUserManagementService, AdminUserManagementService>();
         builder.Services.AddScoped<IMapService, MapService>();
+        builder.Services.AddScoped<IMissionLogService, MissionLogService>();
         
         await builder.Build().RunAsync();
     }

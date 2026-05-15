@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using RobotManagementSystem.Client.Services.MissionLogs;
 using RobotManagementSystem.Shared.Models.MissionLog;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.Users;
@@ -9,25 +11,20 @@ public partial class MissionLogs : ComponentBase
 {
     public IList<MissionLog> Logs { get; set; } = new List<MissionLog>();
     public bool IsLoadingLogs { get; set; }
+    [Inject] public IMissionLogService MissionLogService { get; set; } = default!;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         // Feed in data to showcase UI functionality
-        MissionLog dummyMissionLog = new MissionLog
+        var missionLogs = await MissionLogService.GetAllMissionLogs();
+        if (missionLogs.Count > 0)
         {
-            User = new UserAccountDto
-            {
-                FirstName = "Andreas",
-                LastName = "Nordboe",
-                Username = "Andreasnordboe",
-                Id = 1
-            },
-            Timestamp = DateTime.Now,
-            Command = RobotCommand.MoveDown,
-            Role = UserRole.Commander
-        };
-        
-        Logs.Add(dummyMissionLog);
-
+            Logs = missionLogs;
+        }
+        else
+        {
+            // TODO Refactor to static error message class and display error message on the UI
+            SnackBar.Add("Failed to load mission logs.", Severity.Error);
+        }
     }
 }

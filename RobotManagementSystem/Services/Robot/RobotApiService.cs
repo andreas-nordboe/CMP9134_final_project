@@ -1,6 +1,10 @@
+using RobotManagementSystem.Services.FailureHandling;
+using RobotManagementSystem.Services.MissionLogs;
 using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Map;
+using RobotManagementSystem.Shared.Models.MissionLog;
 using RobotManagementSystem.Shared.Models.Robot;
+using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Services;
 
@@ -8,11 +12,13 @@ public class RobotApiService : IRobotApiService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<RobotApiService> _logger;
+    private readonly IMissionLogsService _missionLogsService;
 
-    public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger)
+    public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService)
     {
         _httpClient = httpClient;
         _logger = logger;
+        _missionLogsService = missionLogsService;
     }
 
     public async Task<RobotStatusResponse?> GetRobotStatusAsync()
@@ -41,11 +47,20 @@ public class RobotApiService : IRobotApiService
         }
     }
 
-    public async Task<RobotCommandResponse?> MoveRobotAsync(RobotNavigationRequest request)
+    public async Task<RobotCommandResponse?> MoveRobotAsync(RobotNavigationRequest request, int userId, UserRole role)
     {
         // Validate coordinates so they don't go out of bounds (TODO move this to helper later)
         if (request.X < 0 || request.Y < 0 || request.X > 20 || request.Y > 20)
         {
+            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+            {
+                UserId = userId,
+                Role = role,
+                Command = RobotCommand.MoveDown, // TODO add or change to generic move
+                CommandResult = RobotCommandResult.Failure
+                
+            });
+            
             return new RobotCommandResponse
             {
                 Success = false,

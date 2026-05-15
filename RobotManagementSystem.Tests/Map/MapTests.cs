@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RobotManagementSystem.Services;
+using RobotManagementSystem.Services.MissionLogs;
 using RobotManagementSystem.Shared.Models.Map;
 using RobotManagementSystem.Tests.Helpers;
 
@@ -62,7 +63,8 @@ public class MapTests
         };
 
         var logger = new Mock<ILogger<RobotApiService>>();
-        var apiService = new RobotApiService(httpClient, logger.Object);
+        var missionLogService = new Mock<IMissionLogsService>();
+        var apiService = new RobotApiService(httpClient, logger.Object, missionLogService.Object);
 
         var results = await apiService.GetMapAsync();
         Assert.NotNull(results);

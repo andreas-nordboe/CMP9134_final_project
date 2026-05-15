@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RobotManagementSystem.Data;
@@ -6,6 +7,7 @@ using RobotManagementSystem.Services;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Shared.Models.Errors;
 using RobotManagementSystem.Shared.Models.Robot;
+using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Controllers;
 
@@ -49,7 +51,16 @@ public class RobotCommandsController : ControllerBase
     [Authorize(Roles = "Admin,Commander")]
     public async Task<ActionResult<RobotCommandResponse>> MoveRobot([FromBody] RobotNavigationRequest request)
     {
-        var robotMoveResponse  = await _robotApiService.MoveRobotAsync(request);
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userRoleValue = User.FindFirstValue(ClaimTypes.Role);
+        
+        if(!int.TryParse(userRoleValue, out var userId))
+        {
+            // TODO return user id not found in token?
+            return Unauthorized(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, ErrorMessages.InvalidRequest));
+        }
+        
+        var robotMoveResponse  = await _robotApiService.MoveRobotAsync(request, userId, Enum.Parse<UserRole>(userRoleValue));
         if (robotMoveResponse == null || !robotMoveResponse.Success)
         {
             return BadRequest(robotMoveResponse);
