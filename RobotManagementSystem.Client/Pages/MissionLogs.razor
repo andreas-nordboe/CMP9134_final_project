@@ -12,7 +12,7 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Date/Time">@context.Timestamp.Date - @context.Timestamp.TimeOfDay</MudTd>
-            <MudTd DataLabel="Username">@context.UserId</MudTd>
+            <MudTd DataLabel="Username">@context.User.Username</MudTd>
             <MudTd DataLabel="Role">@context.Role.ToString()</MudTd> @* TODO Show different icons for different roles here later*@
             <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@
             <MudTd DataLabel="Result">@context.CommandResult</MudTd>

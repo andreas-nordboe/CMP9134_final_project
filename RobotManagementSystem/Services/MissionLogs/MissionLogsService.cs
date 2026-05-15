@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RobotManagementSystem.Data;
+using RobotManagementSystem.Mappers;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Shared.Models.MissionLog;
 
@@ -49,9 +50,31 @@ public class MissionLogsService : IMissionLogsService
         return newMissionLog;
     }
 
-    public async Task<List<MissionLog>> GetAllMissionLogs()
+    public async Task<List<MissionLogDto>> GetAllMissionLogs()
     {
-        return await _dbContext.MissionLogs.ToListAsync();
+        var logsList = new List<MissionLogDto>();
+        var missionLogs = await _dbContext.MissionLogs.ToListAsync();
+        foreach (var missionLog in missionLogs)
+        {
+            var user = await _dbContext.Users.FindAsync(missionLog.UserId);
+
+            if (user != null)
+            {
+                var missionLogDto = new MissionLogDto
+                {
+                    LogId = missionLog.Id,
+                    User = UserMapper.ToDto(user), // TODO handle exception better or return empty user
+                    Timestamp = missionLog.Timestamp,
+                    Role = missionLog.Role,
+                    Command = missionLog.Command,
+                    CommandResult = missionLog.CommandResult
+                };
+                
+                logsList.Add(missionLogDto);
+            }
+        }
+
+        return logsList;
     }
 
     public Task<List<MissionLog>> GetAllMissionLogsByUserId(int userId)

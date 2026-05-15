@@ -9,7 +9,7 @@ namespace RobotManagementSystem.Client.Pages;
 
 public partial class MissionLogs : ComponentBase
 {
-    public IList<MissionLog> Logs { get; set; } = new List<MissionLog>();
+    public IList<MissionLogDto> Logs { get; set; } = new List<MissionLogDto>();
     public bool IsLoadingLogs { get; set; }
     [Inject] public IMissionLogService MissionLogService { get; set; } = default!;
 

@@ -4,5 +4,5 @@ namespace RobotManagementSystem.Client.Services.MissionLogs;
 
 public interface IMissionLogService
 {
-    Task<List<MissionLog>> GetAllMissionLogs();
+    Task<List<MissionLogDto>> GetAllMissionLogs();
 }

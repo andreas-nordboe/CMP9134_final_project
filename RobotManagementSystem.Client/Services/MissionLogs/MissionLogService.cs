@@ -17,16 +17,16 @@ public class MissionLogService : IMissionLogService
         _httpClient = _httpClientFactory.CreateClient("API");
     }
 
-    public async Task<List<MissionLog?>> GetAllMissionLogs()
+    public async Task<List<MissionLogDto?>> GetAllMissionLogs()
     {
         try
         {
-            return await _httpClient.GetFromJsonAsync<List<MissionLog?>>("/mission-logs/all");
+            return await _httpClient.GetFromJsonAsync<List<MissionLogDto?>>("/mission-logs/all");
         }
         catch (Exception e)
         {
             _logger.LogWarning(e, "Failed to retrieve mission logs.");
-            return new List<MissionLog?>();
+            return new List<MissionLogDto?>();
         }
     }
 }

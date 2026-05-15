@@ -6,6 +6,6 @@ namespace RobotManagementSystem.Services.MissionLogs;
 public interface IMissionLogsService
 {
     Task<MissionLog> AddMissionLog(AddMissionLogRequest missionLog);
-    Task<List<MissionLog>> GetAllMissionLogs();
+    Task<List<MissionLogDto>> GetAllMissionLogs();
     Task<List<MissionLog>> GetAllMissionLogsByUserId(int userId);
 }
