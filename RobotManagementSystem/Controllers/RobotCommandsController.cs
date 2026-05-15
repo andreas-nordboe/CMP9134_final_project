@@ -73,7 +73,16 @@ public class RobotCommandsController : ControllerBase
     [Authorize(Roles = "Admin,Commander")]
     public async Task<IActionResult> ResetRobot()
     {
-        return Ok(await _robotApiService.ResetAsync());
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userRoleValue = User.FindFirstValue(ClaimTypes.Role);
+        
+        if(!int.TryParse(userIdValue, out var userId))
+        {
+            // TODO return user id not found in token?
+            return Unauthorized(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, ErrorMessages.InvalidRequest));
+        }
+        
+        return Ok(await _robotApiService.ResetAsync(userId, Enum.Parse<UserRole>(userRoleValue)));
     }
     
 }

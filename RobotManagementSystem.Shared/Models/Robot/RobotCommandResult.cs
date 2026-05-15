@@ -5,5 +5,6 @@ public enum RobotCommandResult
     Success,
     Failure,
     Retried,
-    PermissionsDenied
+    PermissionsDenied,
+    InvalidCoordinates
 }

@@ -9,5 +9,5 @@ public interface IRobotApiService
     Task<RobotStatusResponse?> GetRobotStatusAsync();
     Task<MapResponse?> GetMapAsync();
     Task<RobotCommandResponse?> MoveRobotAsync(RobotNavigationRequest request, int userId, UserRole userRole);
-    Task<RobotCommandResponse?> ResetAsync();
+    Task<RobotCommandResponse?> ResetAsync(int userId, UserRole userRole);
 }
