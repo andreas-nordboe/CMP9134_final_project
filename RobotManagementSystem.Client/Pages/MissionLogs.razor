@@ -1,4 +1,5 @@
 @page "/mission-log"
+@using System.Globalization
 @inject ISnackbar SnackBar
 
 <MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full mx-4 my-4">
@@ -11,7 +12,7 @@
             <MudTh>Result</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Date/Time">@context.Timestamp.Date - @context.Timestamp.TimeOfDay</MudTd>
+            <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
             <MudTd DataLabel="Username">@context.User.Username</MudTd>
             <MudTd DataLabel="Role">@context.Role.ToString()</MudTd> @* TODO Show different icons for different roles here later*@
             <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@

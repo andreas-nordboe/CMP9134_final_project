@@ -1,87 +1,126 @@
-using RobotManagementSystem.Services.FailureHandling;
-using RobotManagementSystem.Services.MissionLogs;
-using RobotManagementSystem.Shared.Models.Components;
-using RobotManagementSystem.Shared.Models.Map;
-using RobotManagementSystem.Shared.Models.MissionLog;
-using RobotManagementSystem.Shared.Models.Robot;
-using RobotManagementSystem.Shared.Models.Users;
+    using RobotManagementSystem.Services.FailureHandling;
+    using RobotManagementSystem.Services.MissionLogs;
+    using RobotManagementSystem.Shared.Models.Components;
+    using RobotManagementSystem.Shared.Models.Map;
+    using RobotManagementSystem.Shared.Models.MissionLog;
+    using RobotManagementSystem.Shared.Models.Robot;
+    using RobotManagementSystem.Shared.Models.Users;
 
-namespace RobotManagementSystem.Services;
+    namespace RobotManagementSystem.Services;
 
-public class RobotApiService : IRobotApiService
-{
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<RobotApiService> _logger;
-    private readonly IMissionLogsService _missionLogsService;
-
-    public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService)
+    public class RobotApiService : IRobotApiService
     {
-        _httpClient = httpClient;
-        _logger = logger;
-        _missionLogsService = missionLogsService;
-    }
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<RobotApiService> _logger;
+        private readonly IMissionLogsService _missionLogsService;
 
-    public async Task<RobotStatusResponse?> GetRobotStatusAsync()
-    {
-        try
+        public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService)
         {
-            return await _httpClient.GetFromJsonAsync<RobotStatusResponse>("/api/status");
+            _httpClient = httpClient;
+            _logger = logger;
+            _missionLogsService = missionLogsService;
         }
-        catch (Exception e)
-        {
-            _logger.LogWarning(e, "Failed to retrieve robot status.");
-            return null;
-        }
-    }
 
-    public async Task<MapResponse?> GetMapAsync()
-    {
-        try
+        public async Task<RobotStatusResponse?> GetRobotStatusAsync()
         {
-            return await _httpClient.GetFromJsonAsync<MapResponse>("/api/map");
-        }
-        catch (Exception e)
-        {
-            _logger.LogWarning(e, "Failed to retrieve map information.");
-            return null;
-        }
-    }
-
-    public async Task<RobotCommandResponse?> MoveRobotAsync(RobotNavigationRequest request, int userId, UserRole role)
-    {
-        if (request == null)
-        {
-            return new RobotCommandResponse
+            try
             {
-                Success = false,
-                Message = "Failed to move robot due to invalid input."
-            };
-        }
-        
-        // Validate coordinates so they don't go out of bounds (TODO move this to helper later)
-        // TODO: Code smell magic numbers
-        if (request.X < 0 || request.Y < 0 || request.X > 20 || request.Y > 20)
-        {
-            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                return await _httpClient.GetFromJsonAsync<RobotStatusResponse>("/api/status");
+            }
+            catch (Exception e)
             {
-                UserId = userId,
-                Role = role,
-                Command = RobotCommand.Move,
-                CommandResult = RobotCommandResult.InvalidCoordinates
-            });
+                _logger.LogWarning(e, "Failed to retrieve robot status.");
+                return null;
+            }
+        }
+
+        public async Task<MapResponse?> GetMapAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<MapResponse>("/api/map");
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Failed to retrieve map information.");
+                return null;
+            }
+        }
+
+        public async Task<RobotCommandResponse?> MoveRobotAsync(RobotNavigationRequest request, int userId, UserRole role)
+        {
+            if (request == null)
+            {
+                return new RobotCommandResponse
+                {
+                    Success = false,
+                    Message = "Failed to move robot due to invalid input."
+                };
+            }
             
-            return new RobotCommandResponse
+            // Validate coordinates so they don't go out of bounds (TODO move this to helper later)
+            // TODO: Code smell magic numbers
+            if (request.X < 0 || request.Y < 0 || request.X > 20 || request.Y > 20)
             {
-                Success = false,
-                Message = "Robot coordinates not valid and must be between 0 and 20."
-            };
-        }
+                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                {
+                    UserId = userId,
+                    Role = role,
+                    Command = RobotCommand.Move,
+                    CommandResult = RobotCommandResult.InvalidCoordinates
+                });
+                
+                return new RobotCommandResponse
+                {
+                    Success = false,
+                    Message = "Robot coordinates not valid and must be between 0 and 20."
+                };
+            }
 
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync("/api/move", request);
-            if (!response.IsSuccessStatusCode)
+            try
             {
+                var response = await _httpClient.PostAsJsonAsync("/api/move", request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                    {
+                        UserId = userId,
+                        Role = role,
+                        Command = RobotCommand.Move,
+                        CommandResult = RobotCommandResult.Failure
+                    });
+                    
+                    return new RobotCommandResponse
+                    {
+                        Success = false,
+                        Message = $"Move command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                    };
+                }
+                
+                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                {
+                    UserId = userId,
+                    Role = role,
+                    Command = RobotCommand.Move,
+                    CommandResult = RobotCommandResult.Success
+                });
+                
+                return new RobotCommandResponse
+                {
+                    Success = true,
+                    Message = $"Robot was moved to {request.X}, {request.Y}.",
+                    RobotPosition = new Vector2D
+                    {
+                        X = request.X,
+                        Y = request.Y
+                    }
+                };
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Robot move command failed.");
+                
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
                     UserId = userId,
@@ -93,58 +132,46 @@ public class RobotApiService : IRobotApiService
                 return new RobotCommandResponse
                 {
                     Success = false,
-                    Message = $"Move command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                    Message = "Robot move command failed."
                 };
             }
-            
-            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+        }
+
+        public async Task<RobotCommandResponse?> ResetAsync(int userId, UserRole userRole)
+        {
+            try
             {
-                UserId = userId,
-                Role = role,
-                Command = RobotCommand.Move,
-                CommandResult = RobotCommandResult.Success
-            });
-            
-            return new RobotCommandResponse
-            {
-                Success = true,
-                Message = $"Robot was moved to {request.X}, {request.Y}.",
-                RobotPosition = new Vector2D
+                var response = await _httpClient.PostAsync("/api/reset", null);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    X = request.X,
-                    Y = request.Y
+                    await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                    {
+                        UserId = userId,
+                        Role = userRole,
+                        Command = RobotCommand.Reset,
+                        CommandResult = RobotCommandResult.Failure
+                    });
                 }
-            };
-
-        }
-        catch (Exception e)
-        {
-            _logger.LogWarning(e, "Robot move command failed.");
-            
-            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                
+                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                {
+                    UserId = userId,
+                    Role = userRole,
+                    Command = RobotCommand.Reset,
+                    CommandResult = RobotCommandResult.Success
+                });
+                
+                return new RobotCommandResponse
+                {
+                    Success = response.IsSuccessStatusCode,
+                    Message = response.IsSuccessStatusCode ? "Robot was successfully reset." : $"Reset robot command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                };
+            }
+            catch (Exception e)
             {
-                UserId = userId,
-                Role = role,
-                Command = RobotCommand.Move,
-                CommandResult = RobotCommandResult.Failure
-            });
-            
-            return new RobotCommandResponse
-            {
-                Success = false,
-                Message = "Robot move command failed."
-            };
-        }
-    }
-
-    public async Task<RobotCommandResponse?> ResetAsync(int userId, UserRole userRole)
-    {
-        try
-        {
-            var response = await _httpClient.PostAsync("/api/reset", null);
-
-            if (!response.IsSuccessStatusCode)
-            {
+                _logger.LogWarning(e, "Robot reset command failed.");
+                
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
                     UserId = userId,
@@ -152,39 +179,12 @@ public class RobotApiService : IRobotApiService
                     Command = RobotCommand.Reset,
                     CommandResult = RobotCommandResult.Failure
                 });
+                
+                return new RobotCommandResponse
+                {
+                    Success = false,
+                    Message = "Robot reset command failed."
+                };
             }
-            
-            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
-            {
-                UserId = userId,
-                Role = userRole,
-                Command = RobotCommand.Reset,
-                CommandResult = RobotCommandResult.Success
-            });
-            
-            return new RobotCommandResponse
-            {
-                Success = response.IsSuccessStatusCode,
-                Message = response.IsSuccessStatusCode ? "Robot was successfully reset." : $"Reset robot command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
-            };
-        }
-        catch (Exception e)
-        {
-            _logger.LogWarning(e, "Robot reset command failed.");
-            
-            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
-            {
-                UserId = userId,
-                Role = userRole,
-                Command = RobotCommand.Reset,
-                CommandResult = RobotCommandResult.Failure
-            });
-            
-            return new RobotCommandResponse
-            {
-                Success = false,
-                Message = "Robot reset command failed."
-            };
         }
     }
-}

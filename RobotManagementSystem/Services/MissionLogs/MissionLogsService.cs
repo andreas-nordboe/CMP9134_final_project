@@ -35,13 +35,20 @@ public class MissionLogsService : IMissionLogsService
             throw new ArgumentException("Command is invalid");
         }
         
+        // TODO: Viewer attempted to move robot
+        
         MissionLog newMissionLog = new MissionLog
         {
             UserId = missionLog.UserId,
             Timestamp = DateTime.UtcNow,
             Role = missionLog.Role,
             Command =  missionLog.Command,
-            CommandResult =  missionLog.CommandResult
+            CommandResult =  missionLog.CommandResult,
+            Details = missionLog.Details,
+            RobotX = missionLog.RobotX,
+            RobotY = missionLog.RobotY,
+            Battery = missionLog.Battery,
+            ConnectionStatus = missionLog.ConnectionStatus
         };
 
         _dbContext.MissionLogs.Add(newMissionLog);
@@ -52,6 +59,20 @@ public class MissionLogsService : IMissionLogsService
 
     public async Task<List<MissionLogDto>> GetAllMissionLogs()
     {
+        return await _dbContext.MissionLogs
+            .Include(log => log.User)
+            .OrderByDescending(log => log.Timestamp)
+            .Select(missionLog => new MissionLogDto
+            {
+                LogId = missionLog.Id,
+                User = UserMapper.ToDto(missionLog.User), // TODO handle exception better or return empty user
+                Timestamp = missionLog.Timestamp,
+                Role = missionLog.Role,
+                Command = missionLog.Command,
+                CommandResult = missionLog.CommandResult
+            }).ToListAsync<MissionLogDto>();
+            
+        
         var logsList = new List<MissionLogDto>();
         var missionLogs = await _dbContext.MissionLogs.ToListAsync();
         foreach (var missionLog in missionLogs)
