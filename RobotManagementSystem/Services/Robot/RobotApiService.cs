@@ -1,3 +1,4 @@
+    using System.Net;
     using RobotManagementSystem.Services.FailureHandling;
     using RobotManagementSystem.Services.MissionLogs;
     using RobotManagementSystem.Shared.Models.Components;
@@ -253,7 +254,7 @@
                 {
                     var response = await action();
 
-                    if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                    if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
                     {
                         _logger.LogWarning("Robot API returned 503. Retrying...");
                         await Task.Delay(delay);
