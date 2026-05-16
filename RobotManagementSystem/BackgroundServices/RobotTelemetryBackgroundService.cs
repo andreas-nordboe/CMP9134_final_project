@@ -15,6 +15,7 @@ public class RobotTelemetryBackgroundService : BackgroundService
     private readonly ILogger<RobotTelemetryBackgroundService> _logger;
     private readonly IConfiguration _configuration;
     private readonly IRobotApiStatusStore _robotApiStatusStore;
+    private DateTime _latestTelemetryReceivedAt;
 
     public RobotTelemetryBackgroundService(IHubContext<RobotTelemetryHub> hubContext, ILogger<RobotTelemetryBackgroundService> logger, IConfiguration configuration, IRobotApiStatusStore robotApiStatusStore)
     {
@@ -44,19 +45,49 @@ public class RobotTelemetryBackgroundService : BackgroundService
 
                 while (webSocket.State == WebSocketState.Open && !stoppingToken.IsCancellationRequested)
                 {
-                    var response = await webSocket.ReceiveAsync(
-                        new ArraySegment<byte>(buffer),
-                        stoppingToken);
+                    using var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                    
+                    timeoutCancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3));
+
+                    WebSocketReceiveResult response;
+
+                    try
+                    {
+                        response = await webSocket.ReceiveAsync(
+                    new ArraySegment<byte>(buffer),
+                        timeoutCancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
+                    {
+                        _logger.LogWarning("No telemetry received from robot simulation API in 3 seconds, assuming there was an outage.");
+                        
+                        _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Reconnecting;
+                        await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Reconnecting },
+                            stoppingToken);
+                        
+                        await Task.Delay(TimeSpan.FromMilliseconds(2500), stoppingToken);
+                        break;
+                    }
 
                     if (response.MessageType == WebSocketMessageType.Close)
                     {
                         _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Disconnected;
                         await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Disconnected },
                             stoppingToken);
+                        
                         break;
                     }
                     
                     var jsonResponse = Encoding.UTF8.GetString(buffer, 0, response.Count);
+                    
+                    _latestTelemetryReceivedAt = DateTime.UtcNow;
+
+                    if (_robotApiStatusStore.CurrentApiStatus != RobotApiStatus.Connected)
+                    {
+                        _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Connected;
+                        await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Connected },
+                            stoppingToken);
+                    }
 
                     RobotTelemetry? robotTelemetry;
                     
@@ -68,7 +99,7 @@ public class RobotTelemetryBackgroundService : BackgroundService
                                 PropertyNameCaseInsensitive = true
                             });
                     }
-                    catch (JsonException e)
+                    catch (JsonException)
                     {
                         _logger.LogWarning("Failed to parse robot telemetry JSON.");
                         continue;

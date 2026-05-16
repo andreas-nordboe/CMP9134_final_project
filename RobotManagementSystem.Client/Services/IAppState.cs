@@ -16,6 +16,7 @@ public interface IAppState
     event Action? OnUserChanged;
     event Action? OnDarkModeChanged;
     event Action? OnRobotReset;
+    event Action? OnApiStatusChanged;
     void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse);
     void ClearUser();
     void ToggleDarkMode();

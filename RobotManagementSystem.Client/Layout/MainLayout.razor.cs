@@ -8,12 +8,9 @@ using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Layout;
 
-public partial class MainLayout
+public partial class MainLayout : IDisposable
 {
     private bool _sidebarOpen = true; // open by default
-    
-    [Inject] private IAppState Appstate { get; set; }
-    
     [Inject] private NavigationManager NavigationManager { get; set; }
     
     [Inject] private IDataStoreService DataStore { get; set; }
@@ -36,11 +33,12 @@ public partial class MainLayout
             AppState.ClearUser();
         }
         
-        Appstate.OnUserChanged += StateHasChanged;
-        Appstate.OnDarkModeChanged += StateHasChanged;
-        Appstate.OnUserChanged += StateHasChanged;
+        AppState.OnUserChanged += StateHasChanged;
+        AppState.OnDarkModeChanged += StateHasChanged;
+        AppState.OnUserChanged += StateHasChanged;
+        AppState.OnApiStatusChanged += OnApiStatusChanged;
 
-        if (Appstate.CurrentUser is null || !Appstate.CurrentUser.IsLoggedIn)
+        if (AppState.CurrentUser is null || !AppState.CurrentUser.IsLoggedIn)
         {
             NavigationManager.NavigateTo("/login");
         }
@@ -49,28 +47,34 @@ public partial class MainLayout
         var isDarkMode = localStorage.GetItemAsync<bool>("IsDarkMode");
         if (isDarkMode.IsCompleted)
         {
-            Appstate.IsDarkMode = isDarkMode.Result;
+            AppState.IsDarkMode = isDarkMode.Result;
             //Appstate.OnDarkModeChanged?.Invoke();
             StateHasChanged();
         }
 
-        Appstate.IsDarkMode = true; // Easier on the eyes while developing 
+        AppState.IsDarkMode = true; // Easier on the eyes while developing 
     }
 
     async void ToggleDarkMode()
     {
-        Appstate.IsDarkMode = !Appstate.IsDarkMode;
-        await localStorage.SetItemAsync("IsDarkMode", Appstate.IsDarkMode);
+        AppState.IsDarkMode = !AppState.IsDarkMode;
+        await localStorage.SetItemAsync("IsDarkMode", AppState.IsDarkMode);
     }
 
     void ToggleSidebar()
     {
         _sidebarOpen = !_sidebarOpen;
     }
+    
+    private void OnApiStatusChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     public void Dispose()
     {
-        Appstate.OnUserChanged -= StateHasChanged;
-        Appstate.OnDarkModeChanged -= StateHasChanged;
+        AppState.OnUserChanged -= StateHasChanged;
+        AppState.OnDarkModeChanged -= StateHasChanged;
+        AppState.OnApiStatusChanged -= OnApiStatusChanged;
     }
 }

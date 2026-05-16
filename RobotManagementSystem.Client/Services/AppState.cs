@@ -18,11 +18,25 @@ public class AppState : IAppState
 
     public User? CurrentUser { get; private set; }
     public bool IsDarkMode { get; set; }
-    public string ApiStatus { get; set; } = RobotApiStatus.Disconnected;
+    public string _apiStatus { get; set; } = RobotApiStatus.Disconnected;
     public AuthenticationResponse? AuthenticationDetails { get; set; }
     public event Action? OnUserChanged;
     public event Action? OnDarkModeChanged;
     public event Action? OnRobotReset;
+    public event Action? OnApiStatusChanged;
+
+    public string ApiStatus
+    {
+        get => _apiStatus;
+        set
+        {
+            if(_apiStatus == value)
+                return;
+            
+            _apiStatus = value;
+            OnApiStatusChanged?.Invoke();
+        }
+    }
 
     public async void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse)
     {

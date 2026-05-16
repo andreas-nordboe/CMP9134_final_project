@@ -54,11 +54,11 @@ public class MissionLogsService : IMissionLogsService
             Role = missionLog.Role,
             Command =  missionLog.Command,
             CommandResult =  missionLog.CommandResult,
-            Details = missionLog.Details,
-            RobotX = robotStatus.Position.X,
-            RobotY = robotStatus.Position.Y,
-            Battery = robotStatus.Battery,
-            ConnectionStatus = robotStatus?.Status,
+            Details = missionLog.Details ?? "",
+            RobotX = robotStatus?.Position.X ?? 0,
+            RobotY = robotStatus?.Position.Y ?? 0,
+            Battery = robotStatus?.Battery ?? 0,
+            ConnectionStatus = robotStatus?.Status ?? "Disconnected"
         };
 
         _dbContext.MissionLogs.Add(newMissionLog);

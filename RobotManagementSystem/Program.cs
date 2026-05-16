@@ -72,19 +72,20 @@ public class Program
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddHostedService<RobotTelemetryBackgroundService>();
+        builder.Services.AddHostedService<RobotApiHealthCheckerService>();
         builder.Services.AddSingleton<IRobotApiStatusStore, RobotApiStatusStore>();
         builder.Services.AddScoped<IMissionLogsService, MissionLogsService>();
         builder.Services.AddHttpClient<IRobotStatusService, RobotStatusService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException()); // TODO this stops the backend from working if the RobotApi is missing, imrpove with bette error handling and logging later
-            client.Timeout = TimeSpan.FromSeconds(10);
+            client.Timeout = TimeSpan.FromSeconds(2);
         });
 
         // Adds a Httpclient using the IRobotApi service to interact with the external RobotApi
         builder.Services.AddHttpClient<IRobotApiService, RobotApiService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException()); // TODO this stops the backend from working if the RobotApi is missing, imrpove with bette error handling and logging later
-            client.Timeout = TimeSpan.FromSeconds(10);
+            client.Timeout = TimeSpan.FromSeconds(2);
         });
         builder.Services.AddSignalR();
         

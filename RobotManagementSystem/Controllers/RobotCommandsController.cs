@@ -84,9 +84,14 @@ public class RobotCommandsController : ControllerBase
         
         var robotMoveResponse  = await _robotApiService.MoveRobotAsync(request, userId, Enum.Parse<UserRole>(userRoleValue));
         
-        if (robotMoveResponse == null || !robotMoveResponse.Success)
+        if (robotMoveResponse == null)
         {
-            return BadRequest(robotMoveResponse);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, _apiFailureService.CreateApiError(ErrorCodes.RobotApiNotAvailable, ErrorMessages.RobotApiNotAvailable));
+        }
+        
+        if (!robotMoveResponse.Success)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, robotMoveResponse);
         }
         
         return Ok(robotMoveResponse);
@@ -113,9 +118,9 @@ public class RobotCommandsController : ControllerBase
             {
                 UserId = userId,
                 Role = role,
-                Command = RobotCommand.Move,
+                Command = RobotCommand.Reset,
                 CommandResult = RobotCommandResult.PermissionsDenied,
-                Details = "Viewer tried to move robot."
+                Details = "Viewer tried to reset robot."
             });
             
             return Forbid();
