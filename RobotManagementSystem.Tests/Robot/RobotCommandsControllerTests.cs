@@ -5,6 +5,7 @@ using Moq;
 using RobotManagementSystem.Controllers;
 using RobotManagementSystem.Services;
 using RobotManagementSystem.Services.FailureHandling;
+using RobotManagementSystem.Services.MissionLogs;
 using RobotManagementSystem.Shared.Models.Authentication;
 using RobotManagementSystem.Shared.Models.Errors;
 using RobotManagementSystem.Shared.Models.Robot;
@@ -19,8 +20,10 @@ public class RobotCommandsControllerTests
         var robotApiService = new Mock<IRobotApiService>();
         var logger = new Mock<ILogger<RobotCommandsController>>();
         var apiFailureService = new Mock<IAPIFailureService>();
+        var robotStatusService = new Mock<IRobotStatusService>();
+        var missionLogService = new Mock<IMissionLogsService>();
         
-        robotApiService
+        robotStatusService
             .Setup(x => x.GetRobotStatusAsync())
             .ReturnsAsync(new RobotStatusResponse());
         
@@ -35,14 +38,16 @@ public class RobotCommandsControllerTests
         var robotApiController = new RobotCommandsController(
             logger.Object,
             robotApiService.Object,
-            apiFailureService.Object);
+            apiFailureService.Object,
+            missionLogService.Object,
+            robotStatusService.Object);
 
         var results = await robotApiController.GetRobotStatus();
         var okResult = Assert.IsType<OkObjectResult>(results.Result);
         
         var response = Assert.IsType<RobotStatusResponse>(okResult.Value);
         
-        robotApiService.Verify(x => x.GetRobotStatusAsync(), Times.Once);
+        robotStatusService.Verify(x => x.GetRobotStatusAsync(), Times.Once);
     }
     
     [Fact]
@@ -51,8 +56,10 @@ public class RobotCommandsControllerTests
         var robotApiService = new Mock<IRobotApiService>();
         var logger = new Mock<ILogger<RobotCommandsController>>();
         var apiFailureService = new Mock<IAPIFailureService>();
+        var robotStatusService = new Mock<IRobotStatusService>();
+        var missionLogService = new Mock<IMissionLogsService>();
         
-        robotApiService
+        robotStatusService
             .Setup(x => x.GetRobotStatusAsync())
             .ReturnsAsync((RobotStatusResponse?)null);
         
@@ -67,7 +74,9 @@ public class RobotCommandsControllerTests
         var robotApiController = new RobotCommandsController(
             logger.Object,
             robotApiService.Object,
-            apiFailureService.Object);
+            apiFailureService.Object,
+            missionLogService.Object,
+            robotStatusService.Object);
 
         var results = await robotApiController.GetRobotStatus();
         var okResult = Assert.IsType<ObjectResult>(results.Result);
@@ -76,6 +85,6 @@ public class RobotCommandsControllerTests
         Assert.Equal(ErrorCodes.RobotApiNotAvailable, error.ErrorCode);
         Assert.Equal(ErrorMessages.RobotApiNotAvailable, error.ErrorMessage);
         
-        robotApiService.Verify(x => x.GetRobotStatusAsync(), Times.Once);
+        robotStatusService.Verify(x => x.GetRobotStatusAsync(), Times.Once);
     }
 }

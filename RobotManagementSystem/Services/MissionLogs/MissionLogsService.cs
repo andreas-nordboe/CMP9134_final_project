@@ -10,10 +10,13 @@ namespace RobotManagementSystem.Services.MissionLogs;
 public class MissionLogsService : IMissionLogsService
 {
     private readonly RobotApiDbContext _dbContext;
+    private readonly IRobotApiService _robotApiService;
+    private readonly IRobotStatusService _robotStatusService;
 
-    public MissionLogsService(RobotApiDbContext dbContext)
+    public MissionLogsService(RobotApiDbContext dbContext, IRobotStatusService robotStatusService)
     {
         _dbContext = dbContext;
+        _robotStatusService = robotStatusService;
     }
 
     public async Task<MissionLog> AddMissionLog(AddMissionLogRequest missionLog)
@@ -41,6 +44,8 @@ public class MissionLogsService : IMissionLogsService
         {
             throw new ArgumentException("User does not exist");
         }
+
+        var robotStatus = await _robotStatusService.GetRobotStatusAsync();
         
         MissionLog newMissionLog = new MissionLog
         {
@@ -50,10 +55,10 @@ public class MissionLogsService : IMissionLogsService
             Command =  missionLog.Command,
             CommandResult =  missionLog.CommandResult,
             Details = missionLog.Details,
-            RobotX = missionLog.RobotPosition?.X,
-            RobotY = missionLog.RobotPosition?.Y,
-            Battery = missionLog.RobotBattery,
-            ConnectionStatus = missionLog.ConnectionStatus
+            RobotX = robotStatus.Position.X,
+            RobotY = robotStatus.Position.Y,
+            Battery = robotStatus.Battery,
+            ConnectionStatus = robotStatus?.Status,
         };
 
         _dbContext.MissionLogs.Add(newMissionLog);
@@ -74,7 +79,14 @@ public class MissionLogsService : IMissionLogsService
                 Timestamp = missionLog.Timestamp,
                 Role = missionLog.Role,
                 Command = missionLog.Command,
-                CommandResult = missionLog.CommandResult
+                CommandResult = missionLog.CommandResult,
+                RobotPosition = new Vector2D
+                {
+                    X = missionLog.RobotX,
+                    Y = missionLog.RobotY
+                },
+                Battery = missionLog.Battery,
+                ConnectionStatus = missionLog.ConnectionStatus,
             }).ToListAsync<MissionLogDto>();
     }
 

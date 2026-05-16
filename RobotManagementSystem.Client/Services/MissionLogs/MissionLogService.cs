@@ -14,7 +14,7 @@ public class MissionLogService : IMissionLogService
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _httpClient = _httpClientFactory.CreateClient("API");
+        _httpClient = httpClientFactory.CreateClient("API");
     }
 
     public async Task<List<MissionLogDto?>> GetAllMissionLogs()

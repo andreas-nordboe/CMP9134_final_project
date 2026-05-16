@@ -11,7 +11,4 @@ public class AddMissionLogRequest
     public RobotCommand Command { get; set; }
     public RobotCommandResult CommandResult { get; set; }
     public string? Details { get; set; }
-    public double? RobotBattery { get; set; }
-    public Vector2D? RobotPosition { get; set; }
-    public string? ConnectionStatus { get; set; }
 }

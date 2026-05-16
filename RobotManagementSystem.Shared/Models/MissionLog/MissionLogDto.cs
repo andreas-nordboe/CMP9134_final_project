@@ -14,6 +14,6 @@ public class MissionLogDto
     public RobotCommandResult CommandResult { get; set; }
     public string? Details { get; set; }
     public Vector2D? RobotPosition { get; set; }
-    public int? Battery { get; set; }
+    public double Battery { get; set; }
     public string? ConnectionStatus { get; set; }
 }

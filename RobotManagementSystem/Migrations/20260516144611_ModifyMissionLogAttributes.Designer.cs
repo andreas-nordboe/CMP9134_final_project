@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RobotManagementSystem.Data;
 
@@ -10,9 +11,11 @@ using RobotManagementSystem.Data;
 namespace RobotManagementSystem.Migrations
 {
     [DbContext(typeof(RobotApiDbContext))]
-    partial class RobotApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260516144611_ModifyMissionLogAttributes")]
+    partial class ModifyMissionLogAttributes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -23,8 +26,8 @@ namespace RobotManagementSystem.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("Battery")
-                        .HasColumnType("REAL");
+                    b.Property<int>("Battery")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Command")
                         .HasColumnType("INTEGER");

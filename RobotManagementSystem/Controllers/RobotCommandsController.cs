@@ -28,20 +28,22 @@ public class RobotCommandsController : ControllerBase
     private readonly IRobotApiService _robotApiService;
     private readonly IAPIFailureService _apiFailureService;
     private readonly IMissionLogsService _missionLogsService;
+    private readonly IRobotStatusService _robotStatusService;
 
-    public RobotCommandsController(ILogger<RobotCommandsController> logger, IRobotApiService robotApiService, IAPIFailureService apiFailureService, IMissionLogsService missionLogsService)
+    public RobotCommandsController(ILogger<RobotCommandsController> logger, IRobotApiService robotApiService, IAPIFailureService apiFailureService, IMissionLogsService missionLogsService, IRobotStatusService robotStatusService)
     {
         _logger = logger;
         _robotApiService = robotApiService;
         _apiFailureService = apiFailureService;
         _missionLogsService = missionLogsService;
+        _robotStatusService = robotStatusService;
     }
 
     [HttpGet("status")]
     [Authorize(Roles = "Admin,Viewer,Commander,Auditor")]
     public async Task<ActionResult<RobotStatusResponse>> GetRobotStatus()
     {
-        var robotStatus = await _robotApiService.GetRobotStatusAsync();
+        var robotStatus = await _robotStatusService.GetRobotStatusAsync();
 
         if (robotStatus == null)
         {
@@ -74,7 +76,7 @@ public class RobotCommandsController : ControllerBase
                 Role = role,
                 Command = RobotCommand.Move,
                 CommandResult = RobotCommandResult.PermissionsDenied,
-                Details = "Viewer tried to move robot."
+                Details = "Viewer tried to move robot.",
             });
             
             return Forbid();

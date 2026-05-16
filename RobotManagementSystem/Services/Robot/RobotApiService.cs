@@ -21,21 +21,8 @@
             _missionLogsService = missionLogsService;
         }
 
-        public async Task<RobotStatusResponse?> GetRobotStatusAsync()
-        {
-            try
-            {
-                return await _httpClient.GetFromJsonAsync<RobotStatusResponse>("/api/status");
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Failed to retrieve robot status.");
-                return null;
-            }
-        }
-
         public async Task<MapResponse?> GetMapAsync()
-        {
+        { 
             try
             {
                 return await _httpClient.GetFromJsonAsync<MapResponse>("/api/map");
@@ -67,7 +54,8 @@
                     UserId = userId,
                     Role = role,
                     Command = RobotCommand.Move,
-                    CommandResult = RobotCommandResult.InvalidCoordinates
+                    CommandResult = RobotCommandResult.InvalidCoordinates,
+                    Details = $"Tried to move robot to invalid coordinates ({request.X}, {request.Y})"
                 });
                 
                 return new RobotCommandResponse
@@ -87,7 +75,8 @@
                         UserId = userId,
                         Role = role,
                         Command = RobotCommand.Move,
-                        CommandResult = RobotCommandResult.Failure
+                        CommandResult = RobotCommandResult.Failure,
+                        Details =  $"API returned status code {response.StatusCode}"
                     });
                     
                     return new RobotCommandResponse
@@ -126,7 +115,8 @@
                     UserId = userId,
                     Role = role,
                     Command = RobotCommand.Move,
-                    CommandResult = RobotCommandResult.Failure
+                    CommandResult = RobotCommandResult.Failure,
+                    Details = $"Exception: {e.Message}"
                 });
                 
                 return new RobotCommandResponse
@@ -150,8 +140,15 @@
                         UserId = userId,
                         Role = userRole,
                         Command = RobotCommand.Reset,
-                        CommandResult = RobotCommandResult.Failure
+                        CommandResult = RobotCommandResult.Failure,
+                        Details =  $"API returned status code {response.StatusCode}"
                     });
+                    
+                    return new RobotCommandResponse
+                    {
+                        Success = false,
+                        Message = $"Reset robot command failed. Response {response.StatusCode}" // TODO I'll try stautus code for now and try ReasonPhrase later 
+                    };
                 }
                 
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
@@ -164,8 +161,8 @@
                 
                 return new RobotCommandResponse
                 {
-                    Success = response.IsSuccessStatusCode,
-                    Message = response.IsSuccessStatusCode ? "Robot was successfully reset." : $"Reset robot command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                    Success = true,
+                    Message = "Robot was successfully reset." // TODO I'll try stautus code for now and try ReasonPhrase later 
                 };
             }
             catch (Exception e)
@@ -177,7 +174,8 @@
                     UserId = userId,
                     Role = userRole,
                     Command = RobotCommand.Reset,
-                    CommandResult = RobotCommandResult.Failure
+                    CommandResult = RobotCommandResult.Failure,
+                    Details = $"Exception: {e.Message}"
                 });
                 
                 return new RobotCommandResponse
