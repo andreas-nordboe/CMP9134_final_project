@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using RobotManagementSystem.Data;
 using RobotManagementSystem.Services;
 using RobotManagementSystem.Services.FailureHandling;
+using RobotManagementSystem.Services.MissionLogs;
 using RobotManagementSystem.Shared.Models.Errors;
+using RobotManagementSystem.Shared.Models.MissionLog;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.Users;
 
@@ -25,12 +27,14 @@ public class RobotCommandsController : ControllerBase
     private readonly ILogger<RobotCommandsController> _logger;
     private readonly IRobotApiService _robotApiService;
     private readonly IAPIFailureService _apiFailureService;
+    private readonly IMissionLogsService _missionLogsService;
 
-    public RobotCommandsController(ILogger<RobotCommandsController> logger, IRobotApiService robotApiService, IAPIFailureService apiFailureService)
+    public RobotCommandsController(ILogger<RobotCommandsController> logger, IRobotApiService robotApiService, IAPIFailureService apiFailureService, IMissionLogsService missionLogsService)
     {
         _logger = logger;
         _robotApiService = robotApiService;
         _apiFailureService = apiFailureService;
+        _missionLogsService = missionLogsService;
     }
 
     [HttpGet("status")]
@@ -48,7 +52,7 @@ public class RobotCommandsController : ControllerBase
     }
     
     [HttpPost("move")]
-    [Authorize(Roles = "Admin,Commander")]
+    [Authorize(Roles = "Admin,Commander,Viewer")]
     public async Task<ActionResult<RobotCommandResponse>> MoveRobot([FromBody] RobotNavigationRequest request)
     {
         var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -60,7 +64,24 @@ public class RobotCommandsController : ControllerBase
             return Unauthorized(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, ErrorMessages.InvalidRequest));
         }
         
+        var role = Enum.Parse<UserRole>(userRoleValue);
+
+        if (role == UserRole.Viewer)
+        {
+            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+            {
+                UserId = userId,
+                Role = role,
+                Command = RobotCommand.Move,
+                CommandResult = RobotCommandResult.PermissionsDenied,
+                Details = "Viewer tried to move robot."
+            });
+            
+            return Forbid();
+        }
+        
         var robotMoveResponse  = await _robotApiService.MoveRobotAsync(request, userId, Enum.Parse<UserRole>(userRoleValue));
+        
         if (robotMoveResponse == null || !robotMoveResponse.Success)
         {
             return BadRequest(robotMoveResponse);
@@ -70,7 +91,7 @@ public class RobotCommandsController : ControllerBase
     }
     
     [HttpPost("reset")]
-    [Authorize(Roles = "Admin,Commander")]
+    [Authorize(Roles = "Admin,Commander,Viewer")]
     public async Task<IActionResult> ResetRobot()
     {
         var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -80,6 +101,22 @@ public class RobotCommandsController : ControllerBase
         {
             // TODO return user id not found in token?
             return Unauthorized(_apiFailureService.CreateApiError(ErrorCodes.InvalidRequest, ErrorMessages.InvalidRequest));
+        }
+        
+        var role = Enum.Parse<UserRole>(userRoleValue);
+
+        if (role == UserRole.Viewer)
+        {
+            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+            {
+                UserId = userId,
+                Role = role,
+                Command = RobotCommand.Move,
+                CommandResult = RobotCommandResult.PermissionsDenied,
+                Details = "Viewer tried to move robot."
+            });
+            
+            return Forbid();
         }
         
         return Ok(await _robotApiService.ResetAsync(userId, Enum.Parse<UserRole>(userRoleValue)));

@@ -1,3 +1,4 @@
+using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.Users;
 
@@ -12,8 +13,7 @@ public class MissionLogDto
     public RobotCommand Command { get; set; }
     public RobotCommandResult CommandResult { get; set; }
     public string? Details { get; set; }
-    public int? RobotX { get; set; }
-    public int? RobotY { get; set; }
+    public Vector2D? RobotPosition { get; set; }
     public int? Battery { get; set; }
     public string? ConnectionStatus { get; set; }
 }

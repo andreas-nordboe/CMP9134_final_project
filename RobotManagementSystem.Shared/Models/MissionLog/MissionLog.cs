@@ -17,6 +17,6 @@ public class MissionLog
     public string? Details { get; set; }
     public int? RobotX { get; set; }
     public int? RobotY { get; set; }
-    public int? Battery { get; set; }
+    public double? Battery { get; set; }
     public string? ConnectionStatus { get; set; }
 }

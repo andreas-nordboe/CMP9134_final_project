@@ -10,6 +10,10 @@
             <MudTh>Role</MudTh>
             <MudTh>Command</MudTh>
             <MudTh>Result</MudTh>
+            <MudTh>Battery</MudTh>
+            <MudTh>Position</MudTh>
+            <MudTh>Connection Status</MudTh>
+            <MudTh>Details</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
@@ -17,6 +21,9 @@
             <MudTd DataLabel="Role">@context.Role.ToString()</MudTd> @* TODO Show different icons for different roles here later*@
             <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@
             <MudTd DataLabel="Result">@context.CommandResult</MudTd>
+            <MudTd DataLabel="Battery">@context.Battery</MudTd>
+            <MudTd DataLabel="Position">@context.RobotPosition</MudTd>
+            <MudTd DataLabel="Connection Status">@context.ConnectionStatus</MudTd>
         </RowTemplate>
     </MudTable>
 </MudPaper>
