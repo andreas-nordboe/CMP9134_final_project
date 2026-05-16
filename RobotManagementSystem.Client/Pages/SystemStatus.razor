@@ -1,6 +1,18 @@
 @page "/system-status"
-<h3>SystemStatus</h3>
+@using RobotManagementSystem.Client.Services
+@using RobotManagementSystem.Shared.Models.Users
+@inject IAppState AppState
 
-@code {
+@if (AppState.IsUserLoggedIn() && AppState.CurrentUser?.Role is UserRole.Admin or UserRole.Commander or UserRole.Auditor or UserRole.Viewer)
+{
+    @*TODO*@
+}
+else
+{
+    <MudContainer Class="d-flex align-center justify-center mud-width-full mud-height-full">
+        <MudAlert Variant="Variant.Outlined" Style="max-width: 500px" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
+            You do not have permission to access system status.
+        </MudAlert>
+    </MudContainer>
     
 }

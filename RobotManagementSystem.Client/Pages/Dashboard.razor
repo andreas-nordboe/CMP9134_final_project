@@ -1,36 +1,51 @@
 @page "/"
 @using RobotManagementSystem.Client.Components
 @using RobotManagementSystem.Client.Services
+@using RobotManagementSystem.Shared.Models.Users
 @inject IAppState AppState
 
 <MudSpacer/>
 
 @if (AppState.IsUserLoggedIn())
 {
-    <MudText Align="Align.Center" Typo="Typo.h3">
-        Welcome, @AppState.AuthenticationDetails?.FirstName
+    <MudText Class="mb-4" Align="Align.Center" Typo="Typo.h3">
+        Welcome, @AppState.AuthenticationDetails?.FirstName!
     </MudText>
 }
 
-<MudGrid Class="my-6 mx-6">
-    <MudItem xs="6">
-        <MudPaper Class="d-flex align-center justify-center mud-width-full py-4" Style="min-height: 1000px">
-            <GridComponent/>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="6">
-        <MudGrid>
-            <MudItem xs="12">
-                <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
-                    <RobotTelemetryComponent/>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12">
-                <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
-                    <CommanderControls/>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-    </MudItem>
-</MudGrid>
 <MudSpacer/>
+
+@if (AppState.IsUserLoggedIn() && AppState.CurrentUser?.Role is UserRole.Admin or UserRole.Commander or UserRole.Auditor or UserRole.Viewer)
+{
+    <MudGrid Class="my-6 mx-6">
+        <MudItem xs="6">
+            <MudPaper Class="d-flex align-center justify-center mud-width-full py-4" Style="min-height: 1000px">
+                <GridComponent/>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
+                        <RobotTelemetryComponent/>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
+                        <CommanderControls/>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+    <MudSpacer/>
+}
+else
+{
+    <MudContainer Class="d-flex align-center justify-center mud-width-full mud-height-full">
+        <MudAlert Variant="Variant.Outlined" Style="max-width: 500px; display: flex; justify-content: center" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
+            You do not have permission to access this page.
+        </MudAlert>
+    </MudContainer>
+}
+

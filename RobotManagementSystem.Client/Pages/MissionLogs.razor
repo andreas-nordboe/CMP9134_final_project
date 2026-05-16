@@ -1,31 +1,50 @@
 @page "/mission-log"
 @using System.Globalization
+@using RobotManagementSystem.Client.Services
+@using RobotManagementSystem.Shared.Models.Users
 @inject ISnackbar SnackBar
+@inject IAppState AppState
 
-<MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full mx-4 my-4">
-    <MudTable Class="d-flex align-center justify-center mud-width-full mud-height-full" Items="@Logs" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingLogs" LoadingProgressColor="Color.Info">
-        <HeaderContent>
-            <MudTh>Date/Time</MudTh>
-            <MudTh>Username</MudTh>
-            <MudTh>Role</MudTh>
-            <MudTh>Command</MudTh>
-            <MudTh>Result</MudTh>
-            <MudTh>Battery</MudTh>
-            <MudTh>Position</MudTh>
-            <MudTh>Connection Status</MudTh>
-            <MudTh>Details</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
-            <MudTd DataLabel="Username">@context.User.Username</MudTd>
-            <MudTd DataLabel="Role">@context.Role.ToString()</MudTd> @* TODO Show different icons for different roles here later*@
-            <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@
-            <MudTd DataLabel="Result">@context.CommandResult</MudTd>
-            <MudTd DataLabel="Battery">@context.Battery</MudTd>
-            <MudTd DataLabel="Position">(@context.RobotPosition?.X, @context.RobotPosition?.Y)</MudTd>
-            <MudTd DataLabel="Connection Status">@context.ConnectionStatus</MudTd>
-            <MudTd DataLabel="Details">@context.Details</MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudPaper>
+@if (AppState.IsUserLoggedIn() && AppState.CurrentUser?.Role is UserRole.Admin or UserRole.Commander or UserRole.Auditor or UserRole.Viewer)
+{
+    <MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full mx-4 my-4">
+        <MudTable Class="d-flex align-center justify-center mud-width-full mud-height-full" Items="@Logs" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingLogs" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Date/Time</MudTh>
+                <MudTh>Username</MudTh>
+                <MudTh>Role</MudTh>
+                <MudTh>Command</MudTh>
+                <MudTh>Result</MudTh>
+                <MudTh>Battery</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Connection Status</MudTh>
+                <MudTh>Details</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
+                <MudTd DataLabel="Username">@context.User.Username</MudTd>
+                <MudTd DataLabel="Role">@context.Role.ToString()</MudTd> @* TODO Show different icons for different roles here later*@
+                <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@
+                <MudTd DataLabel="Result">@context.CommandResult</MudTd>
+                <MudTd DataLabel="Battery">@context.Battery</MudTd>
+                <MudTd DataLabel="Position">(@context.RobotPosition?.X, @context.RobotPosition?.Y)</MudTd>
+                <MudTd DataLabel="Connection Status">@context.ConnectionStatus</MudTd>
+                <MudTd DataLabel="Details">@context.Details</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+}
+else
+{
+    <MudContainer Class="d-flex align-center justify-center mud-width-full mud-height-full">
+        <MudContainer Class="d-flex align-center justify-center mud-width-full mud-height-full">
+            <MudAlert Variant="Variant.Outlined" Style="max-width: 500px; display: flex; justify-content: center" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
+                You do not have permission to access mission logs.
+            </MudAlert>
+        </MudContainer>
+    </MudContainer>
+}
+
+
+
 
