@@ -36,7 +36,11 @@ public class MissionLogsService : IMissionLogsService
             throw new ArgumentException("Command is invalid");
         }
         
-        // TODO: Viewer attempted to move robot
+        var userExists = await _dbContext.Users.AnyAsync(u => u.Id == missionLog.UserId);
+        if (!userExists)
+        {
+            throw new ArgumentException("User does not exist");
+        }
         
         MissionLog newMissionLog = new MissionLog
         {
@@ -46,8 +50,8 @@ public class MissionLogsService : IMissionLogsService
             Command =  missionLog.Command,
             CommandResult =  missionLog.CommandResult,
             Details = missionLog.Details,
-            RobotX = missionLog.RobotPosition.X,
-            RobotY = missionLog.RobotPosition.Y,
+            RobotX = missionLog.RobotPosition?.X,
+            RobotY = missionLog.RobotPosition?.Y,
             Battery = missionLog.RobotBattery,
             ConnectionStatus = missionLog.ConnectionStatus
         };
