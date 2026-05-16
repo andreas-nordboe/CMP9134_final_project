@@ -22,7 +22,7 @@
             <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@
             <MudTd DataLabel="Result">@context.CommandResult</MudTd>
             <MudTd DataLabel="Battery">@context.Battery</MudTd>
-            <MudTd DataLabel="Position">@context.RobotPosition</MudTd>
+            <MudTd DataLabel="Position">(@context.RobotPosition?.X, @context.RobotPosition?.Y)</MudTd>
             <MudTd DataLabel="Connection Status">@context.ConnectionStatus</MudTd>
             <MudTd DataLabel="Details">@context.Details</MudTd>
         </RowTemplate>
