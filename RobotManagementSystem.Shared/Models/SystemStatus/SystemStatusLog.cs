@@ -5,7 +5,7 @@ public class SystemStatusLog
     public int Id { get; set; }
     public DateTime Timestamp { get; set; }
 
-    public string EventType { get; set; } = "";
+    public SystemStatusEventType EventType { get; set; } = SystemStatusEventType.UNKNOWN;
     public string Message { get; set; } = "";
 
     public string? CurrentStatus { get; set; }

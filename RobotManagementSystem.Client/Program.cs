@@ -10,6 +10,7 @@ using RobotManagementSystem.Client.Services.Map;
 using RobotManagementSystem.Client.Services.MissionLogs;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Client.Services.Sessions;
+using RobotManagementSystem.Client.Services.SystemStatus;
 
 namespace RobotManagementSystem.Client;
 
@@ -38,6 +39,7 @@ public class Program
         builder.Services.AddScoped<IAdminUserManagementService, AdminUserManagementService>();
         builder.Services.AddScoped<IMapService, MapService>();
         builder.Services.AddScoped<IMissionLogService, MissionLogService>();
+        builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
         
         await builder.Build().RunAsync();
     }

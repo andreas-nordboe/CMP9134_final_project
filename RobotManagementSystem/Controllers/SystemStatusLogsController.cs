@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RobotManagementSystem.Services.System;
+using RobotManagementSystem.Services.SystemStatus;
 using RobotManagementSystem.Shared.Models.SystemStatus;
 
 namespace RobotManagementSystem.Controllers;
 
 [ApiController]
-[Route("api/system-status-logs")]
+[Route("system-status-logs")]
 [Authorize (Roles = "Admin,Commander,Auditor")]
 public class SystemStatusLogsController : ControllerBase
 {
@@ -20,7 +21,7 @@ public class SystemStatusLogsController : ControllerBase
     }
 
     [HttpGet("all")]
-    public async Task<IActionResult> GetLogs([FromQuery] string? eventType, DateTime? fromDate, int page = 1, int pageSize = 25)
+    public async Task<IActionResult> GetLogs([FromQuery] SystemStatusEventType? eventType, DateTime? fromDate, int page = 1, int pageSize = 25)
     {
         if(page < 1)
             return BadRequest("Page must be greater or equal to 1.");

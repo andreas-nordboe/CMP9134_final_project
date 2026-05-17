@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RobotManagementSystem.Data;
+using RobotManagementSystem.Services.SystemStatus;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.SystemStatus;
 
@@ -27,7 +28,7 @@ public class SystemStatusLogService : ISystemStatusLogService
         var log = new SystemStatusLog
         {
             Timestamp = DateTime.UtcNow,
-            EventType = "CONNECTION_CHANGED",
+            EventType = SystemStatusEventType.CONNECTION_CHANGED,
             Message = $"Robot API connection changed to {newStatus}",
             CurrentStatus = newStatus
         };
@@ -43,7 +44,7 @@ public class SystemStatusLogService : ISystemStatusLogService
         var log = new SystemStatusLog
         {
             Timestamp = DateTime.UtcNow,
-            EventType = "ROBOT_STATUS_CHANGED",
+            EventType = SystemStatusEventType.ROBOT_STATUS_CHANGED,
             Message = $"Robot status changed to {robotStatus}",
             CurrentStatus = robotStatus,
             RobotState = robotStatus
@@ -60,7 +61,7 @@ public class SystemStatusLogService : ISystemStatusLogService
         var log = new SystemStatusLog
         {
             Timestamp = DateTime.UtcNow,
-            EventType = "TELEMETRY_SNAPSHOT",
+            EventType = SystemStatusEventType.TELEMETRY_SNAPSHOT,
             Message = "Periodic robot telemetry snapshot",
             RobotX = status.Position.X,
             RobotY = status.Position.Y,
@@ -72,7 +73,7 @@ public class SystemStatusLogService : ISystemStatusLogService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task LogBackendEventAsync(string eventType, string message)
+    public async Task LogBackendEventAsync(SystemStatusEventType eventType, string message)
     {
         var log = new SystemStatusLog
         {
@@ -87,11 +88,11 @@ public class SystemStatusLogService : ISystemStatusLogService
         _logger.LogInformation("{EventType}: {Message}", eventType, message);
     }
 
-    public async Task<PagedResult<SystemStatusLog>> GetSystemStatusLogsAsync(string? eventType, DateTime? fromDate, int page, int pageSize)
+    public async Task<PagedResult<SystemStatusLog>> GetSystemStatusLogsAsync(SystemStatusEventType? eventType, DateTime? fromDate, int page, int pageSize)
     {
         var query = _dbContext.SystemStatusLogs.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(eventType))
+        if (eventType != null)
         {
             query = query.Where(x => x.EventType == eventType);
         }

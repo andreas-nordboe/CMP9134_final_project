@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.SignalR;
 using RobotManagementSystem.Hubs;
 using RobotManagementSystem.Services.System;
+using RobotManagementSystem.Services.SystemStatus;
 using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Services;
