@@ -46,4 +46,18 @@ public class SystemStatusLogService : ISystemStatusLogService
             return new PagedResult<SystemStatusLog>();
         }
     }
+    
+    public async Task<SystemStatusSummary?> GetSystemStatusSummaryAsync()
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<SystemStatusSummary>(
+                "/system-status-logs/summary");
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Failed to retrieve system status summary.");
+            return null;
+        }
+    }
 }

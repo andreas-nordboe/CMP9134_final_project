@@ -1,51 +1,13 @@
 @page "/system-status"
 @using System.Globalization
+@using RobotManagementSystem.Client.Components
 @using RobotManagementSystem.Shared.Models.SystemStatus
 
-<MudGrid Spacing="2">
+<MudContainer MaxWidth="MaxWidth.False" Class="px-6 py-4">
+    <MudGrid Spacing="2">
 
     <MudItem xs="12" md="5">
-        <MudPaper Class="pa-3 mb-3" Outlined="true">
-            <MudText Typo="Typo.h6">API Connection Status</MudText>
-
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudIcon Icon="@Icons.Material.Filled.Circle" Color="Color.Success" Size="Size.Small" />
-                <MudText>Online</MudText>
-            </MudStack>
-
-            <MudDivider Class="my-2" />
-
-            <MudGrid>
-                <MudItem xs="6">
-                    <MudText Typo="Typo.subtitle2">Average Latency</MudText>
-                    <MudText Typo="Typo.h6">32ms</MudText>
-                </MudItem>
-
-                <MudItem xs="6">
-                    <MudText Typo="Typo.subtitle2">Retry Attempts</MudText>
-                    <MudText Typo="Typo.h6">4</MudText>
-                </MudItem>
-
-                <MudItem xs="6">
-                    <MudText Typo="Typo.subtitle2">Signal State</MudText>
-                    <MudText>Stable</MudText>
-                </MudItem>
-
-                <MudItem xs="6">
-                    <MudText Typo="Typo.subtitle2">Last Updated</MudText>
-                    <MudText>16.03.2026 11:44:21</MudText>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-
-        <MudPaper Class="pa-3" Outlined="true">
-            <MudText Typo="Typo.h6">API Response Time</MudText>
-
-            @* Later: chart goes here *@
-            <MudText Class="pa-6" Align="Align.Center">
-                Chart placeholder
-            </MudText>
-        </MudPaper>
+        <SystemStatusSummaryComponent />
     </MudItem>
 
     <MudItem xs="12" md="7">
@@ -53,25 +15,36 @@
             <MudText Typo="Typo.h6" Class="mb-2">Event Status</MudText>
 
             <MudTable T="SystemStatusLog"
+                      Class="flex-grow-1"
                       @ref="_table"
                       ServerData="LoadServerData"
                       Dense="true"
                       Hover="true"
+                      Loading="@IsLoadingSystemLogs"
+                      LoadingProgressColor="Color.Info"
                       RowsPerPage="10">
 
                 <HeaderContent>
                     <MudTh>Event Timestamp</MudTh>
+                    <MudTh>Event Type</MudTh>
                     <MudTh>Event Status</MudTh>
                 </HeaderContent>
 
                 <RowTemplate>
                     <MudTd>
-                        @context.Timestamp.ToString("ddd dd.MM.yyyy - HH:mm:ss")
+                        @context.Timestamp.ToString("ddd dd.MM.yyyy - HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))
+                    </MudTd>
+                    <MudTd>
+                        @FormatEventType(context.EventType)
                     </MudTd>
                     <MudTd>
                         @context.Message
                     </MudTd>
                 </RowTemplate>
+                
+                <NoRecordsContent>
+                    <MudText>No system status logs found.</MudText>
+                </NoRecordsContent>
 
                 <PagerContent>
                     <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
@@ -82,3 +55,4 @@
     </MudItem>
 
 </MudGrid>
+</MudContainer>
