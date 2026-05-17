@@ -49,6 +49,9 @@ public partial class GridComponent : ComponentBase, IDisposable
         _appState.OnDarkModeChanged += HandleDarkModeChanged;
         _appState.OnSignalRestored += HandleSignalRestored;
         _appState.OnPendingRobotCommandTargetChanged += HandlePendingRobotCommandTargetChanged;
+
+        UseLightMapTheme = !_appState.IsDarkMode;
+        StateHasChanged();
     }
 
     private async Task LoadMapAsync()
