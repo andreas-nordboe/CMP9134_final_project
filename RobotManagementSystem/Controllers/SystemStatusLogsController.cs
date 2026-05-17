@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RobotManagementSystem.Services.System;
 using RobotManagementSystem.Shared.Models.SystemStatus;
@@ -6,6 +7,7 @@ namespace RobotManagementSystem.Controllers;
 
 [ApiController]
 [Route("api/system-status-logs")]
+[Authorize (Roles = "Admin,Commander,Auditor")]
 public class SystemStatusLogsController : ControllerBase
 {
     private readonly ILogger<SystemStatusLogsController> _logger;
