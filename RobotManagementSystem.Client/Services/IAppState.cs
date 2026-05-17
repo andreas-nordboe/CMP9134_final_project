@@ -17,9 +17,12 @@ public interface IAppState
     event Action? OnDarkModeChanged;
     event Action? OnRobotReset;
     event Action? OnApiStatusChanged;
+    event Action? OnSignalRestored;
+    
     void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse);
     void ClearUser();
     void ToggleDarkMode();
     bool IsUserLoggedIn();
     void NotifyRobotReset();
+    void SetSignalDisrupted(bool isDisrupted);
 }

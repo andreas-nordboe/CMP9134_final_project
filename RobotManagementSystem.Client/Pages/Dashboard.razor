@@ -4,14 +4,6 @@
 @inject IAppState AppState
 
 <MudContainer MaxWidth="MaxWidth.False" Class="px-6 py-4 dashboard-page">
-
-    @if (AppState.IsUserLoggedIn())
-    {
-        <MudText Typo="Typo.h4" Class="mb-4 fw-bold">
-            Ground Control Station
-        </MudText>
-    }
-
     <MudGrid Spacing="2" Class="dashboard-grid">
 
         <MudItem xs="12" lg="7" xl="8" Class="dashboard-left">

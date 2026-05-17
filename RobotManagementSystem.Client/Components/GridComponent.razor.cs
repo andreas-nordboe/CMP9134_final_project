@@ -35,22 +35,7 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        var map = await _mapService.GetMapAsync();
-
-        if (map != null)
-        {
-            Console.WriteLine(map);
-            
-            GridWidth = map.Width;
-            GridHeight = map.Height;
-            LoadGridFromMapData(map);
-        }
-        else
-        {
-            GridWidth = 21;
-            GridHeight = 21;
-            SetupGrid(); // empty grid fallback
-        }
+        await LoadMapAsync();
         
         var storedShowCoordinates = await DataStoreService.LoadShowMapCoordinatesAsync();
         ShowCoordinates = storedShowCoordinates ?? false;
@@ -60,6 +45,38 @@ public partial class GridComponent : ComponentBase, IDisposable
 
         _appState.OnRobotReset += HandleResetGrid;
         _appState.OnDarkModeChanged += HandleDarkModeChanged;
+        _appState.OnSignalRestored += HandleSignalRestored;
+    }
+
+    private async Task LoadMapAsync()
+    {
+        var map = await _mapService.GetMapAsync();
+
+        if (map != null)
+        {
+            Console.WriteLine(map);
+            
+            GridWidth = map.Width;
+            GridHeight = map.Height;
+            LoadGridFromMapData(map);
+            return;
+        }
+        
+        if (Tiles.Count == 0)
+        {
+            GridWidth = 21;
+            GridHeight = 21;
+            SetupGrid(); // empty grid fallback
+        }
+    }
+    
+    private async void HandleSignalRestored()
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadMapAsync();
+            StateHasChanged();
+        });
     }
 
     private async void HandleDarkModeChanged()
@@ -367,6 +384,8 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         _robotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
         _appState.OnRobotReset -= HandleResetGrid;
+        _appState.OnDarkModeChanged -= HandleDarkModeChanged;
+        _appState.OnSignalRestored -= HandleSignalRestored;
     }
     
     private async Task OnShowCoordinatesChanged(bool value)

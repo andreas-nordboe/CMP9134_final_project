@@ -24,6 +24,9 @@ public class AppState : IAppState
     public event Action? OnDarkModeChanged;
     public event Action? OnRobotReset;
     public event Action? OnApiStatusChanged;
+    public event Action? OnSignalRestored;
+    public bool IsSignalDisrupted { get; private set; }
+
 
     public string ApiStatus
     {
@@ -53,6 +56,18 @@ public class AppState : IAppState
     public void NotifyRobotReset()
     {
         OnRobotReset?.Invoke();
+    }
+
+    public void SetSignalDisrupted(bool isDisrupted)
+    {
+        var wasDisrupted = IsSignalDisrupted;
+
+        IsSignalDisrupted = isDisrupted;
+
+        if (wasDisrupted && !isDisrupted)
+        {
+            OnSignalRestored?.Invoke();
+        }
     }
 
     public void ClearUser()

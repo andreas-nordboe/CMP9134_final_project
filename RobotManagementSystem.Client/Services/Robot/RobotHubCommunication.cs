@@ -53,18 +53,21 @@ public class RobotHubCommunication : IAsyncDisposable
 
         _connection.Reconnecting += error =>
         {
+            _appState.SetSignalDisrupted(true);
             ConnectionStatusChanged?.Invoke(RobotApiStatus.Reconnecting);
             return Task.CompletedTask;
         };
         
         _connection.Reconnected += error =>
         {
+            _appState.SetSignalDisrupted(false);
             ConnectionStatusChanged?.Invoke(RobotApiStatus.Connected);
             return Task.CompletedTask;
         };
 
         _connection.Closed += async error =>
         {
+            _appState.SetSignalDisrupted(true);
             ConnectionStatusChanged?.Invoke(RobotApiStatus.Disconnected);
 
             await Task.Delay(3000);
