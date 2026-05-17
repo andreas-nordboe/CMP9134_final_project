@@ -25,6 +25,8 @@ public partial class GridComponent : ComponentBase, IDisposable
     [Inject] private ISnackbar _snackbar { get; set; }
     private bool UseLightMapTheme { get; set; }
     private bool ShowCoordinates { get; set; } = true;
+    private TileState? PendingCommandTile { get; set; }
+    private bool IsCommandProcessing { get; set; }
 
     private string MapShellClass =>
         UseLightMapTheme
@@ -46,6 +48,7 @@ public partial class GridComponent : ComponentBase, IDisposable
         _appState.OnRobotReset += HandleResetGrid;
         _appState.OnDarkModeChanged += HandleDarkModeChanged;
         _appState.OnSignalRestored += HandleSignalRestored;
+        _appState.OnPendingRobotCommandTargetChanged += HandlePendingRobotCommandTargetChanged;
     }
 
     private async Task LoadMapAsync()
@@ -125,7 +128,18 @@ public partial class GridComponent : ComponentBase, IDisposable
         InvokeAsync(() =>
         {
             ClearOldLidarHits();
-            MoveRobot((int)robotTelemetry.Position.X, (int)robotTelemetry.Position.Y);
+
+            var robotX = (int)robotTelemetry.Position.X;
+            var robotY = (int)robotTelemetry.Position.Y;
+            
+            MoveRobot(robotX, robotY);
+            
+            if (PendingCommandTile != null && PendingCommandTile.VectorPosition.X == robotX && PendingCommandTile.VectorPosition.Y == robotY)
+            {
+                PendingCommandTile = null;
+                IsCommandProcessing = false;
+                _appState.SetPendingRobotCommandTarget(null);
+            }
             
             if (robotTelemetry.Sensors.Lidar.Count > 0)
             {
@@ -257,6 +271,12 @@ public partial class GridComponent : ComponentBase, IDisposable
         // TODO Refactor these into a service or robot movement safety handler later
         // I'm just doing client side validation here as well but the request could still be sent to the backend
         // however, from testing it seems like the backend handles this safely
+        
+        if (IsCommandProcessing)
+        {
+            _snackbar.Add("A movement command is already being processed.", Severity.Info);
+            return;
+        }
 
         if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
         {
@@ -290,18 +310,37 @@ public partial class GridComponent : ComponentBase, IDisposable
         
         try
         {
+            PendingCommandTile = tile;
+            IsCommandProcessing = true;
+            
+            _appState.SetPendingRobotCommandTarget(new Vector2D
+            {
+                X = tile.VectorPosition.X,
+                Y = tile.VectorPosition.Y
+            });
+            
+            StateHasChanged();
+
             await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
             {
                 X = tile.VectorPosition.X,
                 Y = tile.VectorPosition.Y
             });
+            
+            _snackbar.Add($"Move command sent to ({tile.VectorPosition.X}, {tile.VectorPosition.Y}).", Severity.Success);
         }
         catch (Exception e)
         {
-            _snackbar.Add("Could not send move command to robot! There simulation may currently be unavailable.", Severity.Error);
+            PendingCommandTile = null;
+            IsCommandProcessing = false;
+            _appState.SetPendingRobotCommandTarget(null);
+
+            _snackbar.Add("Could not send move command to robot! The simulation may currently be unavailable.", Severity.Error);
         }
-        
-        StateHasChanged();
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
     protected void OnTileHovered(TileState tile)
@@ -327,6 +366,16 @@ public partial class GridComponent : ComponentBase, IDisposable
             GridTileType.ChargingStation => "charging-station",
             _ => "free-space"
         });
+
+        if (tile.OriginalContentType == GridTileType.ChargingStation)
+        {
+            classes.Add("charging-station-base");
+        }
+
+        if (PendingCommandTile == tile)
+        {
+            classes.Add("pending-command");
+        }
 
         return string.Join(" ", classes);
     }
@@ -386,6 +435,26 @@ public partial class GridComponent : ComponentBase, IDisposable
         _appState.OnRobotReset -= HandleResetGrid;
         _appState.OnDarkModeChanged -= HandleDarkModeChanged;
         _appState.OnSignalRestored -= HandleSignalRestored;
+        _appState.OnPendingRobotCommandTargetChanged -= HandlePendingRobotCommandTargetChanged;
+    }
+    
+    private void HandlePendingRobotCommandTargetChanged(Vector2D? target)
+    {
+        InvokeAsync(() =>
+        {
+            if (target == null)
+            {
+                PendingCommandTile = null;
+                IsCommandProcessing = false;
+                StateHasChanged();
+                return;
+            }
+
+            PendingCommandTile = GetTileState(target.X, target.Y);
+            IsCommandProcessing = PendingCommandTile != null;
+
+            StateHasChanged();
+        });
     }
     
     private async Task OnShowCoordinatesChanged(bool value)

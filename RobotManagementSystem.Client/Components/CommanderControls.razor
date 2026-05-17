@@ -1,54 +1,142 @@
-<MudStack Class="flex-row">
-    <MudPaper Class="d-flex flex-column align-center justify-center mud-width-full py-8"
-              Style="min-height: 50px; min-width: 300px">
-        <MudText Align="Align.Center">Robot Commands</MudText>
-    </MudPaper>
-    <MudTabs @bind-ActivePanelIndex="UsesAdvancedControls" Outlined="true">
-        <MudTabPanel Text="Simple Controls" Icon="@Icons.Material.Filled.Api"/>
-        <MudTabPanel Text="Advanced Controls" Icon="@Icons.Material.Filled.Build"/>
-    </MudTabs>
-    @if (UsesAdvancedControls == 0)
-    {
-        <MudGrid Justify="Justify.Center">
+@using RobotManagementSystem.Shared.Models.Robot
+
+<MudPaper Class="commander-card pa-0" Outlined="true">
+
+    <div class="summary-header">
+        <span>Robot Commands</span>
+
+        <div class="summary-online">
+            @if (IsProcessingCommand)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Color="Color.Warning" />
+                <span>Processing command</span>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Circle"
+                         Color="@GetCommandStatusColor()"
+                         Size="Size.Small" />
+                <span>@CommandStatusText</span>
+            }
+        </div>
+    </div>
+
+    <div class="commander-tabs">
+        <MudTabs @bind-ActivePanelIndex="UsesAdvancedControls"
+                 Outlined="true"
+                 Rounded="true"
+                 Dense="true"
+                 centered="true"
+                 Class="mud-width-full">
+
+            <MudTabPanel Text="Simple Controls"
+                         Icon="@Icons.Material.Filled.Gamepad">
+
+                <div class="commander-section">
+                    <MudText Typo="Typo.body2" Class="commander-help">
+                        Move one tile from the robot's current telemetry position.
+                    </MudText>
+
+                    <div class="direction-pad">
+                        <div></div>
+
+                        <MudIconButton OnClick="MoveRobotUp"
+                                       Icon="@Icons.Material.Filled.ArrowUpward"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       Disabled="@(!CanSendCommand)"
+                                       aria-label="Move robot up" />
+
+                        <div></div>
+
+                        <MudIconButton OnClick="MoveRobotLeft"
+                                       Icon="@Icons.Material.Filled.ArrowBack"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       Disabled="@(!CanSendCommand)"
+                                       aria-label="Move robot left" />
+
+                        <div class="direction-center-empty"></div>
+
+                        <MudIconButton OnClick="MoveRobotRight"
+                                       Icon="@Icons.Material.Filled.ArrowForward"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       Disabled="@(!CanSendCommand)"
+                                       aria-label="Move robot right" />
+
+                        <div></div>
+
+                        <MudIconButton OnClick="MoveRobotDown"
+                                       Icon="@Icons.Material.Filled.ArrowDownward"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       Disabled="@(!CanSendCommand)"
+                                       aria-label="Move robot down" />
+
+                        <div></div>
+                    </div>
+                </div>
+
+            </MudTabPanel>
+
+            <MudTabPanel Text="Advanced Controls"
+                         Icon="@Icons.Material.Filled.Tune">
+
+                <div class="commander-section advanced-command-section">
+
+                    <MudText Typo="Typo.body2" Class="commander-help">
+                        Send the robot to a specific map coordinate.
+                    </MudText>
+
+                    <MudStack Row="true"
+                              Spacing="2"
+                              Class="coordinate-inputs justify-center">
+
+                        <MudNumericField Immediate="false"
+                                         Min="0"
+                                         Max="20"
+                                         Label="X Coordinate"
+                                         T="int"
+                                         @bind-Value="@InputVector.X"
+                                         HelperText="Robot X"
+                                         Variant="Variant.Outlined"
+                                         Dense="true" />
+
+                        <MudNumericField Immediate="false"
+                                         Min="0"
+                                         Max="20"
+                                         Label="Y Coordinate"
+                                         T="int"
+                                         @bind-Value="@InputVector.Y"
+                                         HelperText="Robot Y"
+                                         Variant="Variant.Outlined"
+                                         Dense="true" />
+                    </MudStack>
+
+                    <MudButton OnClick="MoveRobot"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Navigation"
+                               Color="Color.Primary"
+                               Disabled="@(!CanSendCommand)"
+                               Class="move-command-button">
+                        Move Robot
+                    </MudButton>
+                </div>
+
+            </MudTabPanel>
             
-            <MudItem xs="12" Class="d-flex justify-center">
-                <MudPaper Class="pa-2">
-                    <MudIconButton OnClick="MoveRobotUp" Icon="@Icons.Material.Filled.ArrowUpward" aria-label="delete" />
-                </MudPaper>
-            </MudItem>
-            
-            <MudItem xs="4" Class="d-flex justify-end">
-                <MudPaper Class="pa-2">
-                    <MudIconButton OnClick="MoveRobotLeft"Icon="@Icons.Material.Filled.ArrowBack" aria-label="delete"/>
-                </MudPaper>
-            </MudItem>
+            <div class="reset-command-area">
+                <MudButton OnClick="ResetSimulation"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.ResetTv"
+                           Color="Color.Error">
+                    Reset Simulation
+                </MudButton>
+            </div>
 
-            <MudItem xs="4" Class="d-flex justify-center">
-                @*Empty Center*@
-            </MudItem>
-
-            <MudItem xs="4" Class="d-flex justify-start">
-                <MudPaper Class="pa-2">
-                    <MudIconButton OnClick="MoveRobotRight" Icon="@Icons.Material.Filled.ArrowForward" aria-label="delete"/>
-                </MudPaper>
-            </MudItem>
-            
-            <MudItem xs="12" Class="d-flex justify-center">
-                <MudPaper Class="pa-2">
-                    <MudIconButton OnClick="MoveRobotDown" Icon="@Icons.Material.Filled.ArrowDownward" aria-label="delete" />
-                </MudPaper>
-            </MudItem>
-
-        </MudGrid>
-    }
-    else
-    {
-        <MudStack Row="true">
-            <MudNumericField Immediate="false" Min="0" Max="20" Label="X Coordinate" T="int" @bind-Value="@InputVector.X" HelperText="Robot X"/>
-            <MudNumericField Immediate="false" Min="0" Max="20" Label="Y Coordinate" T="int" @bind-Value="@InputVector.Y" HelperText="Robot Y"/>
-        </MudStack>
-        <MudButton OnClick="MoveRobot" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Start" Color="Color.Primary">Move Robot</MudButton>
-        <MudButton OnClick="EmergencyStop" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.RemoveCircleOutline" Color="Color.Error">Emergency Stop</MudButton>
-    }
-</MudStack>
-
+        </MudTabs>
+    </div>
+</MudPaper>

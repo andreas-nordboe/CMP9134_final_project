@@ -5,5 +5,6 @@ public enum RobotStatus
     IDLE,
     MOVING,
     LOW_BATTERY,
-    STUCK
+    STUCK,
+    CHARGING // UI only
 }

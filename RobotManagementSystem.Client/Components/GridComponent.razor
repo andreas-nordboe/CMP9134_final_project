@@ -5,16 +5,25 @@
     <div class="robot-map-panel">
 
         <div class="robot-map-toolbar">
-            <MudText Typo="Typo.caption" Class="map-toolbar-title">
-                Robot Map
-            </MudText>
+            <div class="robot-map-toolbar-title">
+                <MudIcon Icon="@Icons.Material.Filled.Map"
+                         Size="Size.Small"
+                         Color="Color.Primary" />
 
-            <MudSwitch T="bool"
-                       Value="@ShowCoordinates"
-                       ValueChanged="OnShowCoordinatesChanged"
-                       Color="Color.Primary"
-                       Label="Coordinates"
-                       Size="Size.Small" />
+                <span>Robot Map</span>
+            </div>
+
+            <div class="robot-map-toolbar-actions">
+                <MudText Typo="Typo.caption" Class="coordinate-label">
+                    Coordinates
+                </MudText>
+
+                <MudSwitch T="bool"
+                           Value="@ShowCoordinates"
+                           ValueChanged="OnShowCoordinatesChanged"
+                           Color="Color.Primary"
+                           Size="Size.Small" />
+            </div>
         </div>
 
         <div class="robot-grid"
@@ -32,8 +41,7 @@
                              alt="Robot" />
                     }
                     
-                    @if (tile.ContentType == GridTileType.ChargingStation ||
-                         tile.OriginalContentType == GridTileType.ChargingStation)
+                    @if (tile.ContentType == GridTileType.ChargingStation)
                     {
                         <MudIcon Icon="@Icons.Material.Filled.BatteryChargingFull"
                                  Class="charging-station-icon" />

@@ -1,6 +1,7 @@
 using RobotManagementSystem.Client.Pages;
 using RobotManagementSystem.Shared.Models;
 using RobotManagementSystem.Shared.Models.Authentication;
+using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.Users;
 
@@ -18,6 +19,8 @@ public interface IAppState
     event Action? OnRobotReset;
     event Action? OnApiStatusChanged;
     event Action? OnSignalRestored;
+    event Action<Vector2D?>? OnPendingRobotCommandTargetChanged; 
+    void SetPendingRobotCommandTarget(Vector2D? target);
     
     void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse);
     void ClearUser();

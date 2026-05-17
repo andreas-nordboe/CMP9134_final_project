@@ -32,7 +32,7 @@
            {
                @if (AppState.ApiStatus == RobotApiStatus.Reconnecting)
                {
-                   <MudAlert Class="mud-width-full" Severity="Severity.Warning" Variant="Variant.Outlined">WARNING: Signal Lost. Reconnecting</MudAlert>
+                   <MudAlert Class="mud-width-full mx-2 my-2" Severity="Severity.Warning" Variant="Variant.Outlined">WARNING: Signal Lost. Reconnecting</MudAlert>
                }
                else if (AppState.ApiStatus == RobotApiStatus.Disconnected)
                {
