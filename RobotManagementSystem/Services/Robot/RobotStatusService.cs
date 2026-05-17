@@ -52,7 +52,7 @@ public class RobotStatusService : IRobotStatusService
 
             if (status != null && _robotApiStatusStore.LastRobotState != status.Status)
             {
-                await _systemStatusLogService.LogRobotStatusChangedAsync(status.Status);
+                await _systemStatusLogService.LogRobotStatusChangedAsync(status);
                 _robotApiStatusStore.LastRobotState = status.Status;
             }
 

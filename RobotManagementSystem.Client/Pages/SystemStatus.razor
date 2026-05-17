@@ -2,73 +2,83 @@
 @using System.Globalization
 @using RobotManagementSystem.Shared.Models.SystemStatus
 
-<MudPaper Class="pa-4 mx-4 my-4">
-    
-    <MudStack Row="true" Spacing="2" Class="mb-4">
-        <MudSelect T="SystemStatusEventType?"
-                   Label="Event Type"
-                   Value="@SelectedEventType"
-                   ValueChanged="OnEventTypeChanged"
-                   Clearable="true">
+<MudGrid Spacing="2">
 
-            @foreach (SystemStatusEventType eventType in Enum.GetValues<SystemStatusEventType>())
-            {
-                <MudSelectItem T="SystemStatusEventType?" Value="@((SystemStatusEventType?)eventType)">
-                    @FormatEventType(eventType)
-                </MudSelectItem>
-            }
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-3 mb-3" Outlined="true">
+            <MudText Typo="Typo.h6">API Connection Status</MudText>
 
-        </MudSelect>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.Circle" Color="Color.Success" Size="Size.Small" />
+                <MudText>Online</MudText>
+            </MudStack>
 
-        <MudDatePicker Label="From Date"
-                       Date="@FromDate"
-                       DateChanged="OnFromDateChanged"
-                       Clearable="true" />
-    </MudStack>
-    
-    <MudTable @ref="_table" Hover="true" ServerData="LoadServerData" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingSystemLogs" LoadingProgressColor="Color.Info">
-        <HeaderContent>
-            <MudTh>Date/Time</MudTh>
-            <MudTh>Event Type</MudTh>
-            <MudTh>Message</MudTh>
-            <MudTh>Current Status</MudTh>
-            <MudTh>Robot Position</MudTh>
-            <MudTh>Battery</MudTh>
-            <MudTh>Robot State</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
-            <MudTd DataLabel="Event Type">@(FormatEventType(@context.EventType))</MudTd>
-            <MudTd DataLabel="Message">@context.Message</MudTd>
-            <MudTd DataLabel="Current Status">
-                @(string.IsNullOrWhiteSpace(context.CurrentStatus) ? "N/A" : context.CurrentStatus)
-            </MudTd>
-            <MudTd DataLabel="Robot Position">
-                @if (context.RobotX.HasValue && context.RobotY.HasValue)
-                {
-                    <span>(@context.RobotX,@context.RobotY)</span>
-                }
-                else
-                {
-                    <span>N/A</span>
-                }
-            </MudTd>
-            <MudTd DataLabel="Battery">
-                @if (context.Battery.HasValue)
-                {
-                    <span>@($"{context.Battery.Value:0.##}%")</span>
-                }
-                else
-                {
-                    <span>N/A</span>
-                }
-            </MudTd>
-            <MudTd DataLabel="Robot State">
-                @(string.IsNullOrWhiteSpace(context.RobotState) ? "N/A" : context.RobotState)
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-        </PagerContent>
-    </MudTable>
-</MudPaper>
+            <MudDivider Class="my-2" />
+
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2">Average Latency</MudText>
+                    <MudText Typo="Typo.h6">32ms</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2">Retry Attempts</MudText>
+                    <MudText Typo="Typo.h6">4</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2">Signal State</MudText>
+                    <MudText>Stable</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2">Last Updated</MudText>
+                    <MudText>16.03.2026 11:44:21</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-3" Outlined="true">
+            <MudText Typo="Typo.h6">API Response Time</MudText>
+
+            @* Later: chart goes here *@
+            <MudText Class="pa-6" Align="Align.Center">
+                Chart placeholder
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        <MudPaper Class="pa-3" Outlined="true">
+            <MudText Typo="Typo.h6" Class="mb-2">Event Status</MudText>
+
+            <MudTable T="SystemStatusLog"
+                      @ref="_table"
+                      ServerData="LoadServerData"
+                      Dense="true"
+                      Hover="true"
+                      RowsPerPage="10">
+
+                <HeaderContent>
+                    <MudTh>Event Timestamp</MudTh>
+                    <MudTh>Event Status</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>
+                        @context.Timestamp.ToString("ddd dd.MM.yyyy - HH:mm:ss")
+                    </MudTd>
+                    <MudTd>
+                        @context.Message
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                </PagerContent>
+
+            </MudTable>
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>

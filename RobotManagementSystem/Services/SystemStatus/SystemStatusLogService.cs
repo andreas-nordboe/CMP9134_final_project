@@ -39,15 +39,18 @@ public class SystemStatusLogService : ISystemStatusLogService
         _logger.LogInformation("Robot API connection changed to {Status}", newStatus);
     }
 
-    public async Task LogRobotStatusChangedAsync(string robotStatus)
+    public async Task LogRobotStatusChangedAsync(RobotStatusResponse robotStatus)
     {
         var log = new SystemStatusLog
         {
             Timestamp = DateTime.UtcNow,
             EventType = SystemStatusEventType.ROBOT_STATUS_CHANGED,
-            Message = $"Robot status changed to {robotStatus}",
-            CurrentStatus = robotStatus,
-            RobotState = robotStatus
+            Message = $"Robot status changed to {robotStatus.Status}",
+            CurrentStatus = robotStatus.Status,
+            RobotState = robotStatus.Status,
+            RobotX = robotStatus.Position.X,
+            RobotY = robotStatus.Position.Y,
+            Battery = robotStatus.Battery
         };
 
         _dbContext.SystemStatusLogs.Add(log);
