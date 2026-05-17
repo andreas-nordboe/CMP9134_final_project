@@ -4,6 +4,7 @@ using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
+using RobotManagementSystem.Client.Services.Sessions;
 using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Layout;
@@ -16,6 +17,7 @@ public partial class MainLayout : IDisposable
     [Inject] private IDataStoreService DataStore { get; set; }
     [Inject] private IAppState AppState { get; set; }
     [Inject] private RobotHubCommunication RobotHubCommunication { get; set; }
+    [Inject] private IUserSessionService UserSessionService { get; set; }
     
     protected override async Task OnInitializedAsync()
     {
@@ -25,6 +27,7 @@ public partial class MainLayout : IDisposable
         if (auth != null && !JWTHelper.IsAccessTokenExpired(auth.AccessToken))
         {
             AppState.SetLoggedInUserFromAuthentication(auth);
+            UserSessionService.MonitorUserSession(auth);
             await RobotHubCommunication.StartAsync();
         }
         else
