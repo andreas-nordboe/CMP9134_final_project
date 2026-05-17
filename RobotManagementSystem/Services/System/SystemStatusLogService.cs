@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using RobotManagementSystem.Data;
 using RobotManagementSystem.Shared.Models.Robot;
 using RobotManagementSystem.Shared.Models.SystemStatus;
@@ -84,5 +85,46 @@ public class SystemStatusLogService : ISystemStatusLogService
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("{EventType}: {Message}", eventType, message);
+    }
+
+    public async Task<PagedResult<SystemStatusLog>> GetSystemStatusLogsAsync(string? eventType, DateTime? fromDate, int page, int pageSize)
+    {
+        var query = _dbContext.SystemStatusLogs.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(eventType))
+        {
+            query = query.Where(x => x.EventType == eventType);
+        }
+
+        if (fromDate.HasValue)
+        {
+            query = query.Where(x => x.Timestamp >= fromDate.Value);
+        }
+
+        var totalCount = await query.CountAsync();
+        
+        var logs = await query
+            .OrderByDescending(x => x.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new SystemStatusLog
+            {
+                Id = x.Id,
+                Timestamp = x.Timestamp,
+                EventType = x.EventType,
+                Message = x.Message,
+                RobotState = x.RobotState,
+                Battery = x.Battery
+            })
+            .ToListAsync();
+
+        return new PagedResult<SystemStatusLog>
+        {
+            Items = logs,
+            TotalCount = totalCount,
+            PageIndex = page,
+            PageSize = pageSize
+        };
+
     }
 }

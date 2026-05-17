@@ -5,4 +5,6 @@ namespace RobotManagementSystem.Services;
 public class RobotApiStatusStore : IRobotApiStatusStore
 {
     public string CurrentApiStatus { get; set; } = RobotApiStatus.Disconnected.ToString();
+    public string LastRobotState { get; set; } = string.Empty;
+    public DateTime LastSnapshotLoggedAt { get; set; } = DateTime.MinValue;
 }

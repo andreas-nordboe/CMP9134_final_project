@@ -13,8 +13,6 @@ public class RobotStatusService : IRobotStatusService
     private readonly IRobotApiStatusStore _robotApiStatusStore;
     private readonly IHubContext<RobotTelemetryHub> _hubContext;
     private readonly ISystemStatusLogService _systemStatusLogService;
-    private string _lastRobotState = "";
-    private DateTime _lastSnapshotLoggedAt = DateTime.MinValue;
 
     public RobotStatusService(ILogger<RobotStatusService> logger, HttpClient httpClient, IRobotApiStatusStore robotApiStatusStore, IHubContext<RobotTelemetryHub> hubContext, ISystemStatusLogService systemStatusLogService)
     {
@@ -51,10 +49,10 @@ public class RobotStatusService : IRobotStatusService
             
             var status = await response.Content.ReadFromJsonAsync<RobotStatusResponse>();
 
-            if (status != null && _lastRobotState != status.Status)
+            if (status != null && _robotApiStatusStore.LastRobotState != status.Status)
             {
                 await _systemStatusLogService.LogRobotStatusChangedAsync(status.Status);
-                _lastRobotState = status.Status;
+                _robotApiStatusStore.LastRobotState = status.Status;
             }
 
             if (status == null)
@@ -63,10 +61,10 @@ public class RobotStatusService : IRobotStatusService
                 return null;
             }
             
-            if (DateTime.UtcNow - _lastSnapshotLoggedAt > TimeSpan.FromSeconds(15))
+            if (DateTime.UtcNow - _robotApiStatusStore.LastSnapshotLoggedAt > TimeSpan.FromSeconds(15))
             {
                 await _systemStatusLogService.LogTelemetrySnapshotAsync(status);
-                _lastSnapshotLoggedAt = DateTime.UtcNow;
+                _robotApiStatusStore.LastSnapshotLoggedAt = DateTime.UtcNow;
             }
             
             return status;
