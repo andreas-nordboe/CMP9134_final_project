@@ -6,5 +6,6 @@ public enum GridTileType
     Obstacle,
     Robot,
     LidarHit,
-    LidarVisibility
+    LidarVisibility,
+    ChargingStation
 }

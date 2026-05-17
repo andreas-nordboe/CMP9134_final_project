@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RobotManagementSystem.Client.Services;
+using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Map;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Client.Services.Sessions;
@@ -17,11 +18,18 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     [Inject] private RobotHubCommunication _robotHubCommunication { get; set; } = default!;
     [Inject] private IRobotCommanderService _robotCommanderService { get; set; }
+    [Inject] private IDataStoreService DataStoreService { get; set; } = default!;
     [Inject] private IMapService _mapService { get; set; } = default!;
     [Inject] private IAppState _appState { get; set; }
     [Inject] private IUserSessionService _userSessionService { get; set; }
     [Inject] private ISnackbar _snackbar { get; set; }
-    
+    private bool UseLightMapTheme { get; set; }
+    private bool ShowCoordinates { get; set; } = true;
+
+    private string MapShellClass =>
+        UseLightMapTheme
+            ? "robot-map-shell robot-map-light"
+            : "robot-map-shell";
     
     protected List<TileState> Tiles { get; set; } = new();
 
@@ -39,15 +47,27 @@ public partial class GridComponent : ComponentBase, IDisposable
         }
         else
         {
+            GridWidth = 21;
+            GridHeight = 21;
             SetupGrid(); // empty grid fallback
         }
+        
+        var storedShowCoordinates = await DataStoreService.LoadShowMapCoordinatesAsync();
+        ShowCoordinates = storedShowCoordinates ?? false;
         
         _robotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
         await _robotHubCommunication.StartAsync(); // TODO this might be a bug as it could start multiple socket connections
 
         _appState.OnRobotReset += HandleResetGrid;
+        _appState.OnDarkModeChanged += HandleDarkModeChanged;
     }
 
+    private async void HandleDarkModeChanged()
+    {
+        UseLightMapTheme = !_appState.IsDarkMode;
+        await InvokeAsync(StateHasChanged);
+    }
+    
     private void LoadGridFromMapData(MapResponse map)
     {
         Tiles.Clear();
@@ -71,6 +91,15 @@ public partial class GridComponent : ComponentBase, IDisposable
                 });
             }
         }
+        
+        var chargingStationTile = GetTileState(0, 0);
+
+        if (chargingStationTile != null)
+        {
+            chargingStationTile.ContentType = GridTileType.ChargingStation;
+            chargingStationTile.OriginalContentType = GridTileType.ChargingStation;
+        }
+        
         StateHasChanged(); // refreshes the grid
     }
 
@@ -91,11 +120,6 @@ public partial class GridComponent : ComponentBase, IDisposable
                     {
                         continue;
                     }
-                    
-                    double angleRadius = angle * Math.PI / 180;
-
-                    int hitX = (int)Math.Round(robotTelemetry.Position.X + (distance * Math.Cos((angleRadius))));
-                    int hitY = (int)Math.Round(robotTelemetry.Position.Y + (distance * Math.Sin((angleRadius))));
                 
                     //OnLidarHit(hitX, hitY);
                     VisualiseLidarSensor(robotTelemetry.Position.X, robotTelemetry.Position.Y, angle, distance);
@@ -120,37 +144,30 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         double angleRadians = angle * Math.PI / 180;
 
-        for (double step = 0.5; step < distance; step += 0.5)
+        for (double step = 0.5; step <= distance; step += 0.5)
         {
-            int x = (int)Math.Round(startX + (step * Math.Cos(angleRadians)));
-            int y = (int)Math.Round(startY + (step * Math.Sin(angleRadians)));
-            
+            int x = (int)Math.Round(startX + step * Math.Cos(angleRadians));
+            int y = (int)Math.Round(startY + step * Math.Sin(angleRadians));
+
             var targetTile = GetTileState(x, y);
-            if (targetTile != null && targetTile.ContentType == GridTileType.FreeSpace)
+
+            if (targetTile == null)
+                break;
+
+            if (targetTile.ContentType == GridTileType.Robot)
+                continue;
+
+            if (targetTile.OriginalContentType == GridTileType.Obstacle ||
+                targetTile.ContentType == GridTileType.Obstacle)
+            {
+                targetTile.ContentType = GridTileType.LidarHit;
+                break;
+            }
+
+            if (targetTile.ContentType == GridTileType.FreeSpace)
             {
                 targetTile.ContentType = GridTileType.LidarVisibility;
             }
-        }
-        
-        if (distance < 10)
-        {
-            int hitX = (int)Math.Round(startX + (distance * Math.Cos(angleRadians)));
-            int hitY = (int)Math.Round(startY + (distance * Math.Sin(angleRadians)));
-            OnLidarHit(hitX, hitY);
-        }
-    }
-    
-    private void OnLidarHit(int x, int y)
-    {
-        var targetTile = GetTileState(x, y);
-        
-        if(targetTile == null)
-            return;
-        
-        if (targetTile.ContentType != GridTileType.FreeSpace &&
-            targetTile.ContentType != GridTileType.LidarVisibility)
-        {
-            targetTile.ContentType = GridTileType.LidarHit;
         }
     }
     
@@ -279,7 +296,24 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         // todo
     }
+    
+    private string GetTileClass(TileState tile)
+    {
+        var classes = new List<string> { "robot-tile" };
 
+        classes.Add(tile.ContentType switch
+        {
+            GridTileType.Obstacle => "obstacle",
+            GridTileType.Robot => "robot",
+            GridTileType.LidarHit => "lidar-hit",
+            GridTileType.LidarVisibility => "lidar-visibility",
+            GridTileType.ChargingStation => "charging-station",
+            _ => "free-space"
+        });
+
+        return string.Join(" ", classes);
+    }
+    
     protected void PlaceRobot(int x, int y, string? imageUrl = "/images/robot-image.png")
     {
         MoveRobot(x, y);
@@ -306,15 +340,15 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         foreach (var tile in Tiles.Where(t => t.ContentType == GridTileType.Robot))
         {
-            tile.ContentType = GridTileType.FreeSpace;
+            tile.ContentType = tile.OriginalContentType;
             tile.ImageUrl = null;
         }
-        
+
         var targetTile = GetTileState(x, y);
-        if(targetTile is null) return;
-        
+        if (targetTile is null) return;
+
         targetTile.ContentType = GridTileType.Robot;
-        targetTile.ImageUrl = "/images/robot-image.jpg";
+        targetTile.ImageUrl = "/images/robot-image.png";
     }
 
     protected void ClearGrid()
@@ -333,5 +367,11 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         _robotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
         _appState.OnRobotReset -= HandleResetGrid;
+    }
+    
+    private async Task OnShowCoordinatesChanged(bool value)
+    {
+        ShowCoordinates = value;
+        await DataStoreService.StoreShowMapCoordinatesAsync(value);
     }
 }
