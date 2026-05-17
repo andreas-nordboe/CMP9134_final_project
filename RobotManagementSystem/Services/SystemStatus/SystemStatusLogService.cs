@@ -114,8 +114,11 @@ public class SystemStatusLogService : ISystemStatusLogService
                 Timestamp = x.Timestamp,
                 EventType = x.EventType,
                 Message = x.Message,
-                RobotState = x.RobotState,
-                Battery = x.Battery
+                CurrentStatus = x.CurrentStatus,
+                RobotX = x.RobotX,
+                RobotY = x.RobotY,
+                Battery = x.Battery,
+                RobotState = x.RobotState
             })
             .ToListAsync();
 

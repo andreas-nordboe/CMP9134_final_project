@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.WebUtilities;
 using RobotManagementSystem.Client.Services.MissionLogs;
 using RobotManagementSystem.Shared.Models.MissionLog;
 using RobotManagementSystem.Shared.Models.SystemStatus;
@@ -20,14 +21,28 @@ public class SystemStatusLogService : ISystemStatusLogService
 
     public async Task<PagedResult<SystemStatusLog>> GetSystemStatusLogsAsync(SystemStatusEventType? eventType, DateTime? fromDate, int page, int pageSize)
     {
-        
         try
         {
-            return await _httpClient.GetFromJsonAsync<PagedResult<SystemStatusLog>>("/mission-logs/all") ?? new PagedResult<SystemStatusLog>();
+            var query = new Dictionary<string, string?>
+            {
+                ["page"] = page.ToString(),
+                ["pageSize"] = pageSize.ToString()
+            };
+
+            if (eventType.HasValue)
+                query["eventType"] = eventType.Value.ToString();
+
+            if (fromDate.HasValue)
+                query["fromDate"] = fromDate.Value.ToString("O");
+
+            var url = QueryHelpers.AddQueryString("/system-status-logs/all", query);
+
+            return await _httpClient.GetFromJsonAsync<PagedResult<SystemStatusLog>>(url)
+                   ?? new PagedResult<SystemStatusLog>();
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Failed to retrieve mission logs.");
+            _logger.LogWarning(e, "Failed to retrieve system status logs.");
             return new PagedResult<SystemStatusLog>();
         }
     }

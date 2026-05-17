@@ -1,6 +1,74 @@
 @page "/system-status"
-<h3>SystemStatus</h3>
+@using System.Globalization
+@using RobotManagementSystem.Shared.Models.SystemStatus
 
-@code {
+<MudPaper Class="pa-4 mx-4 my-4">
     
-}
+    <MudStack Row="true" Spacing="2" Class="mb-4">
+        <MudSelect T="SystemStatusEventType?"
+                   Label="Event Type"
+                   Value="@SelectedEventType"
+                   ValueChanged="OnEventTypeChanged"
+                   Clearable="true">
+
+            @foreach (SystemStatusEventType eventType in Enum.GetValues<SystemStatusEventType>())
+            {
+                <MudSelectItem T="SystemStatusEventType?" Value="@((SystemStatusEventType?)eventType)">
+                    @FormatEventType(eventType)
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+        <MudDatePicker Label="From Date"
+                       Date="@FromDate"
+                       DateChanged="OnFromDateChanged"
+                       Clearable="true" />
+    </MudStack>
+    
+    <MudTable @ref="_table" Hover="true" ServerData="LoadServerData" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingSystemLogs" LoadingProgressColor="Color.Info">
+        <HeaderContent>
+            <MudTh>Date/Time</MudTh>
+            <MudTh>Event Type</MudTh>
+            <MudTh>Message</MudTh>
+            <MudTh>Current Status</MudTh>
+            <MudTh>Robot Position</MudTh>
+            <MudTh>Battery</MudTh>
+            <MudTh>Robot State</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
+            <MudTd DataLabel="Event Type">@(FormatEventType(@context.EventType))</MudTd>
+            <MudTd DataLabel="Message">@context.Message</MudTd>
+            <MudTd DataLabel="Current Status">
+                @(string.IsNullOrWhiteSpace(context.CurrentStatus) ? "N/A" : context.CurrentStatus)
+            </MudTd>
+            <MudTd DataLabel="Robot Position">
+                @if (context.RobotX.HasValue && context.RobotY.HasValue)
+                {
+                    <span>(@context.RobotX,@context.RobotY)</span>
+                }
+                else
+                {
+                    <span>N/A</span>
+                }
+            </MudTd>
+            <MudTd DataLabel="Battery">
+                @if (context.Battery.HasValue)
+                {
+                    <span>@($"{context.Battery.Value:0.##}%")</span>
+                }
+                else
+                {
+                    <span>N/A</span>
+                }
+            </MudTd>
+            <MudTd DataLabel="Robot State">
+                @(string.IsNullOrWhiteSpace(context.RobotState) ? "N/A" : context.RobotState)
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
