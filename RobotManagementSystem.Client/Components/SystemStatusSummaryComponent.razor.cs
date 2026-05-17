@@ -23,7 +23,7 @@ public partial class SystemStatusSummaryComponent : ComponentBase, IDisposable
         await LoadSummaryAsync();
         
         _summaryCts = new CancellationTokenSource();
-        _summaryTimer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        _summaryTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
 
         _ = PollSummaryAsync(_summaryCts.Token);
     }
@@ -83,6 +83,22 @@ public partial class SystemStatusSummaryComponent : ComponentBase, IDisposable
         }
     }
     
+    private List<ChartSeries<double>> LatencySeries =>
+    [
+        new ChartSeries<double>
+        {
+            Name = "Latency",
+            Data = Summary?.RecentLatenciesMs?
+                .Select(x => Math.Round(x, 0))
+                .ToArray() ?? []
+        }
+    ];
+    
+    private string[] LatencyLabels =>
+        Summary?.RecentLatenciesMs?
+            .Select((_, index) => (index + 1).ToString())
+            .ToArray()
+        ?? [];
     
     public void Dispose()
     {

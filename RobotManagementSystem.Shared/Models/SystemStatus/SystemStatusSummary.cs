@@ -7,6 +7,7 @@ public class SystemStatusSummary
 
     public double? AverageLatencyMs { get; set; }
     public double? LastLatencyMs { get; set; }
+    public List<double> RecentLatenciesMs { get; set; } = [];
 
     public int RetryAttempts { get; set; }
     public DateTime? LastUpdated { get; set; }

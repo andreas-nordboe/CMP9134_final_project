@@ -56,8 +56,6 @@ public class RobotStatusService : IRobotStatusService
                 return null;
             }
             
-            await SetRobotApiStatusAsync(RobotApiStatus.Connected);
-            
             var status = await response.Content.ReadFromJsonAsync<RobotStatusResponse>();
 
             if (status != null && _robotApiStatusStore.LastRobotState != status.Status)
@@ -71,6 +69,8 @@ public class RobotStatusService : IRobotStatusService
                 await SetRobotApiStatusAsync(RobotApiStatus.Reconnecting);
                 return null;
             }
+            
+            await SetRobotApiStatusAsync(RobotApiStatus.Connected);
             
             if (DateTime.UtcNow - _robotApiStatusStore.LastSnapshotLoggedAt > TimeSpan.FromSeconds(15))
             {

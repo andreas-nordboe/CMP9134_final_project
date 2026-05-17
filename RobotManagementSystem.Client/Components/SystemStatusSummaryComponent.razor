@@ -32,3 +32,27 @@
         </div>
     </div>
 </MudPaper>
+
+<MudPaper Class="pa-0 mt-3" Outlined="true">
+    <div class="summary-header">
+        <span>API Response Time</span>
+    </div>
+
+    <div class="response-chart">
+        @if (Summary?.RecentLatenciesMs?.Any() == true)
+        {
+            <MudChart ChartType="ChartType.Line"
+                      T="double"
+                      ChartSeries="@LatencySeries"
+                      XAxisLabels="@LatencyLabels"
+                      Width="100%"
+                      Height="220px" />
+        }
+        else
+        {
+            <MudText Class="pa-4" Align="Align.Center">
+                No latency data yet
+            </MudText>
+        }
+    </div>
+</MudPaper>

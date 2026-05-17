@@ -85,4 +85,13 @@ public partial class SystemStatus : ComponentBase
             _ => "Unknown"
         };
     }
+    
+    private async Task RefreshLogsAsync()
+    {
+        if (_table != null) 
+        {
+            _table.CurrentPage = 0;
+            await _table.ReloadServerData();
+        }
+    }
 }

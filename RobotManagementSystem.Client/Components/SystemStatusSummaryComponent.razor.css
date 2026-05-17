@@ -50,3 +50,8 @@
     font-size: 0.95rem;
     line-height: 1.2;
 }
+
+.response-chart {
+    padding: 0.75rem;
+    min-height: 240px;
+}

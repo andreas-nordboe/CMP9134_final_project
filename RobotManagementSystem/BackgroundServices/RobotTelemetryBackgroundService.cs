@@ -37,10 +37,6 @@ public class RobotTelemetryBackgroundService : BackgroundService
                     (new Uri(_configuration["RobotApi:TelemetryAddress"] ?? throw new InvalidOperationException("RobotApi:TelemetryAddress is empty or missing.")), 
                         stoppingToken);
 
-                _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Connected;
-                await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Connected },
-                    stoppingToken);
-
                 var buffer = new byte [8192];
 
                 while (webSocket.State == WebSocketState.Open && !stoppingToken.IsCancellationRequested)
@@ -61,33 +57,13 @@ public class RobotTelemetryBackgroundService : BackgroundService
                     {
                         _logger.LogWarning("No telemetry received from robot simulation API in 3 seconds, assuming there was an outage.");
                         
-                        _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Reconnecting;
-                        await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Reconnecting },
-                            stoppingToken);
-                        
                         await Task.Delay(TimeSpan.FromMilliseconds(2500), stoppingToken);
-                        break;
-                    }
-
-                    if (response.MessageType == WebSocketMessageType.Close)
-                    {
-                        _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Disconnected;
-                        await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Disconnected },
-                            stoppingToken);
-                        
                         break;
                     }
                     
                     var jsonResponse = Encoding.UTF8.GetString(buffer, 0, response.Count);
                     
                     _latestTelemetryReceivedAt = DateTime.UtcNow;
-
-                    if (_robotApiStatusStore.CurrentApiStatus != RobotApiStatus.Connected)
-                    {
-                        _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Connected;
-                        await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Connected },
-                            stoppingToken);
-                    }
 
                     RobotTelemetry? robotTelemetry;
                     
@@ -119,18 +95,12 @@ public class RobotTelemetryBackgroundService : BackgroundService
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Disconnected;
-                await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[] { RobotApiStatus.Disconnected },
-                    stoppingToken);
                 
                 break;
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, "Robot Telemetry Websocket was disconnected.");
-
-                _robotApiStatusStore.CurrentApiStatus = RobotApiStatus.Reconnecting;
-                await _hubContext.Clients.All.SendCoreAsync(RobotApiStatus.StatusMethod, new object[]{RobotApiStatus.Reconnecting}, stoppingToken);
                 
                 await Task.Delay(TimeSpan.FromMilliseconds(2500), stoppingToken);
             }

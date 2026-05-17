@@ -167,7 +167,8 @@ public class SystemStatusLogService : ISystemStatusLogService
             Battery = latestTelemetry?.Battery,
             RobotX = latestTelemetry?.RobotX,
             RobotY = latestTelemetry?.RobotY,
-            RobotState = latestTelemetry?.RobotState
+            RobotState = latestTelemetry?.RobotState,
+            RecentLatenciesMs = _robotApiStatusStore.RecentLatenciesMs.ToList(),
         };
     }
 }
