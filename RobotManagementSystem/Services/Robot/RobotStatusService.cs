@@ -29,7 +29,8 @@ public class RobotStatusService : IRobotStatusService
         try
         {
             var startedAt = DateTime.UtcNow;
-            var response = await _httpClient.GetAsync("status");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            var response = await _httpClient.GetAsync("status", cts.Token);
             var latencyMs = (DateTime.UtcNow - startedAt).TotalMilliseconds;
 
             _robotApiStatusStore.LastLatencyMs = latencyMs;

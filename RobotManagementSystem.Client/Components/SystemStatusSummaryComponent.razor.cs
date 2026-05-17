@@ -32,27 +32,11 @@ public partial class SystemStatusSummaryComponent : ComponentBase, IDisposable
         ? $"{Summary.AverageLatencyMs.Value:0} ms"
         : "N/A";
 
-    private string LastLatencyText => Summary?.LastLatencyMs.HasValue == true
-        ? $"{Summary.LastLatencyMs.Value:0} ms"
-        : "N/A";
-
     private int RetryAttempts => Summary?.RetryAttempts ?? 0;
 
     private string LastUpdatedText => Summary?.LastUpdated.HasValue == true
         ? Summary.LastUpdated.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
         : "N/A";
-
-    private string LatestBatteryText => Summary?.Battery.HasValue == true
-        ? $"{Summary.Battery.Value:0.##}%"
-        : "N/A";
-
-    private string LatestPositionText =>
-        Summary?.RobotX.HasValue == true && Summary?.RobotY.HasValue == true
-            ? $"({Summary.RobotX}, {Summary.RobotY})"
-            : "N/A";
-
-    private string LatestRobotStateText =>
-        string.IsNullOrWhiteSpace(Summary?.RobotState) ? "N/A" : Summary.RobotState;
 
     private Color GetConnectionColor()
     {
