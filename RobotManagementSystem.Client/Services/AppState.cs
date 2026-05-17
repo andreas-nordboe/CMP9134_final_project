@@ -89,6 +89,7 @@ public class AppState : IAppState
     public void ToggleDarkMode()
     {
         IsDarkMode = !IsDarkMode;
+        _localStorage.SetItemAsync("IsDarkMode", IsDarkMode);
         OnDarkModeChanged?.Invoke();
     }
 

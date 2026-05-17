@@ -116,8 +116,8 @@ public partial class RobotTelemetryComponent : ComponentBase, IDisposable
 
     private string NearestObstacleText =>
         NearestObstacleDistance.HasValue
-            ? $"Nearest: {NearestObstacleDistance.Value:0.0} tiles"
-            : "Nearest: clear";
+            ? $"Closest object: {NearestObstacleDistance.Value:0.0} tiles"
+            : "Closest object: clear";
 
     private string LidarHitCountText
     {
@@ -126,7 +126,7 @@ public partial class RobotTelemetryComponent : ComponentBase, IDisposable
             if (LidarRayCount == 0)
                 return "No lidar readings";
 
-            return $"{LidarHitCount} obstacle hits / {LidarRayCount} rays";
+            return $"{LidarHitCount} readings in range / {LidarRayCount} rays";
         }
     }
 

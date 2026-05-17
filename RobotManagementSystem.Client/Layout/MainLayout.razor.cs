@@ -47,21 +47,13 @@ public partial class MainLayout : IDisposable
         }
         
         
-        var isDarkMode = localStorage.GetItemAsync<bool>("IsDarkMode");
-        if (isDarkMode.IsCompleted)
+        var isDarkMode = await localStorage.GetItemAsync<bool>("IsDarkMode");
+        if (isDarkMode)
         {
-            AppState.IsDarkMode = isDarkMode.Result;
+            AppState.IsDarkMode = isDarkMode;
             //Appstate.OnDarkModeChanged?.Invoke();
             StateHasChanged();
         }
-
-        AppState.IsDarkMode = true; // Easier on the eyes while developing 
-    }
-
-    async void ToggleDarkMode()
-    {
-        AppState.IsDarkMode = !AppState.IsDarkMode;
-        await localStorage.SetItemAsync("IsDarkMode", AppState.IsDarkMode);
     }
 
     void ToggleSidebar()
