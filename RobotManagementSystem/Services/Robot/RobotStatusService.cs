@@ -28,7 +28,17 @@ public class RobotStatusService : IRobotStatusService
     {
         try
         {
+            var startedAt = DateTime.UtcNow;
             var response = await _httpClient.GetAsync("status");
+            var latencyMs = (DateTime.UtcNow - startedAt).TotalMilliseconds;
+
+            _robotApiStatusStore.LastLatencyMs = latencyMs;
+            _robotApiStatusStore.RecentLatenciesMs.Add(latencyMs);
+
+            if (_robotApiStatusStore.RecentLatenciesMs.Count > 20)
+            {
+                _robotApiStatusStore.RecentLatenciesMs.RemoveAt(0);
+            }
 
             if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {

@@ -16,11 +16,13 @@ public class SystemStatusLogService : ISystemStatusLogService
 {
     private readonly RobotApiDbContext _dbContext;
     private readonly ILogger<SystemStatusLogService> _logger;
+    private readonly IRobotApiStatusStore _robotApiStatusStore;
 
-    public SystemStatusLogService(RobotApiDbContext dbContext, ILogger<SystemStatusLogService> logger)
+    public SystemStatusLogService(RobotApiDbContext dbContext, ILogger<SystemStatusLogService> logger, IRobotApiStatusStore robotApiStatusStore)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _robotApiStatusStore = robotApiStatusStore;
     }
 
     public async Task LogConnectionChangedAsync(string newStatus)
@@ -133,5 +135,39 @@ public class SystemStatusLogService : ISystemStatusLogService
             PageSize = pageSize
         };
 
+    }
+
+    public async Task<SystemStatusSummary> GetSystemStatusSummaryAsync()
+    {
+        var latestTelemetry = await _dbContext.SystemStatusLogs
+            .Where(x => x.EventType == SystemStatusEventType.TELEMETRY_SNAPSHOT)
+            .OrderByDescending(x => x.Timestamp)
+            .FirstOrDefaultAsync();
+
+        var latestLog = await _dbContext.SystemStatusLogs
+            .OrderByDescending(x => x.Timestamp)
+            .FirstOrDefaultAsync();
+
+        double? averageLatency = _robotApiStatusStore.RecentLatenciesMs.Any()
+            ? _robotApiStatusStore.RecentLatenciesMs.Average()
+            : null;
+
+        return new SystemStatusSummary
+        {
+            ConnectionStatus = _robotApiStatusStore.CurrentApiStatus,
+            SignalState = _robotApiStatusStore.CurrentApiStatus == RobotApiStatus.Connected
+                ? "Stable"
+                : "Reconnecting",
+
+            AverageLatencyMs = averageLatency,
+            LastLatencyMs = _robotApiStatusStore.LastLatencyMs,
+            RetryAttempts = _robotApiStatusStore.RetryAttempts,
+            LastUpdated = latestLog?.Timestamp,
+
+            Battery = latestTelemetry?.Battery,
+            RobotX = latestTelemetry?.RobotX,
+            RobotY = latestTelemetry?.RobotY,
+            RobotState = latestTelemetry?.RobotState
+        };
     }
 }

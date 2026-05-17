@@ -10,4 +10,6 @@ public interface ISystemStatusLogService
     Task LogTelemetrySnapshotAsync(RobotStatusResponse status);
     Task LogBackendEventAsync(SystemStatusEventType eventType, string message);
     Task<PagedResult<SystemStatusLog>> GetSystemStatusLogsAsync(SystemStatusEventType? eventType, DateTime? fromDate, int page, int pageSize);
+    public Task<SystemStatusSummary> GetSystemStatusSummaryAsync();
+
 }

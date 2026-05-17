@@ -32,4 +32,11 @@ public class SystemStatusLogsController : ControllerBase
         var systemLogs = await _systemStatusLogService.GetSystemStatusLogsAsync(eventType, fromDate, page, pageSize);
         return Ok(systemLogs);
     }
+    
+    [HttpGet("summary")]
+    public async Task<ActionResult<SystemStatusSummary>> GetSummary()
+    {
+        var summary = await _systemStatusLogService.GetSystemStatusSummaryAsync();
+        return Ok(summary);
+    }
 }
