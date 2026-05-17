@@ -23,7 +23,7 @@ public partial class SystemStatusSummaryComponent : ComponentBase, IDisposable
         await LoadSummaryAsync();
         
         _summaryCts = new CancellationTokenSource();
-        _summaryTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _summaryTimer = new PeriodicTimer(TimeSpan.FromSeconds(5));
 
         _ = PollSummaryAsync(_summaryCts.Token);
     }
@@ -59,6 +59,7 @@ public partial class SystemStatusSummaryComponent : ComponentBase, IDisposable
                 await InvokeAsync(async () =>
                 {
                     await InvokeAsync(LoadSummaryAsync);
+                    StateHasChanged();
                 });
             }
         }
