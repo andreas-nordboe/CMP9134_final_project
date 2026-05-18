@@ -42,7 +42,7 @@ public class RobotCommanderService : IRobotCommanderService
             {
                 return new RobotCommandResponse
                 {
-                    Success = true,
+                    Success = false,
                     Message = $"Move command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
                 };
             }
@@ -96,6 +96,26 @@ public class RobotCommanderService : IRobotCommanderService
                 Success = false,
                 Message = "Robot move command failed."
             };
+        }
+    }
+
+    public async Task<RobotStatusResponse?> GetRobotStatusAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<RobotStatusResponse>("/robot/commands/status");
+            if (response != null)
+            {
+                return response;
+            }
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Robot move command failed.");
+            
+            return null;
         }
     }
 }

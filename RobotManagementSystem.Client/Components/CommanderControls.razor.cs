@@ -87,11 +87,26 @@ public partial class CommanderControls : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         RobotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
+        RobotHubCommunication.ConnectionStatusChanged += OnConnectionStatusChanged;
     }
 
     private void OnTelemetryUpdated(RobotTelemetry telemetry)
     {
         InvokeAsync(StateHasChanged);
+    }
+    
+    private void OnConnectionStatusChanged(string status)
+    {
+        if (status == RobotApiStatus.Disconnected ||
+            status == RobotApiStatus.Reconnecting)
+        {
+            InvokeAsync(() =>
+            {
+                IsProcessingCommand = false;
+                AppState.SetPendingRobotCommandTarget(null);
+                StateHasChanged();
+            });
+        }
     }
 
     protected async Task MoveRobot()
@@ -115,6 +130,8 @@ public partial class CommanderControls : ComponentBase, IDisposable
         }
         catch
         {
+            IsProcessingCommand = false;
+            AppState.SetPendingRobotCommandTarget(null);
             Snackbar.Add("Could not send reset simulation command.", Severity.Error);
         }
         finally
@@ -178,11 +195,18 @@ public partial class CommanderControls : ComponentBase, IDisposable
             
             StateHasChanged();
 
-            await RobotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+            var response = await RobotCommanderService.MoveRobotAsync(new RobotNavigationRequest
             {
                 X = x,
                 Y = y
             });
+
+            if (response == null || !response.Success)
+            {
+                AppState.SetPendingRobotCommandTarget(null);
+                Snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
+                return;
+            }
 
             Snackbar.Add($"Move command sent to ({x}, {y}).", Severity.Success);
         }
@@ -215,5 +239,6 @@ public partial class CommanderControls : ComponentBase, IDisposable
     public void Dispose()
     {
         RobotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
+        RobotHubCommunication.ConnectionStatusChanged -= OnConnectionStatusChanged;
     }
 }

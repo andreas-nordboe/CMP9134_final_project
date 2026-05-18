@@ -27,62 +27,125 @@ public partial class GridComponent : ComponentBase, IDisposable
     private bool ShowCoordinates { get; set; } = true;
     private TileState? PendingCommandTile { get; set; }
     private bool IsCommandProcessing { get; set; }
+    private bool _mapLoadedSuccessfully;
+    private readonly SemaphoreSlim _mapLoadLock = new(1, 1);
+    private bool _suppressTileTransitions;
+    private bool _stuckWarningShown;
+    private bool _reloadMapOnNextTelemetry = true;
+    private DateTime? _pendingCommandStartedAt;
+    private bool _hasSeenRobotMovingForPendingCommand;
+    private DateTime? _lastTelemetryReceivedAt;
+    private static readonly TimeSpan TelemetryGapReloadThreshold = TimeSpan.FromSeconds(3);
 
     private string MapShellClass =>
-        UseLightMapTheme
-            ? "robot-map-shell robot-map-light"
-            : "robot-map-shell";
+        $"{(UseLightMapTheme ? "robot-map-shell robot-map-light" : "robot-map-shell")} " +
+        $"{(_suppressTileTransitions ? "no-tile-transitions" : "")}";
     
     protected List<TileState> Tiles { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadMapAsync();
-        
-        var storedShowCoordinates = await DataStoreService.LoadShowMapCoordinatesAsync();
-        ShowCoordinates = storedShowCoordinates ?? false;
-        
+        _suppressTileTransitions = true;
+
         _robotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
-        await _robotHubCommunication.StartAsync(); // TODO this might be a bug as it could start multiple socket connections
+        _robotHubCommunication.ConnectionStatusChanged += OnConnectionStatusChanged;
 
         _appState.OnRobotReset += HandleResetGrid;
         _appState.OnDarkModeChanged += HandleDarkModeChanged;
         _appState.OnSignalRestored += HandleSignalRestored;
         _appState.OnPendingRobotCommandTargetChanged += HandlePendingRobotCommandTargetChanged;
 
+        await LoadMapAsync();
+        await LoadInitialRobotStateAsync();
+
+        _reloadMapOnNextTelemetry = true;
+
+        var storedShowCoordinates = await DataStoreService.LoadShowMapCoordinatesAsync();
+        ShowCoordinates = storedShowCoordinates ?? false;
+
         UseLightMapTheme = !_appState.IsDarkMode;
+
+        await _robotHubCommunication.StartAsync();
+
+        StateHasChanged();
+
+        await Task.Delay(150);
+
+        _suppressTileTransitions = false;
+
         StateHasChanged();
     }
 
-    private async Task LoadMapAsync()
+    private async Task LoadMapAsync(bool forceReload = false)
     {
-        var map = await _mapService.GetMapAsync();
+        await _mapLoadLock.WaitAsync();
 
-        if (map != null)
+        try
         {
-            Console.WriteLine(map);
-            
-            GridWidth = map.Width;
-            GridHeight = map.Height;
-            LoadGridFromMapData(map);
-            return;
+            if (_mapLoadedSuccessfully && !forceReload)
+                return;
+
+            var map = await _mapService.GetMapAsync();
+
+            if (map != null)
+            {
+                GridWidth = map.Width;
+                GridHeight = map.Height;
+                LoadGridFromMapData(map);
+
+                _mapLoadedSuccessfully = true;
+                return;
+            }
+
+            _mapLoadedSuccessfully = false;
+
+            // Initial fallback only if no map has been displayed
+            if (Tiles.Count == 0)
+            {
+                GridWidth = 21;
+                GridHeight = 21;
+                SetupGrid();
+            }
         }
-        
-        if (Tiles.Count == 0)
+        finally
         {
-            GridWidth = 21;
-            GridHeight = 21;
-            SetupGrid(); // empty grid fallback
+            _mapLoadLock.Release();
         }
     }
     
     private async void HandleSignalRestored()
     {
-        await InvokeAsync(async () =>
+        await InvokeAsync(() =>
         {
-            await LoadMapAsync();
+            _suppressTileTransitions = true;
+            ClearPendingCommand();
+            _reloadMapOnNextTelemetry = true;
             StateHasChanged();
         });
+    }
+    
+    private void OnConnectionStatusChanged(string status)
+    {
+        if (status == RobotApiStatus.Disconnected ||
+            status == RobotApiStatus.Reconnecting)
+        {
+            InvokeAsync(() =>
+            {
+                _lastTelemetryReceivedAt = null;
+                ClearPendingCommand();
+                _reloadMapOnNextTelemetry = true;
+                StateHasChanged();
+            });
+        }
+    }
+    
+    private void ClearPendingCommand()
+    {
+        PendingCommandTile = null;
+        IsCommandProcessing = false;
+        _pendingCommandStartedAt = null;
+        _hasSeenRobotMovingForPendingCommand = false;
+        _appState.SetPendingRobotCommandTarget(null);
     }
 
     private async void HandleDarkModeChanged()
@@ -122,46 +185,152 @@ public partial class GridComponent : ComponentBase, IDisposable
             chargingStationTile.ContentType = GridTileType.ChargingStation;
             chargingStationTile.OriginalContentType = GridTileType.ChargingStation;
         }
-        
-        StateHasChanged(); // refreshes the grid
     }
 
     private void OnTelemetryUpdated(RobotTelemetry robotTelemetry)
     {
-        InvokeAsync(() =>
+        InvokeAsync(async () =>
         {
-            ClearOldLidarHits();
+            var now = DateTime.UtcNow;
 
-            var robotX = (int)robotTelemetry.Position.X;
-            var robotY = (int)robotTelemetry.Position.Y;
-            
-            MoveRobot(robotX, robotY);
-            
-            if (PendingCommandTile != null && PendingCommandTile.VectorPosition.X == robotX && PendingCommandTile.VectorPosition.Y == robotY)
+            if (_lastTelemetryReceivedAt.HasValue &&
+                now - _lastTelemetryReceivedAt.Value > TelemetryGapReloadThreshold)
             {
-                PendingCommandTile = null;
-                IsCommandProcessing = false;
-                _appState.SetPendingRobotCommandTarget(null);
+                _suppressTileTransitions = true;
+                ClearPendingCommand();
+                _reloadMapOnNextTelemetry = true;
             }
-            
-            if (robotTelemetry.Sensors.Lidar.Count > 0)
-            {
-                for (int angle = 0; angle < robotTelemetry.Sensors.Lidar.Count; angle++)
-                {
-                    double distance = robotTelemetry.Sensors.Lidar[angle];
 
-                    if (distance <= 0 || distance > 10)
-                    {
-                        continue;
-                    }
-                
-                    //OnLidarHit(hitX, hitY);
-                    VisualiseLidarSensor(robotTelemetry.Position.X, robotTelemetry.Position.Y, angle, distance);
+            _lastTelemetryReceivedAt = now;
+
+            await ProcessTelemetryAsync(robotTelemetry);
+            StateHasChanged();
+
+            if (_suppressTileTransitions)
+            {
+                await Task.Delay(100);
+                _suppressTileTransitions = false;
+                StateHasChanged();
+            }
+        });
+    }
+    
+    private async Task ProcessTelemetryAsync(RobotTelemetry robotTelemetry)
+    {
+        if (_reloadMapOnNextTelemetry)
+        {
+            _reloadMapOnNextTelemetry = false;
+            await LoadMapAsync(forceReload: true);
+        }
+        else if (!_mapLoadedSuccessfully)
+        {
+            await LoadMapAsync(forceReload: false);
+        }
+
+        var robotX = (int)robotTelemetry.Position.X;
+        var robotY = (int)robotTelemetry.Position.Y;
+
+        MoveRobot(robotX, robotY);
+
+        if (PendingCommandTile != null)
+        {
+            var reachedPendingTarget =
+                PendingCommandTile.VectorPosition.X == robotX &&
+                PendingCommandTile.VectorPosition.Y == robotY;
+
+            var pendingAge = _pendingCommandStartedAt.HasValue
+                ? DateTime.UtcNow - _pendingCommandStartedAt.Value
+                : TimeSpan.Zero;
+
+            if (robotTelemetry.Status == nameof(RobotStatus.MOVING))
+            {
+                _hasSeenRobotMovingForPendingCommand = true;
+            }
+
+            if (reachedPendingTarget)
+            {
+                ClearPendingCommand();
+            }
+            else if (robotTelemetry.Status == nameof(RobotStatus.STUCK))
+            {
+                ClearPendingCommand();
+
+                if (!_stuckWarningShown)
+                {
+                    _snackbar.Add("Robot is stuck. Movement command was cancelled.", Severity.Warning);
+                    _stuckWarningShown = true;
                 }
             }
-            
-            StateHasChanged();
-        });
+            else if (robotTelemetry.Battery <= 0)
+            {
+                ClearPendingCommand();
+                _snackbar.Add("Movement command cancelled because the robot battery is empty.", Severity.Error);
+            }
+            else if (_hasSeenRobotMovingForPendingCommand &&
+                     robotTelemetry.Status != nameof(RobotStatus.MOVING))
+            {
+                ClearPendingCommand();
+            }
+            else if (pendingAge > TimeSpan.FromSeconds(15))
+            {
+                ClearPendingCommand();
+                _snackbar.Add("Movement command timed out.", Severity.Warning);
+            }
+        }
+        else
+        {
+            _stuckWarningShown = robotTelemetry.Status == nameof(RobotStatus.STUCK);
+        }
+
+        var hasLidarData =
+            robotTelemetry.Sensors?.Lidar != null &&
+            robotTelemetry.Sensors.Lidar.Count > 0;
+
+        if (!hasLidarData)
+        {
+            return;
+        }
+
+        ClearOldLidarHits();
+
+        for (int angle = 0; angle < robotTelemetry.Sensors.Lidar.Count; angle++)
+        {
+            double distance = robotTelemetry.Sensors.Lidar[angle];
+
+            if (distance <= 0 || distance > 10)
+                continue;
+
+            VisualiseLidarSensor(
+                robotTelemetry.Position.X,
+                robotTelemetry.Position.Y,
+                angle,
+                distance);
+        }
+    }
+    
+    private async Task LoadInitialRobotStateAsync()
+    {
+        try
+        {
+            var robotStatusResponse = await _robotCommanderService.GetRobotStatusAsync();
+
+            if (robotStatusResponse == null)
+                return;
+
+            var robotTelemetry = new RobotTelemetry()
+            {
+                Position = robotStatusResponse.Position,
+                Battery = robotStatusResponse.Battery,
+                Status = robotStatusResponse.Status,
+                Sensors = robotStatusResponse.Sensors
+            };
+
+            await ProcessTelemetryAsync(robotTelemetry);
+        }
+        catch
+        {
+            // Ignores initial robot load failure as SignalR telemetry will update the robot when available.
+        }
     }
 
     private void ClearOldLidarHits()
@@ -209,6 +378,8 @@ public partial class GridComponent : ComponentBase, IDisposable
     {
         await InvokeAsync(async () =>
         {
+            _reloadMapOnNextTelemetry = true;
+
             await ResetGrid();
             StateHasChanged();
         });
@@ -216,14 +387,8 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     protected async Task ResetGrid()
     {
-        var newMap = await _mapService.GetMapAsync();
-        if (newMap != null)
-        {
-            GridWidth = newMap.Width;
-            GridHeight = newMap.Height;
-            LoadGridFromMapData(newMap);
-            StateHasChanged();
-        }
+        await LoadMapAsync(forceReload: true);
+        StateHasChanged();
     }
 
     private void SetupGrid()
@@ -241,7 +406,8 @@ public partial class GridComponent : ComponentBase, IDisposable
                         X = x,
                         Y = y
                     },
-                    ContentType = GridTileType.FreeSpace
+                    ContentType = GridTileType.FreeSpace,
+                    OriginalContentType = GridTileType.FreeSpace
                 };
                 Tiles.Add(newTile);
             }
@@ -274,6 +440,12 @@ public partial class GridComponent : ComponentBase, IDisposable
         // TODO Refactor these into a service or robot movement safety handler later
         // I'm just doing client side validation here as well but the request could still be sent to the backend
         // however, from testing it seems like the backend handles this safely
+        
+        if (!_robotHubCommunication.IsConnected)
+        {
+            _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+            return;
+        }
         
         if (IsCommandProcessing)
         {
@@ -313,47 +485,43 @@ public partial class GridComponent : ComponentBase, IDisposable
         
         try
         {
-            PendingCommandTile = tile;
             IsCommandProcessing = true;
-            
+            StateHasChanged();
+
+            var response = await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+            {
+                X = tile.VectorPosition.X,
+                Y = tile.VectorPosition.Y
+            });
+
+            if (response == null || !response.Success)
+            {
+                ClearPendingCommand();
+                _snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
+                return;
+            }
+
+            PendingCommandTile = tile;
+            _pendingCommandStartedAt = DateTime.UtcNow;
+            _hasSeenRobotMovingForPendingCommand = false;
+
             _appState.SetPendingRobotCommandTarget(new Vector2D
             {
                 X = tile.VectorPosition.X,
                 Y = tile.VectorPosition.Y
             });
-            
-            StateHasChanged();
 
-            await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
-            {
-                X = tile.VectorPosition.X,
-                Y = tile.VectorPosition.Y
-            });
-            
             _snackbar.Add($"Move command sent to ({tile.VectorPosition.X}, {tile.VectorPosition.Y}).", Severity.Success);
         }
-        catch (Exception e)
+        catch
         {
-            PendingCommandTile = null;
-            IsCommandProcessing = false;
-            _appState.SetPendingRobotCommandTarget(null);
-
+            ClearPendingCommand();
             _snackbar.Add("Could not send move command to robot! The simulation may currently be unavailable.", Severity.Error);
         }
         finally
         {
             StateHasChanged();
         }
-    }
-
-    protected void OnTileHovered(TileState tile)
-    {
-        // todo
-    }
-
-    protected void OnTileUnhovered(TileState tile)
-    {
-        // todo
     }
     
     private string GetTileClass(TileState tile)
@@ -435,6 +603,8 @@ public partial class GridComponent : ComponentBase, IDisposable
     public void Dispose()
     {
         _robotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
+        _robotHubCommunication.ConnectionStatusChanged -= OnConnectionStatusChanged;
+
         _appState.OnRobotReset -= HandleResetGrid;
         _appState.OnDarkModeChanged -= HandleDarkModeChanged;
         _appState.OnSignalRestored -= HandleSignalRestored;
@@ -449,12 +619,20 @@ public partial class GridComponent : ComponentBase, IDisposable
             {
                 PendingCommandTile = null;
                 IsCommandProcessing = false;
+                _pendingCommandStartedAt = null;
+                _hasSeenRobotMovingForPendingCommand = false;
                 StateHasChanged();
                 return;
             }
 
             PendingCommandTile = GetTileState(target.X, target.Y);
             IsCommandProcessing = PendingCommandTile != null;
+
+            if (IsCommandProcessing)
+            {
+                _pendingCommandStartedAt = DateTime.UtcNow;
+                _hasSeenRobotMovingForPendingCommand = false;
+            }
 
             StateHasChanged();
         });

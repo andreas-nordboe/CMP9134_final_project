@@ -311,3 +311,7 @@
 .tile-image {
     z-index: 6;
 }
+
+.no-tile-transitions .robot-tile {
+    transition: none !important;
+}

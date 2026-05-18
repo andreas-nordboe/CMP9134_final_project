@@ -247,9 +247,22 @@
         // Backoff logic that retries the request until it succeeds or the maximum number of retries is reached
         private async Task<HttpResponseMessage?> SendWithRetryAsync(Func<Task<HttpResponseMessage>> action)
         {
-            var delays = new[] { TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(5) };
+            var delays = new[]
+            {
+                TimeSpan.Zero,
+                TimeSpan.FromMilliseconds(500),
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(4),
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(8)
+            };
+
             foreach (var delay in delays)
             {
+                if (delay > TimeSpan.Zero)
+                    await Task.Delay(delay);
+
                 try
                 {
                     var response = await action();
@@ -257,7 +270,7 @@
                     if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
                     {
                         _logger.LogWarning("Robot API returned 503. Retrying...");
-                        await Task.Delay(delay);
+                        response.Dispose();
                         continue;
                     }
 
@@ -266,12 +279,10 @@
                 catch (TaskCanceledException ex)
                 {
                     _logger.LogWarning(ex, "Robot API timeout. Retrying...");
-                    await Task.Delay(delay);
                 }
                 catch (HttpRequestException ex)
                 {
                     _logger.LogWarning(ex, "Robot API connection failed. Retrying...");
-                    await Task.Delay(delay);
                 }
             }
 
