@@ -87,6 +87,7 @@ public class MissionLogsService : IMissionLogsService
                 },
                 Battery = missionLog.Battery,
                 ConnectionStatus = missionLog.ConnectionStatus,
+                Details = missionLog.Details
             }).ToListAsync<MissionLogDto>();
     }
 

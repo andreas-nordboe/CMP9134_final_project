@@ -1,0 +1,44 @@
+.mission-page {
+    height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.mission-card {
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.summary-header {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.mission-toolbar {
+    flex: 0 0 auto;
+}
+
+.mission-log-table {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.mission-log-table .mud-table-container {
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}

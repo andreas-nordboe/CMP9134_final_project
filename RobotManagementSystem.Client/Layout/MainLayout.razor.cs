@@ -34,11 +34,11 @@ public partial class MainLayout : IDisposable
         {
             await DataStore.ClearAuthenticationDetailsAsync();
             AppState.ClearUser();
+            await RobotHubCommunication.StopAsync();
         }
         
         AppState.OnUserChanged += StateHasChanged;
         AppState.OnDarkModeChanged += StateHasChanged;
-        AppState.OnUserChanged += StateHasChanged;
         AppState.OnApiStatusChanged += OnApiStatusChanged;
 
         if (AppState.CurrentUser is null || !AppState.CurrentUser.IsLoggedIn)

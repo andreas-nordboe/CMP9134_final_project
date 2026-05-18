@@ -2,30 +2,54 @@
 @using System.Globalization
 @inject ISnackbar SnackBar
 
-<MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full mx-4 my-4">
-    <MudTable Class="d-flex align-center justify-center mud-width-full mud-height-full" Items="@Logs" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingLogs" LoadingProgressColor="Color.Info">
-        <HeaderContent>
-            <MudTh>Date/Time</MudTh>
-            <MudTh>Username</MudTh>
-            <MudTh>Role</MudTh>
-            <MudTh>Command</MudTh>
-            <MudTh>Result</MudTh>
-            <MudTh>Battery</MudTh>
-            <MudTh>Position</MudTh>
-            <MudTh>Connection Status</MudTh>
-            <MudTh>Details</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Date/Time">@context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))</MudTd>
-            <MudTd DataLabel="Username">@context.User.Username</MudTd>
-            <MudTd DataLabel="Role">@context.Role.ToString()</MudTd> @* TODO Show different icons for different roles here later*@
-            <MudTd DataLabel="Command">@context.Command</MudTd> @* TODO Show different icons for different commands here later*@
-            <MudTd DataLabel="Result">@context.CommandResult</MudTd>
-            <MudTd DataLabel="Battery">@context.Battery</MudTd>
-            <MudTd DataLabel="Position">(@context.RobotPosition?.X, @context.RobotPosition?.Y)</MudTd>
-            <MudTd DataLabel="Connection Status">@context.ConnectionStatus</MudTd>
-            <MudTd DataLabel="Details">@context.Details</MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudPaper>
+<MudContainer MaxWidth="MaxWidth.False" Class="mission-page px-6 pt-4 pb-6">
 
+    <MudPaper Class="mission-card pa-3 d-flex flex-column" Outlined="true">
+
+        <div class="summary-header">
+            <span>Mission Logs</span>
+        </div>
+
+        <MudStack Row="true" Spacing="2" Class="mission-toolbar mb-4">
+            @* filters/buttons here *@
+        </MudStack>
+
+        <MudTable Class="mission-log-table"
+                  Items="@Logs"
+                  Hover="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Loading="@IsLoadingLogs"
+                  LoadingProgressColor="Color.Info"
+                  FixedHeader="true"
+                  Elevation="3"
+                  Height="calc(100vh - 170px)">
+            <HeaderContent>
+                <MudTh>Date/Time</MudTh>
+                <MudTh>Username</MudTh>
+                <MudTh>Role</MudTh>
+                <MudTh>Command</MudTh>
+                <MudTh>Result</MudTh>
+                <MudTh>Battery</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Connection Status</MudTh>
+                <MudTh>Details</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Date/Time">
+                    @context.Timestamp.ToString("ddd dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("en-GB"))
+                </MudTd>
+                <MudTd DataLabel="Username">@context.User.Username</MudTd>
+                <MudTd DataLabel="Role">@context.Role.ToString()</MudTd>
+                <MudTd DataLabel="Command">@context.Command</MudTd>
+                <MudTd DataLabel="Result">@context.CommandResult</MudTd>
+                <MudTd DataLabel="Battery">@context.Battery</MudTd>
+                <MudTd DataLabel="Position">(@context.RobotPosition?.X, @context.RobotPosition?.Y)</MudTd>
+                <MudTd DataLabel="Connection Status">@context.ConnectionStatus</MudTd>
+                <MudTd DataLabel="Details">@DetailsText(context.Details)</MudTd>
+            </RowTemplate>
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>

@@ -30,7 +30,7 @@ public partial class Register : ComponentBase
         if (registerUserResponse != null)
         {
             NavigationManager.NavigateTo("/");
-            StateHasChanged();
+            return;
         }
         else
         {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services.DataStore;
+using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Models.Authentication;
 
 namespace RobotManagementSystem.Client.Services.Sessions;
@@ -12,16 +13,18 @@ public class UserSessionService : IUserSessionService
     private readonly IAppState _appState;
     private readonly NavigationManager _navigationManager;
     private readonly ISnackbar _snackbar;
+    private readonly RobotHubCommunication _robotHubCommunication;
     
     private Timer? _sessionExpiryWarningTimer;
     private Timer? _logoutTimer;
 
-    public UserSessionService(IDataStoreService dataStore, IAppState appState, NavigationManager navigationManager, ISnackbar snackbar)
+    public UserSessionService(IDataStoreService dataStore, IAppState appState, NavigationManager navigationManager, ISnackbar snackbar, RobotHubCommunication robotHubCommunication)
     {
         _dataStore = dataStore;
         _appState = appState;
         _navigationManager = navigationManager;
         _snackbar = snackbar;
+        _robotHubCommunication = robotHubCommunication;
     }
     
     public void MonitorUserSession(AuthenticationResponse? authenticationResponse)
@@ -74,6 +77,7 @@ public class UserSessionService : IUserSessionService
     {
         await _dataStore.ClearAuthenticationDetailsAsync();
         _appState.ClearUser();
+        await _robotHubCommunication.StopAsync();
         
         _snackbar.Add("Login session has expired. Please log in again.", Severity.Warning);
         

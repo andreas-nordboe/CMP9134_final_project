@@ -114,6 +114,6 @@ public class AuthenticationService : IAuthenticationService
     {
         await _dataStoreService.ClearAuthenticationDetailsAsync();
         _appState.ClearUser();
-        await _robotHubCommunication.DisposeAsync();
+        await _robotHubCommunication.StopAsync();
     }
 }

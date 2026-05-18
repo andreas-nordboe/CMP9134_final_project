@@ -27,4 +27,9 @@ public partial class MissionLogs : ComponentBase
             SnackBar.Add("Failed to load mission logs.", Severity.Error);
         }
     }
+
+    private string DetailsText(string? logDetails)
+    {
+        return string.IsNullOrWhiteSpace(logDetails) ? "N/A" : logDetails;
+    }
 }
