@@ -31,3 +31,15 @@ jobs:
       - name: Run unit tests
         run: dotnet test --configuration Release --no-build
 
+      - name: Build Docker compose services
+        run: docker compose build
+    
+      - name: Run Docker Container
+        run: docker compose up -d
+        
+      - name: Chekck backend health
+        run: curl --fail http://localhost:5085/health || exit 1
+        
+      - name: Stop Docker Container
+        if: always()
+        run: docker compose down

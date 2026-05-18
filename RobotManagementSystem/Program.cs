@@ -78,6 +78,7 @@ public class Program
         builder.Services.AddSingleton<IRobotApiStatusStore, RobotApiStatusStore>();
         builder.Services.AddScoped<IMissionLogsService, MissionLogsService>();
         builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
+        builder.Services.AddHealthChecks();
         builder.Services.AddHttpClient<IRobotStatusService, RobotStatusService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException()); // TODO this stops the backend from working if the RobotApi is missing, imrpove with bette error handling and logging later
@@ -162,6 +163,7 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.MapHealthChecks("/health");
 
 
         app.MapControllers();
