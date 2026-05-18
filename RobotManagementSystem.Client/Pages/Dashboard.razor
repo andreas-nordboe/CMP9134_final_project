@@ -1,6 +1,7 @@
 @page "/"
 @using RobotManagementSystem.Client.Components
 @using RobotManagementSystem.Client.Services
+@using RobotManagementSystem.Shared.Models.Users
 @inject IAppState AppState
 
 <MudContainer MaxWidth="MaxWidth.False" Class="px-6 py-4 dashboard-page">
@@ -23,9 +24,12 @@
                     <RobotTelemetryComponent />
                 </MudPaper>
 
-                <MudPaper Class="dashboard-card flex-grow-1" Outlined="true">
-                    <CommanderControls />
-                </MudPaper>
+                @if (AppState.CurrentUser != null && (AppState.CurrentUser.Role == UserRole.Admin || AppState.CurrentUser.Role == UserRole.Auditor || AppState.CurrentUser.Role == UserRole.Admin))
+                {
+                    <MudPaper Class="dashboard-card flex-grow-1" Outlined="true">
+                        <CommanderControls />
+                    </MudPaper>
+                }
 
             </MudStack>
         </MudItem>
