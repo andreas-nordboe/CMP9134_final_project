@@ -158,7 +158,11 @@ public class Program
             });
         }
 
-        app.UseHttpsRedirection();
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
+        
         app.UseCors("Frontend");
 
         app.UseAuthentication();
