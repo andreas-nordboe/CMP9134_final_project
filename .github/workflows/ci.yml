@@ -37,22 +37,22 @@ jobs:
       - name: Run Docker Container
         run: docker compose up -d
         
-      -name: Chekck backend health (try for 30 seconds three times)
-               - run: |
-               - for i in {1..30}; do
-               - if curl --fail http://localhost:5085/health; then
-               - echo "Backend is healthy"
-               - exit 0
-               - fi
-
-               - echo "Backend is not ready yet..."
-               - docker compose ps
-               - sleep 3
-               - done
-
-               - echo "Backend did not become healthy"
-               - docker compose logs robotmanagementsystem
-               - exit 1
+      - name: Check backend health
+        run: |
+          for i in {1..30}; do
+            if curl --fail http://localhost:5085/health; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+          
+            echo "Backend is not ready yet..."
+            docker compose ps
+            sleep 3
+          done
+          
+          echo "Backend did not become healthy"
+          docker compose logs robotmanagementsystem
+          exit 1
         
       - name: Stop Docker Container
         if: always()
