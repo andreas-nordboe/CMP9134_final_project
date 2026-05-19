@@ -4,21 +4,20 @@ using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.DataStore;
 using RobotManagementSystem.Client.Services.Robot;
+using RobotManagementSystem.Client.Services.Sessions;
 using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Layout;
 
-public partial class MainLayout
+public partial class MainLayout : IDisposable
 {
     private bool _sidebarOpen = true; // open by default
-    
-    [Inject] private IAppState Appstate { get; set; }
-    
     [Inject] private NavigationManager NavigationManager { get; set; }
     
     [Inject] private IDataStoreService DataStore { get; set; }
     [Inject] private IAppState AppState { get; set; }
     [Inject] private RobotHubCommunication RobotHubCommunication { get; set; }
+    [Inject] private IUserSessionService UserSessionService { get; set; }
     
     protected override async Task OnInitializedAsync()
     {
@@ -28,49 +27,49 @@ public partial class MainLayout
         if (auth != null && !JWTHelper.IsAccessTokenExpired(auth.AccessToken))
         {
             AppState.SetLoggedInUserFromAuthentication(auth);
+            UserSessionService.MonitorUserSession(auth);
             await RobotHubCommunication.StartAsync();
         }
         else
         {
             await DataStore.ClearAuthenticationDetailsAsync();
             AppState.ClearUser();
+            await RobotHubCommunication.StopAsync();
         }
         
-        Appstate.OnUserChanged += StateHasChanged;
-        Appstate.OnDarkModeChanged += StateHasChanged;
-        Appstate.OnUserChanged += StateHasChanged;
+        AppState.OnUserChanged += StateHasChanged;
+        AppState.OnDarkModeChanged += StateHasChanged;
+        AppState.OnApiStatusChanged += OnApiStatusChanged;
 
-        if (Appstate.CurrentUser is null || !Appstate.CurrentUser.IsLoggedIn)
+        if (AppState.CurrentUser is null || !AppState.CurrentUser.IsLoggedIn)
         {
             NavigationManager.NavigateTo("/login");
         }
         
         
-        var isDarkMode = localStorage.GetItemAsync<bool>("IsDarkMode");
-        if (isDarkMode.IsCompleted)
+        var isDarkMode = await localStorage.GetItemAsync<bool>("IsDarkMode");
+        if (isDarkMode)
         {
-            Appstate.IsDarkMode = isDarkMode.Result;
+            AppState.IsDarkMode = isDarkMode;
             //Appstate.OnDarkModeChanged?.Invoke();
             StateHasChanged();
         }
-
-        Appstate.IsDarkMode = true; // Easier on the eyes while developing 
-    }
-
-    async void ToggleDarkMode()
-    {
-        Appstate.IsDarkMode = !Appstate.IsDarkMode;
-        await localStorage.SetItemAsync("IsDarkMode", Appstate.IsDarkMode);
     }
 
     void ToggleSidebar()
     {
         _sidebarOpen = !_sidebarOpen;
     }
+    
+    private void OnApiStatusChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     public void Dispose()
     {
-        Appstate.OnUserChanged -= StateHasChanged;
-        Appstate.OnDarkModeChanged -= StateHasChanged;
+        AppState.OnUserChanged -= StateHasChanged;
+        AppState.OnDarkModeChanged -= StateHasChanged;
+        AppState.OnApiStatusChanged -= OnApiStatusChanged;
     }
 }

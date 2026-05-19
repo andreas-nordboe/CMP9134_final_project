@@ -4,4 +4,11 @@ namespace RobotManagementSystem.Services;
 public interface IRobotApiStatusStore
 {
     public string CurrentApiStatus { get; set; }
+    string LastRobotState { get; set; }
+    DateTime LastSnapshotLoggedAt { get; set; }
+    
+    // Summary fields
+    double? LastLatencyMs { get; set; }
+    List<double> RecentLatenciesMs { get; }
+    int RetryAttempts { get; set; }
 }

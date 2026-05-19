@@ -11,6 +11,8 @@ using RobotManagementSystem.Services.Authentication;
 using RobotManagementSystem.Services.FailureHandling;
 using RobotManagementSystem.Services.MissionLogs;
 using RobotManagementSystem.Services.Security;
+using RobotManagementSystem.Services.System;
+using RobotManagementSystem.Services.SystemStatus;
 using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem;
@@ -31,7 +33,7 @@ public class Program
         {
             options.AddPolicy("Frontend", policy =>
             {
-                policy.WithOrigins("http://localhost:5116").AllowAnyHeader().AllowAnyMethod();
+                policy.WithOrigins("http://localhost:5116").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
             });
         });
         
@@ -72,19 +74,22 @@ public class Program
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddHostedService<RobotTelemetryBackgroundService>();
+        builder.Services.AddHostedService<RobotApiHealthCheckerService>();
         builder.Services.AddSingleton<IRobotApiStatusStore, RobotApiStatusStore>();
         builder.Services.AddScoped<IMissionLogsService, MissionLogsService>();
+        builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
+        builder.Services.AddHealthChecks();
         builder.Services.AddHttpClient<IRobotStatusService, RobotStatusService>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException()); // TODO this stops the backend from working if the RobotApi is missing, imrpove with bette error handling and logging later
-            client.Timeout = TimeSpan.FromSeconds(10);
+            client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException());
+            client.Timeout = TimeSpan.FromSeconds(2);
         });
 
         // Adds a Httpclient using the IRobotApi service to interact with the external RobotApi
         builder.Services.AddHttpClient<IRobotApiService, RobotApiService>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException()); // TODO this stops the backend from working if the RobotApi is missing, imrpove with bette error handling and logging later
-            client.Timeout = TimeSpan.FromSeconds(10);
+            client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException());
+            client.Timeout = TimeSpan.FromSeconds(2);
         });
         builder.Services.AddSignalR();
         
@@ -104,16 +109,32 @@ public class Program
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTConfiguration:SecretKey"] ?? string.Empty)), // Falls back to empty string if JWT is missing to avoid crashes
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTConfiguration:SecretKey"] ?? throw new InvalidOperationException())), 
                     ValidIssuer = builder.Configuration["JWTConfiguration:Issuer"],
                     ValidAudience = builder.Configuration["JWTConfiguration:Audience"],
                     ClockSkew = TimeSpan.Zero,
                     ValidateLifetime = true,
                 };
+                jwtBearerOptions.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hubs/robot-telemetry")))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+
             });
 
         builder.Services.AddDbContext<RobotApiDbContext>(options =>
             options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+        
 
         builder.Services.AddAuthorization();
         
@@ -152,15 +173,23 @@ public class Program
             });
         }
 
-        app.UseHttpsRedirection();
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
+        
         app.UseCors("Frontend");
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.MapHealthChecks("/health");
 
 
         app.MapControllers();
-        app.MapHub<RobotTelemetryHub>("/hubs/robot-telemetry");
+        app.MapHub<RobotTelemetryHub>("/hubs/robot-telemetry", options =>
+        {
+            options.CloseOnAuthenticationExpiration = true;
+        });
 
         app.Run();
     }

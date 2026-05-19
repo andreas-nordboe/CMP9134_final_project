@@ -7,11 +7,13 @@
 @inject IDataStoreService _dataStore
 @implements IDisposable
 
-<MudPaper Outlined="true" Class="ml-5 rounded-lg" Width="512px">
-    <MudText Typo="Typo.subtitle2" Style="font-weight:bold" Class="px-3 py-2 border-bottom fw-bold">
-        User Profile
-    </MudText>
-    <MudDivider/>
+
+<MudPaper Class="user-accounts-card pa-0" Outlined="true">
+
+    <div class="summary-header">
+        <span>Your User Account</span>
+    </div>
+    
     <MudGrid Spacing="0">
         <MudItem xs="12" md="4" Class="pa-4 border-right">
             <MudStack Spacing="3">
@@ -52,7 +54,7 @@
                     {
                         case "NoRole":
                             <div class="d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Color="Color.Success" Size="Size.Small" Class="mr-2"></MudIcon>
+                                <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Color="Color.Error" Size="Size.Small" Class="mr-2"></MudIcon>
                                 <MudText>You do not have any permissions</MudText>
                             </div>
                             break;

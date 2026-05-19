@@ -1,4 +1,4 @@
-name: ASP.NET Core Continuous Integration (CI)
+name: ASP.NET Core Continuous Integration (CI/CD)
 
 on: 
   push: 
@@ -31,3 +31,58 @@ jobs:
       - name: Run unit tests
         run: dotnet test --configuration Release --no-build
 
+      - name: Build Docker compose services
+        run: docker compose build
+    
+      - name: Run Docker Container
+        run: docker compose up -d
+        
+      - name: Check backend health
+        run: |
+          for i in {1..30}; do
+            if curl --fail http://localhost:5085/health; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+          
+            echo "Backend is not ready yet..."
+            docker compose ps
+            sleep 3
+          done
+          
+          echo "Backend did not become healthy"
+          docker compose logs robotmanagementsystem
+          exit 1
+        
+      - name: Stop Docker Container
+        if: always()
+        run: docker compose down
+        
+  publish-docker-images:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build backend Docker image
+        run: docker build -t ghcr.io/andreas-nordboe/cmp9134_final_project/robotmanagementsystem:${{ github.ref_name }} -f RobotManagementSystem/Dockerfile .
+
+      - name: Build client Docker image
+        run: docker build -t ghcr.io/andreas-nordboe/cmp9134_final_project/robotmanagementsystem-client:${{ github.ref_name }} -f RobotManagementSystem.Client/Dockerfile .
+
+      - name: Push backend Docker image
+        run: docker push ghcr.io/andreas-nordboe/cmp9134_final_project/robotmanagementsystem:${{ github.ref_name }}
+
+      - name: Push client Docker image
+        run: docker push ghcr.io/andreas-nordboe/cmp9134_final_project/robotmanagementsystem-client:${{ github.ref_name }}

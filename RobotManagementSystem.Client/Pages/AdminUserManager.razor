@@ -1,30 +1,58 @@
 @page "/admin"
 
-<MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full mx-4 my-4">
-    <MudTable Class="d-flex align-center justify-center mud-width-full mud-height-full" Items="@UserAccounts" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@IsLoadingUserAccounts" LoadingProgressColor="Color.Info">
-        <HeaderContent>
-            <MudTh>Id</MudTh>
-            <MudTh>Username</MudTh>
-            <MudTh>First Name</MudTh>
-            <MudTh>Last Name</MudTh>
-            <MudTh>Role</MudTh>
-            <MudTh>Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
-            <MudTd DataLabel="Username">@context.Username</MudTd>
-            <MudTd DataLabel="First Name">@context.FirstName</MudTd>
-            <MudTd DataLabel="Last Name">@context.LastName</MudTd> 
-            <MudTd DataLabel="Role">@context.Role</MudTd>
-            <MudTd DataLabel="Actions">
-                @*Buttons are disabled here for visual clarity, but the server still rejects the request if the user is trying to delete or edit the root admin user*@
-                <MudButton Variant="Variant.Filled" Disabled="@(context.Username == "admin")" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => EditUserRole(context))">
-                    Edit User Role
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Disabled="@(context.Username == "admin")" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteUserAccount(context))">
-                    Delete User
-                </MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudPaper>
+<MudContainer MaxWidth="MaxWidth.False" Class="admin-page px-6 pt-4 pb-6">
+
+    <MudPaper Class="admin-card pa-3 d-flex flex-column" Outlined="true">
+
+        <div class="summary-header">
+            <span>User Administration</span>
+        </div>
+
+        <MudTable Class="admin-table mud-width-full"
+                  Items="@UserAccounts"
+                  Hover="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Loading="@IsLoadingUserAccounts"
+                  LoadingProgressColor="Color.Info"
+                  FixedHeader="true"
+                  Height="calc(100vh - 150px)">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Username</MudTh>
+                <MudTh>First Name</MudTh>
+                <MudTh>Last Name</MudTh>
+                <MudTh>Role</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="Username">@context.Username</MudTd>
+                <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+                <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+                <MudTd DataLabel="Role">@context.Role</MudTd>
+
+                <MudTd DataLabel="Actions">
+                    @* Buttons are disabled here for visual clarity, but the server still rejects the request if the user is trying to delete or edit the root admin user *@
+                    <MudButton Variant="Variant.Filled"
+                               Disabled="@(context.Username == "admin")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Edit"
+                               OnClick="@(() => EditUserRole(context))">
+                        Edit User Role
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Disabled="@(context.Username == "admin")"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="@(() => DeleteUserAccount(context))">
+                        Delete User
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>

@@ -60,6 +60,42 @@ namespace RobotManagementSystem.Migrations
                     b.ToTable("MissionLogs");
                 });
 
+            modelBuilder.Entity("RobotManagementSystem.Shared.Models.SystemStatus.SystemStatusLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("Battery")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("CurrentStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RobotState")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RobotX")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RobotY")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SystemStatusLogs");
+                });
+
             modelBuilder.Entity("RobotManagementSystem.Shared.Models.Users.UserAccount", b =>
                 {
                     b.Property<int>("Id")

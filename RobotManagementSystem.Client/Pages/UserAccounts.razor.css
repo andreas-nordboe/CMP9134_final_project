@@ -1,0 +1,13 @@
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.user-accounts-card {
+    width: 100%;
+    overflow: hidden;
+}

@@ -7,6 +7,7 @@ public class DataStoreServiceService : IDataStoreService
 {
     private readonly ILocalStorageService _localStorage;
     private const string AuthenticationDetailsKey = "AuthenticationDetails";
+    private const string ShowMapCoordinatesKey = "ShowMapCoordinates";
 
     public DataStoreServiceService(ILocalStorageService localStorage)
     {
@@ -26,5 +27,20 @@ public class DataStoreServiceService : IDataStoreService
     public async Task ClearAuthenticationDetailsAsync()
     {
         await _localStorage.RemoveItemAsync(AuthenticationDetailsKey);
+    }
+    
+    public async Task StoreShowMapCoordinatesAsync(bool showCoordinates)
+    {
+        await _localStorage.SetItemAsync(ShowMapCoordinatesKey, showCoordinates);
+    }
+
+    public async Task<bool?> LoadShowMapCoordinatesAsync()
+    {
+        return await _localStorage.GetItemAsync<bool?>(ShowMapCoordinatesKey);
+    }
+
+    public async Task ClearShowMapCoordinatesAsync()
+    {
+        await _localStorage.RemoveItemAsync(ShowMapCoordinatesKey);
     }
 }

@@ -4,48 +4,40 @@
 @using RobotManagementSystem.Shared.Models.Users
 @inject IAppState AppState
 
-<MudSpacer/>
+<MudContainer MaxWidth="MaxWidth.False" Class="px-6 py-4 dashboard-page">
+    <MudGrid Spacing="2" Class="dashboard-grid">
 
-@if (AppState.IsUserLoggedIn())
-{
-    <MudText Class="mb-4" Align="Align.Center" Typo="Typo.h3">
-        Welcome, @AppState.AuthenticationDetails?.FirstName!
-    </MudText>
-}
-
-<MudSpacer/>
-
-@if (AppState.IsUserLoggedIn() && AppState.CurrentUser?.Role is UserRole.Admin or UserRole.Commander or UserRole.Auditor or UserRole.Viewer)
-{
-    <MudGrid Class="my-6 mx-6">
-        <MudItem xs="6">
-            <MudPaper Class="d-flex align-center justify-center mud-width-full py-4" Style="min-height: 1000px">
-                <GridComponent/>
+        <MudItem xs="12" lg="7" xl="8" Class="dashboard-left">
+            <MudPaper Class="dashboard-card map-card" Outlined="true">
+                <div class="summary-header">
+                </div>
+                <div class="map-card-body">
+                    <GridComponent />
+                </div>
             </MudPaper>
         </MudItem>
-        <MudItem xs="6">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
-                        <RobotTelemetryComponent/>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudPaper Style="min-height: 500px" Class="d-flex align-center justify-center mud-width-full py-4">
-                        <CommanderControls/>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudItem>
-    </MudGrid>
-    <MudSpacer/>
-}
-else
-{
-    <MudContainer Class="d-flex align-center justify-center mud-width-full mud-height-full">
-        <MudAlert Variant="Variant.Outlined" Style="max-width: 500px; display: flex; justify-content: center" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
-            You do not have permission to access this page.
-        </MudAlert>
-    </MudContainer>
-}
 
+        <MudItem xs="12" lg="5" xl="4" Class="dashboard-right">
+            <MudStack Spacing="2" Class="h-100">
+
+                <MudPaper Class="dashboard-card" Outlined="true">
+                    <RobotTelemetryComponent />
+                </MudPaper>
+
+                @if (AppState.CurrentUser != null && (AppState.CurrentUser.Role == UserRole.Admin || AppState.CurrentUser.Role == UserRole.Auditor || AppState.CurrentUser.Role == UserRole.Admin))
+                {
+                    <MudPaper Class="dashboard-card flex-grow-1" Outlined="true">
+                        <CommanderControls />
+                    </MudPaper>
+                }
+
+                <MudPaper Class="dashboard-card flex-grow-1" Outlined="true">
+                    <UserAccounts />
+                </MudPaper>
+                
+            </MudStack>
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>

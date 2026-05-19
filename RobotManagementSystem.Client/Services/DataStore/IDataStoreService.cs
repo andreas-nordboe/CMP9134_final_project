@@ -7,4 +7,7 @@ public interface IDataStoreService
     Task StoreAuthenticationDetailsAsync(AuthenticationResponse authenticationDetails);
     Task<AuthenticationResponse?> LoadAuthenticationDetailsAsync();
     Task ClearAuthenticationDetailsAsync();
+    Task StoreShowMapCoordinatesAsync(bool showCoordinates);
+    Task<bool?> LoadShowMapCoordinatesAsync();
+    Task ClearShowMapCoordinatesAsync();
 }

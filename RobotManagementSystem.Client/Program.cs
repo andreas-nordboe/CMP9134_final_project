@@ -1,6 +1,7 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor;
 using MudBlazor.Services;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Admin;
@@ -10,6 +11,7 @@ using RobotManagementSystem.Client.Services.Map;
 using RobotManagementSystem.Client.Services.MissionLogs;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Client.Services.Sessions;
+using RobotManagementSystem.Client.Services.SystemStatus;
 
 namespace RobotManagementSystem.Client;
 
@@ -20,7 +22,12 @@ public class Program
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
-        builder.Services.AddMudServices();
+        builder.Services.AddMudServices(config =>
+        {
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+            config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
+
+        });
         builder.Services.AddTransient<JWtAuthorisationHandler>();
         builder.Services.AddBlazoredLocalStorage();
         builder.Services.AddHttpClient("API", client =>
@@ -38,6 +45,7 @@ public class Program
         builder.Services.AddScoped<IAdminUserManagementService, AdminUserManagementService>();
         builder.Services.AddScoped<IMapService, MapService>();
         builder.Services.AddScoped<IMissionLogService, MissionLogService>();
+        builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
         
         await builder.Build().RunAsync();
     }

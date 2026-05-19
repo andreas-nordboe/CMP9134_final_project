@@ -1,58 +1,64 @@
 @using RobotManagementSystem.Shared.Models.Components
-<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height: 100vh">
-    <MudPaper Elevation="3">
-        <div style="display: grid;
-            grid-template-columns: repeat(21, 42px);
-            grid-template-rows: repeat(21, 42px);
-            gap: 2px;
-            width: fit-content;
-            padding: 5px;">
+
+<div class="@MapShellClass">
+
+    <div class="robot-map-panel">
+
+        <div class="robot-map-toolbar">
+            <div class="robot-map-toolbar-title">
+                <MudIcon Icon="@Icons.Material.Filled.Map"
+                         Size="Size.Small"
+                         Color="Color.Primary" />
+
+                <span>Robot Map</span>
+            </div>
+
+            <div class="robot-map-toolbar-actions">
+                <MudText Typo="Typo.caption" Class="coordinate-label">
+                    Coordinates
+                </MudText>
+
+                <MudSwitch T="bool"
+                           Value="@ShowCoordinates"
+                           ValueChanged="OnShowCoordinatesChanged"
+                           Color="Color.Primary"
+                           Size="Size.Small" />
+            </div>
+        </div>
+
+        <div class="robot-grid"
+             style="grid-template-columns: repeat(@GridWidth, minmax(0, 1fr)); grid-template-rows: repeat(@GridHeight, minmax(0, 1fr));">
+
             @foreach (var tile in Tiles)
             {
-                <MudPaper @onclick="() => OnTileClicked(tile)" 
-                          Style="@($"width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; " +
-                                 (tile.ContentType == GridTileType.Obstacle
-                                    ? "background-color: #424242; color: white;"
-                                    : tile.ContentType == GridTileType.LidarHit
-                                    ? "background-color: red; color: white;"
-                                    : tile.ContentType == GridTileType.LidarVisibility
-                                    ? "background-color: rgba(255,255,0,0.25); color: black;"
-                                    : "background-color: var(--mud-palette-primary-lighten); color: black;"))" 
-                          Elevation="1" 
-                          Square="true">
+                <div @onclick="() => OnTileClicked(tile)"
+                     class="@GetTileClass(tile)">
+
                     @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
-                    { 
-                        <img src="@tile.ImageUrl" style="width: 36px; height: 36px; object-fit: contain;"/>
+                    {
+                        <img src="@tile.ImageUrl"
+                             class="tile-image"
+                             alt="Robot" />
                     }
-                    @*<div class="tile-text">
-                        <MudText>@tile.VectorPosition.X,@tile.VectorPosition.Y</MudText>
-                    </div>*@
-                </MudPaper>
+                    
+                    @if (tile.ContentType == GridTileType.ChargingStation)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.BatteryChargingFull"
+                                 Class="charging-station-icon" />
+                    }
+
+                    @if (ShowCoordinates)
+                    {
+                        <span class="tile-coordinates">
+                            @tile.VectorPosition.X,@tile.VectorPosition.Y
+                        </span>
+                    }
+
+                </div>
             }
+
         </div>
-    </MudPaper>
-</MudContainer>
 
-@*
-<MudPaper Class="pa-4 mt-4">
-    <MudText Typo="Typo.h6">Controls</MudText>
-    
-    <MudStack Row="true" Spacing="2" Class="mt-2">
-        <MudButton Variant="Variant.Filled" OnClick="@CenterRobot">
-            CenterRobot
-        </MudButton>
-        
-        <MudButton Variant="Variant.Filled" OnClick="@() => PlaceObstacle(5,5)">
-            Place Random Obstacle Test
-        </MudButton>
-        
-        <MudButton Variant="Variant.Filled" OnClick="@() => MoveRobot(1,0)">
-            Move Robot Right
-        </MudButton>
-        
-        <MudButton Variant="Variant.Filled" OnClick="@ClearGrid">
-            Clear Grid
-        </MudButton>
-    </MudStack>
-</MudPaper>*@
+    </div>
 
+</div>

@@ -1,31 +1,47 @@
-﻿@inherits LayoutComponentBase
+﻿@using RobotManagementSystem.Shared.Models.Robot
+@inherits LayoutComponentBase
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 
 <PageTitle>Ground Control Station</PageTitle>
-<MudThemeProvider IsDarkMode="@Appstate.IsDarkMode" />
+<MudThemeProvider IsDarkMode="@AppState.IsDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        @if (Appstate.CurrentUser != null && Appstate.CurrentUser.IsLoggedIn)
+        @if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
         {
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())"/>
         }
         <MudSpacer/>
         <MudText Typo="Typo.h4">Ground Control Station</MudText>
         <MudSpacer/>
-        <MudIconButton @onclick="Appstate.ToggleDarkMode" Icon="@(Appstate.IsDarkMode ? @Icons.Material.Filled.DarkMode : @Icons.Material.Filled.WbSunny)" Color="Color.Inherit" Edge="Edge.End"/>
+        <MudIconButton @onclick="AppState.ToggleDarkMode" Icon="@(AppState.IsDarkMode ? @Icons.Material.Filled.DarkMode : @Icons.Material.Filled.WbSunny)" Color="Color.Inherit" Edge="Edge.End"/>
     </MudAppBar>
-    @if (Appstate.CurrentUser != null && Appstate.CurrentUser.IsLoggedIn)
+    @if (AppState.CurrentUser != null && AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
     {
         <MudDrawer Variant="DrawerVariant.Persistent" Open="@_sidebarOpen" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="5">
             <NavMenu/>
         </MudDrawer>
     }
-    <MudAlert Class="mud-width-full" Severity="Severity.Warning" Variant="Variant.Outlined">WARNING: Signal Lost. Reconnecting</MudAlert>
+    
     <MudMainContent>
+        <div style="min-height: 56px;">
+           @if (@AppState.IsUserLoggedIn())
+           {
+               @if (AppState.ApiStatus == RobotApiStatus.Reconnecting)
+               {
+                   <MudAlert Class="mud-width-full mx-2 my-2" Severity="Severity.Warning" Variant="Variant.Outlined">WARNING: Signal Lost. Reconnecting</MudAlert>
+               }
+               else if (AppState.ApiStatus == RobotApiStatus.Disconnected)
+               {
+                   <MudAlert Class="mud-width-full" Icon="@Icons.Material.Filled.CloudOff" Severity="Severity.Error" Variant="Variant.Outlined">Robot simulation disconnected.</MudAlert>
+               }
+           }
+        </div>
+        
         @Body
+        
     </MudMainContent>
 </MudLayout>

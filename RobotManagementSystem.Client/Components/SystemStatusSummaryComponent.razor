@@ -1,0 +1,58 @@
+<MudPaper Class="pa-0 mb-3" Outlined="true">
+    <div class="summary-header">
+        <span>API Connection Status</span>
+
+        <div class="summary-online">
+            <MudIcon Icon="@Icons.Material.Filled.Circle"
+                     Color="@GetConnectionColor()"
+                     Size="Size.Small" />
+            <span>@ConnectionStatusText</span>
+        </div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-cell">
+            <div class="summary-label">Average Latency</div>
+            <div class="summary-value">@AverageLatencyText</div>
+        </div>
+
+        <div class="summary-cell">
+            <div class="summary-label">Retry Attempts</div>
+            <div class="summary-value">@RetryAttempts</div>
+        </div>
+
+        <div class="summary-cell">
+            <div class="summary-label">Signal State</div>
+            <div class="summary-value">@SignalStateText</div>
+        </div>
+
+        <div class="summary-cell">
+            <div class="summary-label">Last Updated</div>
+            <div class="summary-value summary-small">@LastUpdatedText</div>
+        </div>
+    </div>
+</MudPaper>
+
+<MudPaper Class="pa-0 mt-3" Outlined="true">
+    <div class="summary-header">
+        <span>API Response Time</span>
+    </div>
+
+    <div class="response-chart">
+        @if (Summary?.RecentLatenciesMs?.Any() == true)
+        {
+            <MudChart ChartType="ChartType.Line"
+                      T="double"
+                      ChartSeries="@LatencySeries"
+                      XAxisLabels="@LatencyLabels"
+                      Width="100%"
+                      Height="220px" />
+        }
+        else
+        {
+            <MudText Class="pa-4" Align="Align.Center">
+                No latency data yet
+            </MudText>
+        }
+    </div>
+</MudPaper>
