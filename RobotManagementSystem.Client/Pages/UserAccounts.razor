@@ -15,7 +15,7 @@
     </div>
     
     <MudGrid Spacing="0">
-        <MudItem xs="12" md="4" Class="pa-4 border-right">
+        <MudItem xs="14" md="4" Class="pa-4 border-right">
             <MudStack Spacing="3">
                 <MudStack Spacing="2">
                     <MudText Style="font-weight:bold">Username</MudText>
@@ -40,7 +40,7 @@
                 <MudStack Spacing="2">
                     <MudText Style="font-weight:bold">Last Logged In</MudText>
                     <MudText>
-                        Work in progress
+                        @appState.AuthenticationDetails?.LastLoggedIn?.ToString("ddd dd.MM.yyyy HH:mm:ss", new System.Globalization.CultureInfo("en-GB"))
                     </MudText>
                 </MudStack>
             </MudStack>

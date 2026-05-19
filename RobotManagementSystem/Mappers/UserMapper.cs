@@ -12,7 +12,9 @@ public static class UserMapper
             Username = user.Username,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role
+            Role = user.Role,
+            CreatedAt = user.CreatedAt,
+            LastLoggedIn = user.LastLoggedIn
         };
     }
 }

@@ -22,6 +22,8 @@
                 <MudTh>First Name</MudTh>
                 <MudTh>Last Name</MudTh>
                 <MudTh>Role</MudTh>
+                <MudTh>Created At</MudTh>
+                <MudTh>Last Logged In</MudTh>
                 <MudTh>Actions</MudTh>
             </HeaderContent>
 
@@ -31,6 +33,8 @@
                 <MudTd DataLabel="First Name">@context.FirstName</MudTd>
                 <MudTd DataLabel="Last Name">@context.LastName</MudTd>
                 <MudTd DataLabel="Role">@context.Role</MudTd>
+                <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
+                <MudTd DataLabel="Last Logged In">@context.LastLoggedIn</MudTd>
 
                 <MudTd DataLabel="Actions">
                     @* Buttons are disabled here for visual clarity, but the server still rejects the request if the user is trying to delete or edit the root admin user *@

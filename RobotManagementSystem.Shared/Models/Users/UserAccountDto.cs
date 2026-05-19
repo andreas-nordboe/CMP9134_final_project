@@ -8,4 +8,6 @@ public class UserAccountDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public UserRole Role { get; set; }
+    public DateTime? LastLoggedIn { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
