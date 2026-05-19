@@ -435,94 +435,80 @@ public partial class GridComponent : ComponentBase, IDisposable
         return "";
     }
 
-    protected async void OnTileClicked(TileState tile)
+    protected async Task OnTileClicked(TileState tile)
+{
+    if (!_robotHubCommunication.IsConnected)
     {
-        // TODO Refactor these into a service or robot movement safety handler later
-        // I'm just doing client side validation here as well but the request could still be sent to the backend
-        // however, from testing it seems like the backend handles this safely
-        
-        if (!_robotHubCommunication.IsConnected)
-        {
-            _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
-            return;
-        }
-        
-        if (IsCommandProcessing)
-        {
-            _snackbar.Add("A movement command is already being processed.", Severity.Info);
-            return;
-        }
+        _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+        return;
+    }
 
-        if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
-        {
-            _snackbar.Add("Robot is already moving!", Severity.Info);
-            return;
-        }
+    if (IsCommandProcessing)
+    {
+        _snackbar.Add("A movement command is already being processed.", Severity.Info);
+        return;
+    }
 
-        if (_robotHubCommunication.LatestTelemetry?.Battery <= 0)
-        {
-            _snackbar.Add("Robot battery is empty!", Severity.Error);
-            return;
-        }
-        
-        if (_robotHubCommunication.LatestTelemetry?.Battery <= 10)
-        {
-            _snackbar.Add("Robot battery is critically low! Please return to the charging station!", Severity.Warning);
-        }
-        
-        if (_robotHubCommunication.LatestTelemetry?.Battery <= 25)
-        {
-            _snackbar.Add("Robot battery is low! Please return to the charging station!", Severity.Warning);
-        }
-        
-        if (tile.ContentType == GridTileType.Obstacle 
-            || tile.OriginalContentType == GridTileType.Obstacle
-            || tile.ContentType == GridTileType.LidarHit)
-        {
-            _snackbar.Add("You can't move there!", Severity.Warning);
-            return;
-        }
-        
-        try
-        {
-            IsCommandProcessing = true;
-            StateHasChanged();
+    if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
+    {
+        _snackbar.Add("Robot is already moving!", Severity.Info);
+        return;
+    }
 
-            var response = await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
-            {
-                X = tile.VectorPosition.X,
-                Y = tile.VectorPosition.Y
-            });
+    if (_robotHubCommunication.LatestTelemetry?.Battery <= 0)
+    {
+        _snackbar.Add("Robot battery is empty!", Severity.Error);
+        return;
+    }
 
-            if (response == null || !response.Success)
-            {
-                ClearPendingCommand();
-                _snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
-                return;
-            }
+    if (tile.ContentType == GridTileType.Obstacle
+        || tile.OriginalContentType == GridTileType.Obstacle
+        || tile.ContentType == GridTileType.LidarHit)
+    {
+        _snackbar.Add("You can't move there!", Severity.Warning);
+        return;
+    }
 
-            PendingCommandTile = tile;
-            _pendingCommandStartedAt = DateTime.UtcNow;
-            _hasSeenRobotMovingForPendingCommand = false;
+    try
+    {
+        IsCommandProcessing = true;
+        PendingCommandTile = tile;
+        _pendingCommandStartedAt = DateTime.UtcNow;
+        _hasSeenRobotMovingForPendingCommand = false;
 
-            _appState.SetPendingRobotCommandTarget(new Vector2D
-            {
-                X = tile.VectorPosition.X,
-                Y = tile.VectorPosition.Y
-            });
+        _appState.SetPendingRobotCommandTarget(new Vector2D
+        {
+            X = tile.VectorPosition.X,
+            Y = tile.VectorPosition.Y
+        });
 
-            _snackbar.Add($"Move command sent to ({tile.VectorPosition.X}, {tile.VectorPosition.Y}).", Severity.Success);
-        }
-        catch
+        await InvokeAsync(StateHasChanged);
+
+        var response = await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+        {
+            X = tile.VectorPosition.X,
+            Y = tile.VectorPosition.Y
+        });
+
+        if (response == null || !response.Success)
         {
             ClearPendingCommand();
-            _snackbar.Add("Could not send move command to robot! The simulation may currently be unavailable.", Severity.Error);
+            _snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
+            return;
         }
-        finally
-        {
-            StateHasChanged();
-        }
+
+        _snackbar.Add($"Move command sent to ({tile.VectorPosition.X}, {tile.VectorPosition.Y}).", Severity.Success);
     }
+    catch
+    {
+        ClearPendingCommand();
+        _snackbar.Add("Could not send move command to robot! The simulation may currently be unavailable.", Severity.Error);
+    }
+    finally
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+}
     
     private string GetTileClass(TileState tile)
     {
