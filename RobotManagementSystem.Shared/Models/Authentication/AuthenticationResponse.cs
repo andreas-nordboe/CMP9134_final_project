@@ -9,4 +9,6 @@ public class AuthenticationResponse
     public string AccessToken { get; set; } = string.Empty;
     public DateTime Expires { get; set; }
     public string Role { get; set; } = string.Empty;
+    public DateTime? LastLoggedIn { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

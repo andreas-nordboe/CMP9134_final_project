@@ -51,6 +51,10 @@ public class AuthenticationService : IAuthenticationService
         {
             throw new InvalidCredentialException(ErrorMessages.PasswordsDoNotMatch);
         }
+        
+        // Store last logged in
+        dbUserAccount.LastLoggedIn = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
                 
         // FR-02 return response with JWT token to the client
         var accessToken = _tokenService.GenerateJWTToken(new AuthenticationTokenDTO
@@ -69,7 +73,9 @@ public class AuthenticationService : IAuthenticationService
             LastName = dbUserAccount.LastName,
             AccessToken = accessToken,
             Expires = _tokenService.GetAccessTokenExpiryTime(),
-            Role = dbUserAccount.Role.ToString()
+            Role = dbUserAccount.Role.ToString(),
+            LastLoggedIn = dbUserAccount.LastLoggedIn,
+            CreatedAt = dbUserAccount.CreatedAt
         };
         
         return response;
@@ -110,7 +116,9 @@ public class AuthenticationService : IAuthenticationService
             FirstName = registerRequest.FirstName,
             LastName = registerRequest.LastName,
             PasswordHash = _passwordService.HashPassword(registerRequest.Password),
-            Role = UserRole.NoRole
+            Role = UserRole.NoRole,
+            CreatedAt = DateTime.UtcNow,
+            LastLoggedIn = DateTime.UtcNow //  I might as well just store this here since the user is immediately redirected to the dashboard
         };
 
         _dbContext.Add(newUser);
@@ -131,7 +139,9 @@ public class AuthenticationService : IAuthenticationService
             Username =  newUser.Username,
             AccessToken = accessToken,
             Expires = _tokenService.GetAccessTokenExpiryTime(),
-            Role = newUser.Role.ToString()
+            Role = newUser.Role.ToString(),
+            LastLoggedIn = newUser.LastLoggedIn,
+            CreatedAt = newUser.CreatedAt
         };
         
         return response;
