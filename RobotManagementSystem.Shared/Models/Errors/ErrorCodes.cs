@@ -28,6 +28,31 @@ public static class ErrorCodes
     public const int InvalidRequest = 1501;
     public const int EmptyRequest = 1502;
     
-    // Robot Command Codes (2000-2099)
+    
+    // Robot Api and Commands Codes (2000-2099)
     public const int RobotApiNotAvailable = 2000;
+    public const int RobotMapDoesNotExist = 2001;
+    public const int RobotCoordinatesNotValid = 2002;
+    public const int RobotCommandFailed = 2003;
+    public const int RobotMoveCommandFailed = 2004;
+    public const int RobotMoveCommandSuccess = 2005;
+    public const int RobotResetCommandSuccess = 2006;
+    public const int RobotResetCommandFailed = 2007;
+    public const int RobotUnavaiableAfterRetrying = 2008;
+    public const int RobotApiUnavailableRetrying = 2009;
+    public const int RobotApiTimeoutRetrying = 2010;
+    public const int RobotApiConnectionErrorRetrying = 2011;
+    public const int RobotAttemptedMove = 2012;
+    public const int RobotApiReturnedStatusCode = 2013; 
+    public const int RobotMoveException = 2014;
+    public const int RobotResetException = 2015;
+    public const int TriedToMoveToObstacle = 2016;
+    public const int RobotIsBlocked = 2017;
+    public const int RobotApiUnavailable = 2018;
+    public const int RobotApiTimeout = 2019;
+    public const int RobotApiConnectionError = 2020;
+    
+    
+    // Map (3000-3099)
+    public const int FailedToRetrieveMapData = 3000;
 }

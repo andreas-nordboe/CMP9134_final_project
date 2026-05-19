@@ -64,7 +64,8 @@ public class MapTests
 
         var logger = new Mock<ILogger<RobotApiService>>();
         var missionLogService = new Mock<IMissionLogsService>();
-        var apiService = new RobotApiService(httpClient, logger.Object, missionLogService.Object);
+        var robotRateLimiter = new Mock<IRobotCommandRateLimiter>();
+        var apiService = new RobotApiService(httpClient, logger.Object, missionLogService.Object, robotRateLimiter.Object);
 
         var results = await apiService.GetMapAsync();
         Assert.NotNull(results);

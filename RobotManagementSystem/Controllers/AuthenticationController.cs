@@ -27,7 +27,7 @@ public class AuthenticationController : ControllerBase
     private readonly ILogger<AuthenticationController> _logger;
     private readonly IAuthenticationService _authenticationService;
     
-    public AuthenticationController(ITokenService tokenService, IAPIFailureService apiFailureService, RobotApiDbContext dbContext, IPasswordService passwordService, ILogger<AuthenticationController> logger, IAuthenticationService authenticationService)
+    public AuthenticationController(IAPIFailureService apiFailureService, ILogger<AuthenticationController> logger, IAuthenticationService authenticationService)
     {
         _apiFailureService = apiFailureService;
         _logger = logger;

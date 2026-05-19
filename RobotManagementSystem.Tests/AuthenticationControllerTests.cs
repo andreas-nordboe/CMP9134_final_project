@@ -30,10 +30,7 @@ public class AuthenticationControllerTests
             });
 
         var authController = new AuthenticationController(
-            tokenService.Object,
             apiFailureService.Object,
-            null!,
-            passwordService.Object,
             logger.Object,
             authenticationService.Object
         );
