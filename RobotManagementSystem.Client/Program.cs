@@ -24,8 +24,8 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddMudServices(config =>
         {
-            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
-            config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
+            config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 
         });
         builder.Services.AddTransient<JWtAuthorisationHandler>();
