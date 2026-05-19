@@ -154,7 +154,8 @@ public class Program
                     FirstName = "System",
                     LastName = "Administrator",
                     PasswordHash = passwordService.HashPassword(builder.Configuration["SeedAdminUser:Password"]!),
-                    Role = UserRole.Admin
+                    Role = UserRole.Admin,
+                    CreatedAt = DateTime.UtcNow
                 };
                 
                 dbContext.Users.Add(administrator);

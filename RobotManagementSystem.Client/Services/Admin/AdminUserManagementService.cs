@@ -7,15 +7,14 @@ namespace RobotManagementSystem.Client.Services.Admin;
 public class AdminUserManagementService : IAdminUserManagementService
 {
     private readonly HttpClient _httpClient;
-    private readonly RobotHubCommunication _robotHubCommunication; // TODO notify other admins through when modifying users (SignalRHub groups should work for this)
-    private readonly IAppState _appState; // TODO potentially remove this if I'm not using it later
     private readonly ILogger<AdminUserManagementService> _logger;
+    private readonly IConfiguration _config;
+    
 
-    public AdminUserManagementService(IHttpClientFactory httpClientFactory, RobotHubCommunication robotHubCommunication, IAppState appState, ILogger<AdminUserManagementService> logger)
+    public AdminUserManagementService(IHttpClientFactory httpClientFactory, ILogger<AdminUserManagementService> logger, IConfiguration config)
     {
-        _robotHubCommunication = robotHubCommunication;
-        _appState = appState;
         _logger = logger;
+        _config = config;
         _httpClient = httpClientFactory.CreateClient("API");
     }
 
@@ -71,6 +70,14 @@ public class AdminUserManagementService : IAdminUserManagementService
     {
         try
         {
+            var user = await GetUserAsync(userId.ToString());
+            
+            if(user == null)
+                return false;
+            
+            if(IsRootAdminUser(user))
+                return false;
+            
             var response = await _httpClient.DeleteAsync($"users/{userId}");
             return response.IsSuccessStatusCode;
         }
@@ -85,6 +92,18 @@ public class AdminUserManagementService : IAdminUserManagementService
     {
         try
         {
+            var user = await GetUserAsync(userId.ToString());
+            
+            if(user == null)
+                return null;
+            
+            if(IsRootAdminUser(user))
+                return null;
+            
+            // This is to avoid uncessary updates
+            if(user.Role == role)
+                return user;
+            
             var response = await _httpClient.PatchAsJsonAsync($"users/{userId}/role", role);
             
             if (!response.IsSuccessStatusCode)
@@ -102,5 +121,12 @@ public class AdminUserManagementService : IAdminUserManagementService
             _logger.LogError(e, "Failed to update user role.");
             return null;
         }
+    }
+
+    private bool IsRootAdminUser(UserAccountDto user)
+    {
+        var rootAdminUsername = _config["SeedAdminUser:Username"];
+        
+        return user.Role == UserRole.Admin && string.Equals(user.Username, rootAdminUsername, StringComparison.OrdinalIgnoreCase);
     }
 }
