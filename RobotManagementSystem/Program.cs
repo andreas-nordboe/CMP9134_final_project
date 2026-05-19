@@ -79,6 +79,7 @@ public class Program
         builder.Services.AddScoped<IMissionLogsService, MissionLogsService>();
         builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
         builder.Services.AddHealthChecks();
+        builder.Services.AddSingleton<IRobotCommandRateLimiter, RobotCommandRateLimiter>();
         builder.Services.AddHttpClient<IRobotStatusService, RobotStatusService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["RobotApi:BaseAddress"] ?? throw new InvalidOperationException());

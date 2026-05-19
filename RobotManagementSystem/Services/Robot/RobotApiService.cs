@@ -21,12 +21,14 @@
         private readonly ILogger<RobotApiService> _logger;
         private readonly IMissionLogsService _missionLogsService;
         private static readonly SemaphoreSlim _robotLock = new(1, 1);
+        private readonly IRobotCommandRateLimiter _commandRateLimiter;
 
-        public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService)
+        public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService, IRobotCommandRateLimiter commandRateLimiter)
         {
             _httpClient = httpClient;
             _logger = logger;
             _missionLogsService = missionLogsService;
+            _commandRateLimiter = commandRateLimiter;
         }
 
         public async Task<MapResponse?> GetMapAsync()
@@ -116,6 +118,8 @@
 
             try
             {
+                await _commandRateLimiter.WaitAsync();
+                
                 var response = await SendWithRetryAsync(() =>
                     _httpClient.PostAsJsonAsync("/api/move", request),
                     userId,
@@ -211,6 +215,8 @@
 
             try
             {
+                await _commandRateLimiter.WaitAsync();
+                
                 var response = await SendWithRetryAsync(() =>
                     _httpClient.PostAsync("/api/reset", null),
                     userId,
