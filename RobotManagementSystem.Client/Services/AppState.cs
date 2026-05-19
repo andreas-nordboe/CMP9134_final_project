@@ -47,8 +47,18 @@ public class AppState : IAppState
 
     public void SetPendingRobotCommandTarget(Vector2D? target)
     {
+        if (PendingRobotCommandTarget == null && target == null)
+            return;
+        
         PendingRobotCommandTarget = target;
         OnPendingRobotCommandTargetChanged?.Invoke(target);
+    }
+
+    public List<TileState> CurrentTiles { get; set; } = new();
+
+    public TileState? GetTileState(int x, int y)
+    {
+        return CurrentTiles.FirstOrDefault(t => t.VectorPosition.X == x && t.VectorPosition.Y == y);
     }
 
     public async void SetLoggedInUserFromAuthentication(AuthenticationResponse authenticationResponse)

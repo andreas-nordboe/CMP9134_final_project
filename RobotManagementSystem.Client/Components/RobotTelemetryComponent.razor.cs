@@ -13,6 +13,7 @@ public partial class RobotTelemetryComponent : ComponentBase, IDisposable
 
     private const double LidarMaxRange = 10.0;
     private const double LidarMaxRangeTolerance = 0.05;
+    private const int ProximityMaxRange = 5;
 
     private string? ConnectionStatus { get; set; }
     private RobotTelemetry? LatestTelemetry { get; set; }
@@ -145,6 +146,44 @@ public partial class RobotTelemetryComponent : ComponentBase, IDisposable
             return Color.Warning;
 
         return Color.Info;
+    }
+    
+    private string FormatProximity(int distance)
+    {
+        if (distance <= 0)
+            return "Blocked";
+
+        if (distance >= ProximityMaxRange)
+            return "Clear";
+
+        return $"{distance} tiles";
+    }
+
+    private Color GetProximityColor(int distance)
+    {
+        return distance switch
+        {
+            <= 1 => Color.Error,
+            <= 2 => Color.Warning,
+            >= ProximityMaxRange => Color.Success,
+            _ => Color.Info
+        };
+    }
+
+    private Color GetProximityOverallColor()
+    {
+        if (LatestTelemetry?.Sensors == null)
+            return Color.Default;
+
+        var closest = new[]
+        {
+            LatestTelemetry.Sensors.N,
+            LatestTelemetry.Sensors.E,
+            LatestTelemetry.Sensors.S,
+            LatestTelemetry.Sensors.W
+        }.Min();
+
+        return GetProximityColor(closest);
     }
 
     public void Dispose()

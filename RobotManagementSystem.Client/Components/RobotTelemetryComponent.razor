@@ -96,7 +96,38 @@
                     @LidarHitCountText
                 </div>
             </div>
+        </div>
+        
+        <div class="proximity-strip">
+            <div class="proximity-strip-values">
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.N)"
+                         Variant="Variant.Outlined">
+                    N: @FormatProximity(LatestTelemetry.Sensors.N)
+                </MudChip>
 
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.E)"
+                         Variant="Variant.Outlined">
+                    E: @FormatProximity(LatestTelemetry.Sensors.E)
+                </MudChip>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.S)"
+                         Variant="Variant.Outlined">
+                    S: @FormatProximity(LatestTelemetry.Sensors.S)
+                </MudChip>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.W)"
+                         Variant="Variant.Outlined">
+                    W: @FormatProximity(LatestTelemetry.Sensors.W)
+                </MudChip>
+            </div>
         </div>
     }
 

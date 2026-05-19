@@ -46,7 +46,7 @@
                                        Icon="@Icons.Material.Filled.ArrowUpward"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                       Disabled="@(!CanSendCommand)"
+                                       Disabled="@(!CanMoveRobotTo(0, -1))"
                                        aria-label="Move robot up" />
 
                         <div></div>
@@ -55,7 +55,7 @@
                                        Icon="@Icons.Material.Filled.ArrowBack"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                       Disabled="@(!CanSendCommand)"
+                                       Disabled="@(!CanMoveRobotTo(-1, 0))"
                                        aria-label="Move robot left" />
 
                         <div class="direction-center-empty"></div>
@@ -64,7 +64,7 @@
                                        Icon="@Icons.Material.Filled.ArrowForward"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                       Disabled="@(!CanSendCommand)"
+                                       Disabled="@(!CanMoveRobotTo(1, 0))"
                                        aria-label="Move robot right" />
 
                         <div></div>
@@ -73,7 +73,7 @@
                                        Icon="@Icons.Material.Filled.ArrowDownward"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                       Disabled="@(!CanSendCommand)"
+                                       Disabled="@(!CanMoveRobotTo(0, 1))"
                                        aria-label="Move robot down" />
 
                         <div></div>
@@ -128,8 +128,12 @@
 
             </MudTabPanel>
             
+            <MudText Align="Align.Center" Typo="Typo.caption" Class="commander-help">
+                Keyboard input: WASD to move and CTRL + R to reset simulation.
+            </MudText>
+            
             <div class="reset-command-area">
-                <MudButton OnClick="ResetSimulation"
+                <MudButton OnClick="ConfirmResetSimulation"
                            Variant="Variant.Filled"
                            StartIcon="@Icons.Material.Filled.ResetTv"
                            Color="Color.Error">

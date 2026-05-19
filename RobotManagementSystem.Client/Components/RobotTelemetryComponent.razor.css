@@ -82,3 +82,26 @@
     font-size: 0.9rem;
     line-height: 1.2;
 }
+
+.proximity-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0.55rem 0.9rem;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.proximity-strip-values {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.proximity-strip-values .mud-chip {
+    min-width: 82px;
+    justify-content: center;
+}

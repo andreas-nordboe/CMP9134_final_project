@@ -315,3 +315,7 @@
 .no-tile-transitions .robot-tile {
     transition: none !important;
 }
+
+.commander-keyboard-zone {
+    outline: none;
+}

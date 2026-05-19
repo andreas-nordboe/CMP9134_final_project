@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Robot;
 using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Robot;
+using Microsoft.JSInterop;
+using RobotManagementSystem.Client.Modals;
 
 namespace RobotManagementSystem.Client.Components;
 
@@ -13,11 +16,14 @@ public partial class CommanderControls : ComponentBase, IDisposable
     public Vector2D InputVector { get; set; } = new();
 
     private bool IsProcessingCommand { get; set; }
+    private DotNetObjectReference<CommanderControls>? _dotNetReference;
 
     [Inject] private IRobotCommanderService RobotCommanderService { get; set; } = default!;
     [Inject] private RobotHubCommunication RobotHubCommunication { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IAppState AppState { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
 
     private RobotTelemetry? LatestTelemetry => RobotHubCommunication.LatestTelemetry;
 
@@ -58,36 +64,23 @@ public partial class CommanderControls : ComponentBase, IDisposable
         LatestTelemetry.Battery > 0 &&
         LatestTelemetry.Status != nameof(RobotStatus.MOVING);
 
-    private string SafetyMessage
-    {
-        get
-        {
-            if (!RobotHubCommunication.IsConnected)
-                return "Connection unavailable";
-
-            if (LatestTelemetry == null)
-                return "No telemetry";
-
-            if (LatestTelemetry.Battery <= 0)
-                return "Battery empty";
-
-            if (LatestTelemetry.Battery <= 10)
-                return "Critical battery";
-
-            if (LatestTelemetry.Status == nameof(RobotStatus.MOVING))
-                return "Robot moving";
-
-            if (IsProcessingCommand)
-                return "Processing";
-
-            return "Ready";
-        }
-    }
-
     protected override void OnInitialized()
     {
         RobotHubCommunication.TelemetryUpdated += OnTelemetryUpdated;
         RobotHubCommunication.ConnectionStatusChanged += OnConnectionStatusChanged;
+        AppState.OnPendingRobotCommandTargetChanged += HandlePendingRobotCommandTargetChanged;
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        _dotNetReference = DotNetObjectReference.Create(this);
+
+        await JSRuntime.InvokeVoidAsync(
+            "robotKeyboardShortcuts.register",
+            _dotNetReference);
     }
 
     private void OnTelemetryUpdated(RobotTelemetry telemetry)
@@ -125,6 +118,8 @@ public partial class CommanderControls : ComponentBase, IDisposable
             StateHasChanged();
 
             await RobotCommanderService.ResetAsync();
+            
+            AppState.SetPendingRobotCommandTarget(null);
 
             Snackbar.Add("Reset simulation command sent.", Severity.Warning);
         }
@@ -138,6 +133,27 @@ public partial class CommanderControls : ComponentBase, IDisposable
         {
             IsProcessingCommand = false;
             StateHasChanged();
+        }
+    }
+    
+    protected async Task ConfirmResetSimulation()
+    {
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmResetSimulationModal>(
+            "Reset Simulation",
+            options);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool confirmed && confirmed)
+        {
+            await ResetSimulation();
         }
     }
 
@@ -177,9 +193,43 @@ public partial class CommanderControls : ComponentBase, IDisposable
 
     private async Task SendMoveCommandAsync(int x, int y)
     {
-        if (!CanSendCommand)
+        if (!RobotHubCommunication.IsConnected)
         {
-            Snackbar.Add(SafetyMessage, Severity.Info);
+            Snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+            return;
+        }
+
+        if (IsProcessingCommand)
+        {
+            Snackbar.Add("A movement command is already being processed.", Severity.Info);
+            return;
+        }
+
+        if (RobotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
+        {
+            Snackbar.Add("Robot is already moving!", Severity.Info);
+            return;
+        }
+
+        if (RobotHubCommunication.LatestTelemetry?.Battery <= 0)
+        {
+            Snackbar.Add("Robot battery is empty!", Severity.Error);
+            return;
+        }
+        
+        var tile = AppState.GetTileState(x, y);
+
+        if (tile == null)
+        {
+            Snackbar.Add("You can't move outside the map!", Severity.Warning);
+            return;
+        }
+
+        if (tile.ContentType == GridTileType.Obstacle
+            || tile.OriginalContentType == GridTileType.Obstacle
+            || tile.ContentType == GridTileType.LidarHit)
+        {
+            Snackbar.Add("You can't move there!", Severity.Warning);
             return;
         }
 
@@ -217,7 +267,6 @@ public partial class CommanderControls : ComponentBase, IDisposable
         }
         finally
         {
-            IsProcessingCommand = false;
             StateHasChanged();
         }
     }
@@ -235,10 +284,71 @@ public partial class CommanderControls : ComponentBase, IDisposable
 
         return Color.Success;
     }
+    
+    private void HandlePendingRobotCommandTargetChanged(Vector2D? target)
+    {
+        InvokeAsync(() =>
+        {
+            IsProcessingCommand = target != null;
+            StateHasChanged();
+        });
+    }
+    
+    private bool CanMoveRobotTo(int deltaX, int deltaY)
+    {
+        if (!CanSendCommand || LatestTelemetry?.Position == null)
+            return false;
 
+        var targetX = (int)LatestTelemetry.Position.X + deltaX;
+        var targetY = (int)LatestTelemetry.Position.Y + deltaY;
+
+        var tile = AppState.GetTileState(targetX, targetY);
+
+        if (tile == null)
+            return false;
+
+        return tile.ContentType != GridTileType.Obstacle
+               && tile.OriginalContentType != GridTileType.Obstacle
+               && tile.ContentType != GridTileType.LidarHit;
+    }
+    
+    [JSInvokable]
+    public async Task HandleGlobalKeyboardInput(string key)
+    {
+        if (IsProcessingCommand)
+            return;
+
+        switch (key)
+        {
+            case "w":
+                await MoveRobotUp();
+                break;
+
+            case "a":
+                await MoveRobotLeft();
+                break;
+
+            case "s":
+                await MoveRobotDown();
+                break;
+
+            case "d":
+                await MoveRobotRight();
+                break;
+
+            case "shift+r":
+                await ConfirmResetSimulation();
+                break;
+        }
+    }
+    
     public void Dispose()
     {
         RobotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
         RobotHubCommunication.ConnectionStatusChanged -= OnConnectionStatusChanged;
+        AppState.OnPendingRobotCommandTargetChanged -= HandlePendingRobotCommandTargetChanged;
+        
+        _ = JSRuntime.InvokeVoidAsync("robotKeyboardShortcuts.unregister");
+        _dotNetReference?.Dispose();
     }
 }

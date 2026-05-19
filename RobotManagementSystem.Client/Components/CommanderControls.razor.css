@@ -29,6 +29,9 @@
     text-align: center;
     margin-bottom: 1rem;
     max-width: 360px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .direction-pad {

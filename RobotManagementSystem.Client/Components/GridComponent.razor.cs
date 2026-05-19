@@ -185,6 +185,8 @@ public partial class GridComponent : ComponentBase, IDisposable
             chargingStationTile.ContentType = GridTileType.ChargingStation;
             chargingStationTile.OriginalContentType = GridTileType.ChargingStation;
         }
+        
+        _appState.CurrentTiles = Tiles;
     }
 
     private void OnTelemetryUpdated(RobotTelemetry robotTelemetry)
@@ -412,6 +414,8 @@ public partial class GridComponent : ComponentBase, IDisposable
                 Tiles.Add(newTile);
             }
         }
+        
+        _appState.CurrentTiles = Tiles;
     }
 
     protected TileState GetTileState(int x, int y)
@@ -436,7 +440,7 @@ public partial class GridComponent : ComponentBase, IDisposable
     }
 
     protected async Task OnTileClicked(TileState tile)
-{
+    {
     if (!_robotHubCommunication.IsConnected)
     {
         _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
