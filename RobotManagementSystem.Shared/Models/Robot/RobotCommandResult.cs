@@ -6,5 +6,6 @@ public enum RobotCommandResult
     Failure,
     Retried,
     PermissionsDenied,
-    InvalidCoordinates
+    InvalidCoordinates,
+    BlockedByObstacle // for when the user tries to move into an obstacle
 }

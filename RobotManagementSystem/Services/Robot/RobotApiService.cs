@@ -2,12 +2,18 @@
     using RobotManagementSystem.Services.FailureHandling;
     using RobotManagementSystem.Services.MissionLogs;
     using RobotManagementSystem.Shared.Models.Components;
+    using RobotManagementSystem.Shared.Models.Errors;
     using RobotManagementSystem.Shared.Models.Map;
     using RobotManagementSystem.Shared.Models.MissionLog;
     using RobotManagementSystem.Shared.Models.Robot;
     using RobotManagementSystem.Shared.Models.Users;
 
     namespace RobotManagementSystem.Services;
+    
+    // Tasks: Validate user permissions, send commands to the robot, persist the command before it is sent (in case of latency drops), update command state, possibly handle errors and unknown states
+    // State machine would be useful here 
+    // States could include Sent, Confirmed, Failed and Unknown
+    // backoff could be useful (e.g., 1s, 2s, 4s, 8s, 15s..)
 
     public class RobotApiService : IRobotApiService
     {
@@ -31,7 +37,7 @@
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Failed to retrieve map information.");
+                _logger.LogWarning(e, ErrorMessages.FailedToRetrieveMapData);
                 return null;
             }
         }
@@ -43,13 +49,33 @@
                 return new RobotCommandResponse
                 {
                     Success = false,
-                    Message = "Failed to move robot due to invalid input."
+                    Message = ErrorMessages.RobotMoveCommandFailed
                 };
             }
             
-            // Validate coordinates so they don't go out of bounds (TODO move this to helper later)
-            // TODO: Code smell magic numbers
-            if (request.X < 0 || request.Y < 0 || request.X > 20 || request.Y > 20)
+            var map = await GetMapAsync();
+            
+            // I think it is safer to test that the map and map grid tiles exist before sending the request
+            if (map == null || map.Grid.Length == 0)
+            {
+                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                {
+                    UserId = userId,
+                    Role = role,
+                    Command = RobotCommand.Move,
+                    CommandResult = RobotCommandResult.Failure,
+                    Details = ErrorMessages.RobotMapDoesNotExist
+                });
+
+                return new RobotCommandResponse
+                {
+                    Success = false,
+                    Message = ErrorMessages.RobotMapDoesNotExist
+                };
+            }
+
+            // Check invalid coordinates
+            if (request.X < 0 || request.Y < 0 || request.X >= map.Width || request.Y >= map.Height || request.Y >= map.Grid.Length || request.X >= map.Grid[request.Y].Length)
             {
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
@@ -57,13 +83,32 @@
                     Role = role,
                     Command = RobotCommand.Move,
                     CommandResult = RobotCommandResult.InvalidCoordinates,
-                    Details = $"Tried to move robot to invalid coordinates ({request.X}, {request.Y})"
+                    Details = $"{ErrorMessages.RobotAttemptedMove} ({request.X}, {request.Y})"
                 });
-                
+
                 return new RobotCommandResponse
                 {
                     Success = false,
-                    Message = "Robot coordinates not valid and must be between 0 and 20."
+                    Message = ErrorMessages.RobotCoordinatesNotValid
+                };
+            }
+            
+            // Check if blocked by an obstacle
+            if (map.Grid[request.Y][request.X] == 1)
+            {
+                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                {
+                    UserId = userId,
+                    Role = role,
+                    Command = RobotCommand.Move,
+                    CommandResult = RobotCommandResult.BlockedByObstacle,
+                    Details = $"{ErrorMessages.TriedToMoveToObstacle} ({request.X}, {request.Y})"
+                });
+
+                return new RobotCommandResponse
+                {
+                    Success = false,
+                    Message = ErrorMessages.RobotIsBlocked
                 };
             }
 
@@ -72,7 +117,10 @@
             try
             {
                 var response = await SendWithRetryAsync(() =>
-                    _httpClient.PostAsJsonAsync("/api/move", request)
+                    _httpClient.PostAsJsonAsync("/api/move", request),
+                    userId,
+                    role,
+                    RobotCommand.Move
                 );
 
                 if (response == null)
@@ -83,13 +131,13 @@
                         Role = role,
                         Command = RobotCommand.Move,
                         CommandResult = RobotCommandResult.Failure,
-                        Details = $"API unavailable after retries."
+                        Details = ErrorMessages.RobotUnavaiableAfterRetrying
                     });
                     
                     return new RobotCommandResponse
                     {
                         Success = false,
-                        Message = "Robot API unavailable after retries."
+                        Message = ErrorMessages.RobotUnavaiableAfterRetrying
                     };
                 }
                 
@@ -101,14 +149,14 @@
                         Role = role,
                         Command = RobotCommand.Move,
                         CommandResult = RobotCommandResult.Failure,
-                        Details = $"API returned status code {response.StatusCode}"
+                        Details = $"{ErrorMessages.RobotApiReturnedStatusCode} {response.StatusCode}"
                     });
 
                     return new RobotCommandResponse
                     {
                         Success = false,
                         Message =
-                            $"Move command failed. Response: {response.StatusCode}." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                            $"{ErrorMessages.RobotMoveCommandFailed} Response: {response.StatusCode}."
                     };
                 }
 
@@ -123,7 +171,7 @@
                 return new RobotCommandResponse
                 {
                     Success = true,
-                    Message = $"Robot was moved to {request.X}, {request.Y}.",
+                    Message = $"{ErrorMessages.RobotMoveCommandSuccess} {request.X}, {request.Y}.",
                     RobotPosition = new Vector2D
                     {
                         X = request.X,
@@ -134,7 +182,7 @@
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Robot move command failed.");
+                _logger.LogWarning(e, ErrorMessages.RobotCommandFailed);
 
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
@@ -142,13 +190,13 @@
                     Role = role,
                     Command = RobotCommand.Move,
                     CommandResult = RobotCommandResult.Failure,
-                    Details = $"Exception: {e.Message}"
+                    Details = $"{ErrorMessages.RobotMoveException} {e.Message}"
                 });
 
                 return new RobotCommandResponse
                 {
                     Success = false,
-                    Message = "Robot move command failed."
+                    Message = ErrorMessages.RobotCommandFailed
                 };
             }
             finally
@@ -164,7 +212,10 @@
             try
             {
                 var response = await SendWithRetryAsync(() =>
-                    _httpClient.PostAsync("/api/reset", null)
+                    _httpClient.PostAsync("/api/reset", null),
+                    userId,
+                    userRole,
+                    RobotCommand.Reset
                 );
                 
                 if (response == null)
@@ -175,13 +226,13 @@
                         Role = userRole,
                         Command = RobotCommand.Reset,
                         CommandResult = RobotCommandResult.Failure,
-                        Details = $"API unavailable after retries."
+                        Details = ErrorMessages.RobotUnavaiableAfterRetrying
                     });
                     
                     return new RobotCommandResponse
                     {
                         Success = false,
-                        Message = "Robot API unavailable after retries."
+                        Message = ErrorMessages.RobotUnavaiableAfterRetrying
                     };
                 }
 
@@ -193,14 +244,13 @@
                         Role = userRole,
                         Command = RobotCommand.Reset,
                         CommandResult = RobotCommandResult.Failure,
-                        Details = $"API returned status code {response.StatusCode}"
+                        Details = $"{ErrorMessages.RobotApiReturnedStatusCode} {response.StatusCode}"
                     });
 
                     return new RobotCommandResponse
                     {
                         Success = false,
-                        Message =
-                            $"Reset robot command failed. Response {response.StatusCode}" // TODO I'll try stautus code for now and try ReasonPhrase later 
+                        Message = $"{ErrorMessages.RobotResetCommandFailed} Response {response.StatusCode}" 
                     };
                 }
 
@@ -215,13 +265,12 @@
                 return new RobotCommandResponse
                 {
                     Success = true,
-                    Message =
-                        "Robot was successfully reset." // TODO I'll try stautus code for now and try ReasonPhrase later 
+                    Message = ErrorMessages.RobotResetCommandSuccess
                 };
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Robot reset command failed.");
+                _logger.LogWarning(e, ErrorMessages.RobotResetCommandFailed);
 
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
@@ -229,13 +278,13 @@
                     Role = userRole,
                     Command = RobotCommand.Reset,
                     CommandResult = RobotCommandResult.Failure,
-                    Details = $"Exception: {e.Message}"
+                    Details = $"{ErrorMessages.RobotResetException} {e.Message}"
                 });
 
                 return new RobotCommandResponse
                 {
                     Success = false,
-                    Message = "Robot reset command failed."
+                    Message = ErrorMessages.RobotResetCommandFailed
                 };
             }
             finally
@@ -245,7 +294,7 @@
         }
 
         // Backoff logic that retries the request until it succeeds or the maximum number of retries is reached
-        private async Task<HttpResponseMessage?> SendWithRetryAsync(Func<Task<HttpResponseMessage>> action)
+        private async Task<HttpResponseMessage?> SendWithRetryAsync(Func<Task<HttpResponseMessage>> action, int userId, UserRole role, RobotCommand command)
         {
             var delays = new[]
             {
@@ -258,8 +307,10 @@
                 TimeSpan.FromSeconds(8)
             };
 
-            foreach (var delay in delays)
+            for (var attempt = 0; attempt < delays.Length; attempt++)
             {
+                var delay = delays[attempt];
+
                 if (delay > TimeSpan.Zero)
                     await Task.Delay(delay);
 
@@ -269,7 +320,14 @@
 
                     if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
                     {
-                        _logger.LogWarning("Robot API returned 503. Retrying...");
+                        await LogRetryAttemptAsync(
+                            userId,
+                            role,
+                            command,
+                            attempt + 1,
+                            ErrorMessages.RobotApiUnavailable);
+
+                        _logger.LogWarning(ErrorMessages.RobotApiUnavailableRetrying);
                         response.Dispose();
                         continue;
                     }
@@ -278,14 +336,40 @@
                 }
                 catch (TaskCanceledException ex)
                 {
-                    _logger.LogWarning(ex, "Robot API timeout. Retrying...");
+                    await LogRetryAttemptAsync(
+                        userId,
+                        role,
+                        command,
+                        attempt + 1,
+                        ErrorMessages.RobotApiTimeout);
+
+                    _logger.LogWarning(ex, ErrorMessages.RobotApiTimeoutRetrying);
                 }
                 catch (HttpRequestException ex)
                 {
-                    _logger.LogWarning(ex, "Robot API connection failed. Retrying...");
+                    await LogRetryAttemptAsync(
+                        userId,
+                        role,
+                        command,
+                        attempt + 1,
+                        ErrorMessages.RobotApiConnectionError);
+
+                    _logger.LogWarning(ex, ErrorMessages.RobotApiConnectionError);
                 }
             }
 
             return null;
+        }
+        
+        private async Task LogRetryAttemptAsync(int userId, UserRole role, RobotCommand command, int attempt, string reason)
+        {
+            await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+            {
+                UserId = userId,
+                Role = role,
+                Command = command,
+                CommandResult = RobotCommandResult.Retried,
+                Details = $"{reason} Retry attempt {attempt} failed."
+            });
         }
     }
