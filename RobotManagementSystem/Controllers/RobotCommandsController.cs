@@ -91,7 +91,8 @@ public class RobotCommandsController : ControllerBase
         
         if (!robotMoveResponse.Success)
         {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, robotMoveResponse);
+            return BadRequest(robotMoveResponse); // Proper return fix, unit test failed because the previous implemention:
+            //    return StatusCode(StatusCodes.Status503ServiceUnavailable, robotMoveResponse);
         }
         
         return Ok(robotMoveResponse);
