@@ -117,3 +117,60 @@ code {
 .button-spacing{
     justify-content: space-between;
 }
+
+.mud-snackbar-location-top-left {
+    position: fixed !important;
+
+    top: 285px !important;
+    left: 0 !important;
+
+    width: 245px !important;
+    max-width: 245px !important;
+
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+    
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    
+    gap: 9px !important;
+
+    z-index: 1300 !important;
+}
+
+.mud-snackbar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+}
+
+.mud-snackbar-content {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+
+    align-items: flex-start !important;
+    padding: 10px 8px !important;
+}
+
+.mud-snackbar-content-message {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+
+    line-height: 1.2rem !important;
+    font-size: 0.75rem !important;
+
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.mud-snackbar-content-action {
+    margin-left: 6px !important;
+    flex-shrink: 0 !important;
+}

@@ -24,9 +24,17 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddMudServices(config =>
         {
-            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopLeft;
             config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
-
+            
+            config.SnackbarConfiguration.ShowCloseIcon = true;
+            config.SnackbarConfiguration.VisibleStateDuration = 4000;
+            config.SnackbarConfiguration.HideTransitionDuration = 250;
+            config.SnackbarConfiguration.ShowTransitionDuration = 250;
+            
+            config.SnackbarConfiguration.NewestOnTop = false;
+            config.SnackbarConfiguration.PreventDuplicates = false;
+            config.SnackbarConfiguration.MaxDisplayedSnackbars = 35;
         });
         builder.Services.AddTransient<JWtAuthorisationHandler>();
         builder.Services.AddBlazoredLocalStorage();

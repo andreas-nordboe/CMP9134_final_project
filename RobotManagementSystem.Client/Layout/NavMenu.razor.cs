@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using RobotManagementSystem.Client.Modals;
 using RobotManagementSystem.Client.Services;
@@ -9,12 +10,13 @@ namespace RobotManagementSystem.Client.Layout;
 public partial class NavMenu
 {
     [Inject] 
-    public IAppState AppState { get; set; }
+    public IAppState AppState { get; set; } = default!;
     [Inject] 
-    public IAuthenticationService AuthenticationService { get; set; }
+    public IAuthenticationService AuthenticationService { get; set; } = default!;
     [Inject] 
-    public NavigationManager NavigationManager { get; set; }
-    [Inject] private IDialogService DialogService { get; set; } = default!;
+    public NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject] public IDialogService DialogService { get; set; } = default!;
 
     protected override void OnInitialized()
     {
@@ -49,4 +51,9 @@ public partial class NavMenu
         }
     }
     
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await ConfirmLogout();
+    }
 }

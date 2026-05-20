@@ -319,3 +319,112 @@
 .commander-keyboard-zone {
     outline: none;
 }
+
+
+
+.robot-stuck-effect .tile-image {
+    filter:
+            brightness(0)
+            saturate(100%)
+            invert(21%)
+            sepia(95%)
+            saturate(3600%)
+            hue-rotate(350deg)
+            brightness(95%)
+            contrast(105%)
+            drop-shadow(0 0 8px rgba(255, 82, 82, 0.9));
+}
+
+.robot-stuck-effect::after {
+    content: "!";
+    position: absolute;
+    top: -12px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: orange;
+    color: black;
+    font-weight: bold;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: stuck-pop 0.9s ease-out forwards;
+    pointer-events: none;
+}
+
+.robot-stuck-effect::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border: 2px solid orange;
+    border-radius: 8px;
+    animation: stuck-pulse 0.9s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes robot-stuck-shake {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    20% {
+        transform: translate(-3px, 1px) rotate(-4deg);
+    }
+
+    40% {
+        transform: translate(3px, -1px) rotate(4deg);
+    }
+
+    60% {
+        transform: translate(-2px, 1px) rotate(-3deg);
+    }
+
+    80% {
+        transform: translate(2px, 0) rotate(3deg);
+    }
+
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+@keyframes stuck-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(6px);
+    }
+
+    30% {
+        opacity: 1;
+        transform: scale(1.2) translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1) translateY(-12px);
+    }
+}
+
+@keyframes stuck-pulse {
+    0% {
+        opacity: 0.9;
+        transform: scale(0.9);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.25);
+    }
+}
+
+.robot-stuck-effect .tile-image,
+.robot-crashed .tile-image {
+    filter:
+            sepia(0.65)
+            saturate(2.8)
+            hue-rotate(320deg)
+            brightness(0.95)
+            drop-shadow(0 0 6px rgba(255, 82, 82, 0.5));
+}

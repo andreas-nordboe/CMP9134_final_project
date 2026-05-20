@@ -135,12 +135,22 @@
             <div class="reset-command-area">
                 <MudButton OnClick="ConfirmResetSimulation"
                            Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.ResetTv"
+                           StartIcon="@Icons.Material.Filled.RotateLeft"
                            Color="Color.Error">
                     Reset Simulation
                 </MudButton>
             </div>
 
         </MudTabs>
+        
+        <div class="keyboard-help-wrapper">
+            <MudText Typo="Typo.caption"
+                     Align="Align.Center"
+                     Class="keyboard-help">
+                Keyboard input: WASD to move and SHIFT + R to reset simulation.
+            </MudText>
+        </div>
+        
+        
     </div>
 </MudPaper>
