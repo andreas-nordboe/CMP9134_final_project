@@ -24,7 +24,7 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddMudServices(config =>
         {
-            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
             config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 
         });

@@ -118,3 +118,17 @@
     display: flex;
     justify-content: center;
 }
+
+.keyboard-help-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 0.75rem;
+}
+
+.keyboard-help {
+    width: 100%;
+    text-align: center;
+    opacity: 0.75;
+}

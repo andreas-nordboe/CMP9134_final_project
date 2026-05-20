@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.DataStore;
@@ -36,7 +37,15 @@ public partial class GridComponent : ComponentBase, IDisposable
     private bool _hasSeenRobotMovingForPendingCommand;
     private DateTime? _lastTelemetryReceivedAt;
     private static readonly TimeSpan TelemetryGapReloadThreshold = TimeSpan.FromSeconds(3);
-
+    [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+    
+    // Sounds/effects
+    private bool _showStuckEffect;
+    private DateTime? _lastStuckEffectAt;
+    private static readonly TimeSpan StuckEffectCooldown = TimeSpan.FromSeconds(2);
+    private bool SoundEffectsEnabled { get; set; } = true;
+    private bool _robotIsStuck;
+    
     private string MapShellClass =>
         $"{(UseLightMapTheme ? "robot-map-shell robot-map-light" : "robot-map-shell")} " +
         $"{(_suppressTileTransitions ? "no-tile-transitions" : "")}";
@@ -217,6 +226,10 @@ public partial class GridComponent : ComponentBase, IDisposable
     
     private async Task ProcessTelemetryAsync(RobotTelemetry robotTelemetry)
     {
+        // WebSocket is open stop movement in the meantime (I think this is due ot a bug on the robot simulation API)
+        if (_appState.ApiStatus == RobotApiStatus.Reconnecting)
+            return;
+        
         if (_reloadMapOnNextTelemetry)
         {
             _reloadMapOnNextTelemetry = false;
@@ -229,6 +242,8 @@ public partial class GridComponent : ComponentBase, IDisposable
 
         var robotX = (int)robotTelemetry.Position.X;
         var robotY = (int)robotTelemetry.Position.Y;
+        
+        _robotIsStuck = robotTelemetry.Status == nameof(RobotStatus.STUCK);
 
         MoveRobot(robotX, robotY);
 
@@ -259,6 +274,8 @@ public partial class GridComponent : ComponentBase, IDisposable
                 {
                     _snackbar.Add("Robot is stuck. Movement command was cancelled.", Severity.Warning);
                     _stuckWarningShown = true;
+
+                    await TriggerStuckFeedbackAsync();
                 }
             }
             else if (robotTelemetry.Battery <= 0)
@@ -533,6 +550,16 @@ public partial class GridComponent : ComponentBase, IDisposable
         {
             classes.Add("pending-command");
         }
+        
+        if (tile.ContentType == GridTileType.Robot && _robotIsStuck)
+        {
+            classes.Add("robot-crashed");
+        }
+
+        if (tile.ContentType == GridTileType.Robot && _showStuckEffect)
+        {
+            classes.Add("robot-stuck-effect");
+        }
 
         return string.Join(" ", classes);
     }
@@ -622,6 +649,41 @@ public partial class GridComponent : ComponentBase, IDisposable
 
             StateHasChanged();
         });
+    }
+    
+    private async Task TriggerStuckFeedbackAsync()
+    {
+        var now = DateTime.UtcNow;
+
+        if (_lastStuckEffectAt.HasValue &&
+            now - _lastStuckEffectAt.Value < StuckEffectCooldown)
+        {
+            return;
+        }
+
+        _lastStuckEffectAt = now;
+        _showStuckEffect = true;
+
+        await InvokeAsync(StateHasChanged);
+
+        // Give Blazor a moment to render .robot-stuck-effect before JS searches for it
+        await Task.Delay(50);
+
+        if (SoundEffectsEnabled)
+        {
+            // Sourced from: https://opengameart.org/content/short-alarm
+            await JsRuntime.InvokeVoidAsync(
+                "robotSoundEffects.play",
+                "/sounds/alarm.ogg"
+            );
+        }
+
+        await JsRuntime.InvokeVoidAsync("robotCrashEffects.explode");
+
+        await Task.Delay(900);
+
+        _showStuckEffect = false;
+        await InvokeAsync(StateHasChanged);
     }
     
     private async Task OnShowCoordinatesChanged(bool value)
