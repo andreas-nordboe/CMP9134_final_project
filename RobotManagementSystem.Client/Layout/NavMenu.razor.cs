@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.Components;
-<<<<<<< Updated upstream
-=======
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using RobotManagementSystem.Client.Modals;
->>>>>>> Stashed changes
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Authentication;
 
@@ -13,25 +10,25 @@ namespace RobotManagementSystem.Client.Layout;
 public partial class NavMenu
 {
     [Inject] 
-    public IAppState AppState { get; set; }
+    public IAppState AppState { get; set; } = default!;
     [Inject] 
-    public IAuthenticationService AuthenticationService { get; set; }
+    public IAuthenticationService AuthenticationService { get; set; } = default!;
     [Inject] 
-    public NavigationManager NavigationManager { get; set; }
+    public NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject] public IDialogService DialogService { get; set; } = default!;
 
     protected override void OnInitialized()
     {
         AppState.OnUserChanged += StateHasChanged;
     }
 
-    private async void LogoutUser()
+    private async Task LogoutUser()
     {
         await AuthenticationService.LogoutUserAsync();
         NavigationManager.NavigateTo("/login"); // Navigating to login for now just to test layout
     }
     
-<<<<<<< Updated upstream
-=======
     protected async Task ConfirmLogout()
     {
         
@@ -59,6 +56,4 @@ public partial class NavMenu
         if (e.Key == "Enter")
             await ConfirmLogout();
     }
-    
->>>>>>> Stashed changes
 }
