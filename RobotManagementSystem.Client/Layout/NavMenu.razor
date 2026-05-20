@@ -11,5 +11,11 @@
     }
     
 }
-<MudNavLink OnClick="@LogoutUser" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+
 <MudNavLink @onkeydown="HandleKeyDown"  OnClick="@ConfirmLogout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+
+<MudSpacer/>
+
+<div class="nav-snackbar-host">
+    <MudSnackbarProvider />
+</div>

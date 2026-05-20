@@ -6,16 +6,17 @@
 <MudThemeProvider IsDarkMode="@AppState.IsDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
-<MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        @if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
+        @*@if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
         {
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())"/>
-        }
+        }*@
         <MudSpacer/>
-        <MudText Typo="Typo.h4">Ground Control Station</MudText>
+        <MudText Typo="Typo.h4" Style="font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
+            Ground Control Station
+        </MudText>
         <MudSpacer/>
         <MudIconButton @onclick="AppState.ToggleDarkMode" Icon="@(AppState.IsDarkMode ? @Icons.Material.Filled.DarkMode : @Icons.Material.Filled.WbSunny)" Color="Color.Inherit" Edge="Edge.End"/>
     </MudAppBar>
