@@ -34,7 +34,6 @@ public class Program
             
             config.SnackbarConfiguration.NewestOnTop = false;
             config.SnackbarConfiguration.PreventDuplicates = false;
-            config.SnackbarConfiguration.MaxDisplayedSnackbars = 35;
         });
         builder.Services.AddTransient<JWtAuthorisationHandler>();
         builder.Services.AddBlazoredLocalStorage();
@@ -54,6 +53,7 @@ public class Program
         builder.Services.AddScoped<IMapService, MapService>();
         builder.Services.AddScoped<IMissionLogService, MissionLogService>();
         builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
+        builder.Services.AddScoped<ISoundService, SoundService>();
         
         await builder.Build().RunAsync();
     }

@@ -5,7 +5,7 @@ using RobotManagementSystem.Shared.Models.Robot;
 
 namespace RobotManagementSystem.Hubs;
 
-[Authorize]
+[Authorize(Policy = "SignalRUser")]
 public class RobotTelemetryHub : Hub
 {
     private readonly ILogger<RobotTelemetryHub> _logger;

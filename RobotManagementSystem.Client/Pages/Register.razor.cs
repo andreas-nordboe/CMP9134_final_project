@@ -15,7 +15,7 @@ public partial class Register : ComponentBase
     NavigationManager NavigationManager { get; set; }
     [Inject]
     IAuthenticationService AuthenticationService { get; set; }
-
+    
     private async Task RegisterUser()
     {
         var registerUserResponse = await AuthenticationService.RegisterUserAsync(new RegisterUserRequest

@@ -11,4 +11,13 @@ public class RobotApiStatusStore : IRobotApiStatusStore
     public double? LastLatencyMs { get; set; }
     public List<double> RecentLatenciesMs { get; } = [];
     public int RetryAttempts { get; set; }
+    public void IncrementRetryAttempts()
+    {
+        RetryAttempts++;
+    }
+
+    public void ResetRetryAttempts()
+    {
+        RetryAttempts = 0;
+    }
 }

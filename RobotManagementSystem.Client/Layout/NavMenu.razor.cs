@@ -26,7 +26,7 @@ public partial class NavMenu
     private async Task LogoutUser()
     {
         await AuthenticationService.LogoutUserAsync();
-        NavigationManager.NavigateTo("/login"); // Navigating to login for now just to test layout
+        NavigationManager.NavigateTo("/login", forceLoad: true);
     }
     
     protected async Task ConfirmLogout()

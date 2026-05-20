@@ -11,4 +11,6 @@ public interface IRobotApiStatusStore
     double? LastLatencyMs { get; set; }
     List<double> RecentLatenciesMs { get; }
     int RetryAttempts { get; set; }
+    void IncrementRetryAttempts();
+    void ResetRetryAttempts();
 }

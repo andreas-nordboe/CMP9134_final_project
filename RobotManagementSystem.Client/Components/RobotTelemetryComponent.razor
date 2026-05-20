@@ -1,9 +1,10 @@
 @using RobotManagementSystem.Shared.Models.Robot
+@using RobotManagementSystem.Shared.Models.Users
 
 <MudPaper Class="telemetry-card pa-0" Outlined="true">
 
     <div class="summary-header">
-        <span>Robot Telemetry</span>
+        <span>Autonomous Robot Telemetry</span>
 
         <div class="summary-online">
             <MudIcon Icon="@Icons.Material.Filled.Circle"
@@ -16,13 +17,34 @@
     @if (LatestTelemetry == null)
     {
         <div class="telemetry-empty">
-            <MudIcon Icon="@Icons.Material.Filled.SensorsOff"
-                     Color="Color.Warning"
-                     Size="Size.Large" />
+            
+            @if (AppState.CurrentUser != null && AppState.CurrentUser.Role != UserRole.NoRole)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.SensorsOff"
+                         Color="Color.Warning"
+                         Size="Size.Large"/>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.ReportGmailerrorred"
+                         Color="Color.Error"
+                         Size="Size.Large"/>
+            }
+            
+            
 
-            <MudText Typo="Typo.body2" Align="Align.Center">
-                Waiting for telemetry from robot connection...
-            </MudText>
+            @if (AppState.CurrentUser != null && AppState.CurrentUser.Role != UserRole.NoRole)
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Waiting for telemetry from autonomous robot connection...
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Unable to establish a connection with the autonomous robot
+                </MudText>
+            }
         </div>
     }
     else

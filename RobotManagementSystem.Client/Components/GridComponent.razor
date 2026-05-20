@@ -4,25 +4,36 @@
 
     <div class="robot-map-panel">
 
-        <div class="robot-map-toolbar">
-            <div class="robot-map-toolbar-title">
+        <div class="summary-header">
+            @*<div class="robot-map-toolbar-title">
                 <MudIcon Icon="@Icons.Material.Filled.Map"
                          Size="Size.Small"
                          Color="Color.Primary" />
 
                 <span>Robot Map</span>
-            </div>
+            </div>*@
 
-            <div class="robot-map-toolbar-actions">
-                <MudText Typo="Typo.caption" Class="coordinate-label">
-                    Coordinates
-                </MudText>
+                <span>Map</span>
 
-                <MudSwitch T="bool"
-                           Value="@ShowCoordinates"
-                           ValueChanged="OnShowCoordinatesChanged"
-                           Color="Color.Primary"
-                           Size="Size.Small" />
+
+            <div class="map-toggle-group">
+                <div @onkeydown="OnShowCoordinatesKeyDown">
+                    <MudSwitch T="bool"
+                               Value="ShowCoordinates"
+                               ValueChanged="OnShowCoordinatesChanged"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Label="Coordinates" />
+                </div>
+
+                <div @onkeydown="OnSoundEffectsKeyDown">
+                    <MudSwitch T="bool"
+                               Value="SoundEffectsEnabled"
+                               ValueChanged="OnEnableSoundEffectsChanged"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Label="Sound Effects" />
+                </div>
             </div>
         </div>
 

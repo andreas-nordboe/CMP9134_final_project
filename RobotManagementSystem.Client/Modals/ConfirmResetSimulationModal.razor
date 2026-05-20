@@ -14,17 +14,19 @@
 
     <DialogActions>
         <MudButton id="reset-cancel-button"
-                   Color="Color.Default"
-                   Variant="Variant.Text"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Close"
+                   Variant="Variant.Filled"
                    OnClick="Cancel">
             Cancel
         </MudButton>
 
         <MudButton id="reset-confirm-button"
                    Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.RotateLeft"
                    Variant="Variant.Filled"
                    OnClick="Confirm">
-            Reset
+            Reset Simulation
         </MudButton>
     </DialogActions>
 </MudDialog>

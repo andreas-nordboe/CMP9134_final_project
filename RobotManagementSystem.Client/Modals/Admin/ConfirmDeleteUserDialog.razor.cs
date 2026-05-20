@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using RobotManagementSystem.Shared.Models.Users;
 
@@ -8,6 +9,19 @@ public partial class ConfirmDeleteUserDialog : ComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
+    
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await JSRuntime.InvokeVoidAsync(
+            "robotDialogFocus.focusElementById",
+            "delete-user-cancel-button");
+    }
 
     [Parameter] public UserAccountDto UserAccount { get; set; } = new UserAccountDto();
 

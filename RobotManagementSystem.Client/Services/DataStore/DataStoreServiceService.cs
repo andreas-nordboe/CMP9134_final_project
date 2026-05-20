@@ -8,6 +8,7 @@ public class DataStoreServiceService : IDataStoreService
     private readonly ILocalStorageService _localStorage;
     private const string AuthenticationDetailsKey = "AuthenticationDetails";
     private const string ShowMapCoordinatesKey = "ShowMapCoordinates";
+    private const string EnableSoundEffectsKey = "EnableSoundEffects";
 
     public DataStoreServiceService(ILocalStorageService localStorage)
     {
@@ -34,9 +35,19 @@ public class DataStoreServiceService : IDataStoreService
         await _localStorage.SetItemAsync(ShowMapCoordinatesKey, showCoordinates);
     }
 
+    public async Task StoreEnableSoundEffectsAsync(bool enableSoundEffects)
+    {
+        await _localStorage.SetItemAsync(EnableSoundEffectsKey, enableSoundEffects);
+    }
+
     public async Task<bool?> LoadShowMapCoordinatesAsync()
     {
         return await _localStorage.GetItemAsync<bool?>(ShowMapCoordinatesKey);
+    }
+
+    public async Task<bool?> LoadEnableSoundEffectsAsync()
+    {
+        return await _localStorage.GetItemAsync<bool?>(EnableSoundEffectsKey);
     }
 
     public async Task ClearShowMapCoordinatesAsync()

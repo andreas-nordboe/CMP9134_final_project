@@ -1,5 +1,6 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using RobotManagementSystem.Client.Helpers;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.DataStore;
@@ -18,6 +19,40 @@ public partial class MainLayout : IDisposable
     [Inject] private IAppState AppState { get; set; }
     [Inject] private RobotHubCommunication RobotHubCommunication { get; set; }
     [Inject] private IUserSessionService UserSessionService { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+    
+    private void UpdateSnackbarPosition()
+    {
+        Snackbar.Configuration.PositionClass =
+            AppState.IsUserLoggedIn()
+                ? Defaults.Classes.Position.TopLeft
+                : Defaults.Classes.Position.TopCenter;
+        
+        if (!AppState.IsUserLoggedIn())
+        {
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+            Snackbar.Configuration.MaxDisplayedSnackbars = 5;
+        }
+        else
+        {
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopLeft;
+            Snackbar.Configuration.MaxDisplayedSnackbars = 35;
+        }
+    }
+    
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#2196F3",
+            PrimaryContrastText = "#FFFFFF"
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#2196F3",
+            PrimaryContrastText = "#FFFFFF"
+        }
+    };
     
     protected override async Task OnInitializedAsync()
     {
@@ -28,7 +63,12 @@ public partial class MainLayout : IDisposable
         {
             AppState.SetLoggedInUserFromAuthentication(auth);
             UserSessionService.MonitorUserSession(auth);
-            await RobotHubCommunication.StartAsync();
+            
+            if (AppState.CurrentUser != null && AppState.CurrentUser.Role != UserRole.NoRole)
+            {
+                RobotHubCommunication.AllowStart();
+                await RobotHubCommunication.StartAsync();
+            }
         }
         else
         {
@@ -37,15 +77,13 @@ public partial class MainLayout : IDisposable
             await RobotHubCommunication.StopAsync();
         }
         
-        AppState.OnUserChanged += StateHasChanged;
+        AppState.OnUserChanged += OnUserChanged;
         AppState.OnDarkModeChanged += StateHasChanged;
         AppState.OnApiStatusChanged += OnApiStatusChanged;
-
-        if (AppState.CurrentUser is null || !AppState.CurrentUser.IsLoggedIn)
-        {
-            NavigationManager.NavigateTo("/login");
-        }
         
+        UpdateSnackbarPosition();
+        
+        RedirectIfLoggedIn();
         
         var isDarkMode = await localStorage.GetItemAsync<bool>("IsDarkMode");
         if (isDarkMode)
@@ -54,6 +92,7 @@ public partial class MainLayout : IDisposable
             //Appstate.OnDarkModeChanged?.Invoke();
             StateHasChanged();
         }
+        
     }
 
     void ToggleSidebar()
@@ -66,9 +105,43 @@ public partial class MainLayout : IDisposable
         InvokeAsync(StateHasChanged);
     }
 
+    private void OnUserChanged()
+    {
+        UpdateSnackbarPosition();
+        InvokeAsync(() =>
+        {
+            RedirectIfLoggedIn();
+            StateHasChanged();
+        });
+    }
+    
+    private void RedirectIfLoggedIn()
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+            .Trim('/')
+            .ToLowerInvariant();
+
+        var isAuthPage = path is "login" or "register";
+
+        if (AppState.IsUserLoggedIn())
+        {
+            if (isAuthPage)
+            {
+                NavigationManager.NavigateTo("/", replace: true);
+            }
+        }
+        else
+        {
+            if (!isAuthPage)
+            {
+                NavigationManager.NavigateTo("/login", replace: true);
+            }
+        }
+    }
+
     public void Dispose()
     {
-        AppState.OnUserChanged -= StateHasChanged;
+        AppState.OnUserChanged -= OnUserChanged;
         AppState.OnDarkModeChanged -= StateHasChanged;
         AppState.OnApiStatusChanged -= OnApiStatusChanged;
     }

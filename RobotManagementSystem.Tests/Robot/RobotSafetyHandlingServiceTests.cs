@@ -49,12 +49,15 @@ public class RobotSafetyHandlingServiceTests
         rateLimiter
             .Setup(x => x.WaitAsync())
             .Returns(Task.CompletedTask);
+        
+        var robotApiStatusStore = new Mock<IRobotApiStatusStore>();
 
         var service = new RobotApiService(
             httpClient,
             logger,
             missionLogsService.Object,
-            rateLimiter.Object
+            rateLimiter.Object,
+            robotApiStatusStore.Object
         );
 
         var request = new RobotNavigationRequest
@@ -121,12 +124,15 @@ public class RobotSafetyHandlingServiceTests
         rateLimiter
             .Setup(x => x.WaitAsync())
             .Returns(Task.CompletedTask);
+        
+        var robotApiStatusStore = new Mock<IRobotApiStatusStore>();
 
         var service = new RobotApiService(
             httpClient,
             logger,
             missionLogsService.Object,
-            rateLimiter.Object
+            rateLimiter.Object,
+            robotApiStatusStore.Object
         );
 
         var request = new RobotNavigationRequest
@@ -188,11 +194,14 @@ public class RobotSafetyHandlingServiceTests
             .Setup(x => x.WaitAsync())
             .Returns(Task.CompletedTask);
 
+        var robotApiStatusStore = new Mock<IRobotApiStatusStore>();
+        
         var service = new RobotApiService(
             httpClient,
             logger,
             missionLogsService.Object,
-            rateLimiter.Object
+            rateLimiter.Object,
+            robotApiStatusStore.Object
         );
 
         var request = new RobotNavigationRequest
@@ -241,12 +250,15 @@ public class RobotSafetyHandlingServiceTests
         rateLimiter
             .Setup(x => x.WaitAsync())
             .Returns(Task.CompletedTask);
+        
+        var robotApiStatusStore = new Mock<IRobotApiStatusStore>();
 
         var service = new RobotApiService(
             httpClient,
             logger,
             missionLogsService.Object,
-            rateLimiter.Object
+            rateLimiter.Object,
+            robotApiStatusStore.Object
         );
 
         var request = new RobotNavigationRequest
@@ -295,12 +307,15 @@ public class RobotSafetyHandlingServiceTests
         rateLimiter
             .Setup(x => x.WaitAsync())
             .Returns(Task.CompletedTask);
+        
+        var robotApiStatusStore = new Mock<IRobotApiStatusStore>();
 
         var service = new RobotApiService(
             httpClient,
             logger,
             missionLogsService.Object,
-            rateLimiter.Object
+            rateLimiter.Object,
+            robotApiStatusStore.Object
         );
 
         // Act

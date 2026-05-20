@@ -17,18 +17,20 @@ public class RobotHubCommunication : IAsyncDisposable
     
     public RobotTelemetry? LatestTelemetry { get; private set; }
     private readonly IDataStoreService _dataStoreService;
+    private readonly ISoundService _soundService;
     
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
     private bool _hasBeenDisposed;
     private bool _retryHasBeenScheduled;
     private bool _manualStop;
 
-    public RobotHubCommunication(IConfiguration configuration, IAppState appState, ILogger<RobotHubCommunication> logger, IDataStoreService dataStoreService)
+    public RobotHubCommunication(IConfiguration configuration, IAppState appState, ILogger<RobotHubCommunication> logger, IDataStoreService dataStoreService, ISoundService soundService)
     {
         _configuration = configuration;
         _appState = appState;
         _logger = logger;
         _dataStoreService = dataStoreService;
+        _soundService = soundService;
     }
     
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
@@ -40,11 +42,8 @@ public class RobotHubCommunication : IAsyncDisposable
         
         try
         {
-            if(_hasBeenDisposed)
+            if (_hasBeenDisposed || _manualStop)
                 return;
-            
-            _manualStop = false;
-
             
             _logger.LogInformation("Starting SignalR connection");
 
@@ -100,6 +99,12 @@ public class RobotHubCommunication : IAsyncDisposable
 
             _connection.Closed += error =>
             {
+                if (_manualStop)
+                {
+                    _logger.LogInformation("SignalR connection closed manually.");
+                    return Task.CompletedTask;
+                }
+                
                 _appState.SetSignalDisrupted(true);
                 ConnectionStatusChanged?.Invoke(RobotApiStatus.Disconnected);
 
@@ -113,11 +118,16 @@ public class RobotHubCommunication : IAsyncDisposable
                 return Task.CompletedTask;
             };
 
-            _connection.On<string>(RobotApiStatus.StatusMethod, status =>
+            _connection.On<string>(RobotApiStatus.StatusMethod, async status =>
             {
                 _appState.ApiStatus = status;
                 ConnectionStatusChanged?.Invoke(status);
                 Console.WriteLine($"Connection status changed: {status}");
+
+                if (status == RobotApiStatus.Disconnected || status == RobotApiStatus.Reconnecting)
+                {
+                    await PlayDisruptSound();
+                }
             });
 
             _connection.On<RobotTelemetry>("TelemetryUpdated", telemetryData =>
@@ -231,5 +241,15 @@ public class RobotHubCommunication : IAsyncDisposable
         {
             _connectionLock.Release();
         }
+    }
+
+    private async Task PlayDisruptSound()
+    {
+        await _soundService.PlaySoundAsync("signal-disrupt.mp3");
+    }
+    
+    public void AllowStart()
+    {
+        _manualStop = false;
     }
 }
