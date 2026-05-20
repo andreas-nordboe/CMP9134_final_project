@@ -24,6 +24,7 @@ public partial class CommanderControls : ComponentBase, IDisposable
     [Inject] private IAppState AppState { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
+    [Inject] private ISoundService _soundService { get; set; } = default;
 
     private RobotTelemetry? LatestTelemetry => RobotHubCommunication.LatestTelemetry;
 
@@ -128,6 +129,7 @@ public partial class CommanderControls : ComponentBase, IDisposable
             IsProcessingCommand = false;
             AppState.SetPendingRobotCommandTarget(null);
             Snackbar.Add("Could not send reset simulation command.", Severity.Error);
+            await _soundService.PlayErrorSoundAsync();
         }
         finally
         {
@@ -182,6 +184,7 @@ public partial class CommanderControls : ComponentBase, IDisposable
         if (LatestTelemetry?.Position == null)
         {
             Snackbar.Add("Cannot move robot because telemetry position is unavailable.", Severity.Warning);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
@@ -196,24 +199,28 @@ public partial class CommanderControls : ComponentBase, IDisposable
         if (!RobotHubCommunication.IsConnected)
         {
             Snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
         if (IsProcessingCommand)
         {
             Snackbar.Add("A movement command is already being processed.", Severity.Info);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
         if (RobotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
         {
             Snackbar.Add("Robot is already moving!", Severity.Info);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
         if (RobotHubCommunication.LatestTelemetry?.Battery <= 0)
         {
             Snackbar.Add("Robot battery is empty!", Severity.Error);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
         
@@ -222,6 +229,7 @@ public partial class CommanderControls : ComponentBase, IDisposable
         if (tile == null)
         {
             Snackbar.Add("You can't move outside the map!", Severity.Warning);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
@@ -230,6 +238,7 @@ public partial class CommanderControls : ComponentBase, IDisposable
             || tile.ContentType == GridTileType.LidarHit)
         {
             Snackbar.Add("You can't move there!", Severity.Warning);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
@@ -255,15 +264,18 @@ public partial class CommanderControls : ComponentBase, IDisposable
             {
                 AppState.SetPendingRobotCommandTarget(null);
                 Snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
+                await _soundService.PlayErrorSoundAsync();
                 return;
             }
 
             Snackbar.Add($"Move command sent to ({x}, {y}).", Severity.Success);
+            await _soundService.PlayErrorSoundAsync();
         }
         catch
         {
             AppState.SetPendingRobotCommandTarget(null);
             Snackbar.Add("Could not send move command to robot.", Severity.Error);
+            await _soundService.PlayErrorSoundAsync();
         }
         finally
         {

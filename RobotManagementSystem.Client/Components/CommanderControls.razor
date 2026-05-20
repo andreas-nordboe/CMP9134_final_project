@@ -118,7 +118,7 @@
 
                     <MudButton OnClick="MoveRobot"
                                Variant="Variant.Filled"
-                               StartIcon="@Icons.Material.Filled.Navigation"
+                               StartIcon="@Icons.Material.Filled.OpenWith"
                                Color="Color.Primary"
                                Disabled="@(!CanSendCommand)"
                                Class="move-command-button">
@@ -127,10 +127,6 @@
                 </div>
 
             </MudTabPanel>
-            
-            <MudText Align="Align.Center" Typo="Typo.caption" Class="commander-help">
-                Keyboard input: WASD to move and CTRL + R to reset simulation.
-            </MudText>
             
             <div class="reset-command-area">
                 <MudButton OnClick="ConfirmResetSimulation"

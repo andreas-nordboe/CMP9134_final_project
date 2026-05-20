@@ -47,3 +47,13 @@ window.robotKeyboardShortcuts = {
         }
     }
 };
+
+window.robotDialogFocus = {
+    focusElementById: function (elementId) {
+        const element = document.getElementById(elementId);
+
+        if (element) {
+            element.focus();
+        }
+    }
+};

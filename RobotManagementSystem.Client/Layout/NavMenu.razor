@@ -1,21 +1,20 @@
 ﻿@using RobotManagementSystem.Shared.Models.Users
-<MudNavLink Href="/" Icon="@Icons.Material.Filled.SpaceDashboard">Dashboard</MudNavLink>
-<MudNavLink Href="/mission-logs" Icon="@Icons.Material.Filled.Notes">Mission Logs</MudNavLink>
-<MudNavLink Href="system-status" Icon="@Icons.Material.Filled.QueryStats">System Status</MudNavLink>
-@*<MudNavLink Href="user-account" Icon="@Icons.Material.Filled.ManageAccounts">User Account</MudNavLink>*@
-@if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
-{   
-    @if (AppState.CurrentUser.Role == UserRole.Admin)
-    {
-        <MudNavLink Href="admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin User Manager</MudNavLink>
-    }
+
+@if (@AppState.IsUserLoggedIn() && @AppState.CurrentUser != null && @AppState.CurrentUser.Role != UserRole.NoRole)
+{
+    <MudNavLink Href="/" Icon="@Icons.Material.Filled.SpaceDashboard">Dashboard</MudNavLink>
+    <MudNavLink Href="/mission-logs" Icon="@Icons.Material.Filled.Notes">Mission Logs</MudNavLink>
+    <MudNavLink Href="system-status" Icon="@Icons.Material.Filled.QueryStats">System Status</MudNavLink>
+    @*<MudNavLink Href="user-account" Icon="@Icons.Material.Filled.ManageAccounts">User Account</MudNavLink>*@
+    @if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
+    {   
+        @if (AppState.CurrentUser.Role == UserRole.Admin)
+        {
+            <MudNavLink Href="admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin User Manager</MudNavLink>
+        }
     
+    }
 }
 
 <MudNavLink @onkeydown="HandleKeyDown"  OnClick="@ConfirmLogout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
-
-<MudSpacer/>
-
-<div class="nav-snackbar-host">
-    <MudSnackbarProvider />
-</div>
+<MudDivider Class="mt-2 mb-4"/>

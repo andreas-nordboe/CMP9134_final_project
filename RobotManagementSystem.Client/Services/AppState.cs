@@ -1,6 +1,5 @@
 using Blazored.LocalStorage;
 using RobotManagementSystem.Client.Helpers;
-using RobotManagementSystem.Client.Pages;
 using RobotManagementSystem.Shared.Models.Authentication;
 using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Users;
@@ -12,7 +11,7 @@ public class AppState : IAppState
 {
     private readonly ILocalStorageService _localStorage;
 
-    public AppState(ILocalStorageService localStorage)
+    public AppState(ILocalStorageService localStorage, ISoundService soundService)
     {
         _localStorage = localStorage;
     }
@@ -29,6 +28,7 @@ public class AppState : IAppState
     public event Action<Vector2D?>? OnPendingRobotCommandTargetChanged;
     public bool IsSignalDisrupted { get; private set; }
     public Vector2D? PendingRobotCommandTarget { get; private set; }
+    
 
 
 

@@ -22,13 +22,15 @@
         private readonly IMissionLogsService _missionLogsService;
         private static readonly SemaphoreSlim _robotLock = new(1, 1);
         private readonly IRobotCommandRateLimiter _commandRateLimiter;
+        private readonly IRobotApiStatusStore _robotApiStatusStore;
 
-        public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService, IRobotCommandRateLimiter commandRateLimiter)
+        public RobotApiService(HttpClient httpClient, ILogger<RobotApiService> logger, IMissionLogsService missionLogsService, IRobotCommandRateLimiter commandRateLimiter, IRobotApiStatusStore robotApiStatusStore)
         {
             _httpClient = httpClient;
             _logger = logger;
             _missionLogsService = missionLogsService;
             _commandRateLimiter = commandRateLimiter;
+            _robotApiStatusStore = robotApiStatusStore;
         }
 
         public async Task<MapResponse?> GetMapAsync()
@@ -163,6 +165,8 @@
                             $"{ErrorMessages.RobotMoveCommandFailed} Response: {response.StatusCode}."
                     };
                 }
+                
+                _robotApiStatusStore.ResetRetryAttempts();
 
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
@@ -259,6 +263,8 @@
                         Message = $"{ErrorMessages.RobotResetCommandFailed} Response {response.StatusCode}" 
                     };
                 }
+                
+                _robotApiStatusStore.ResetRetryAttempts();
 
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
                 {
@@ -369,13 +375,15 @@
         
         private async Task LogRetryAttemptAsync(int userId, UserRole role, RobotCommand command, int attempt, string reason)
         {
+            _robotApiStatusStore.IncrementRetryAttempts();
+
             await _missionLogsService.AddMissionLog(new AddMissionLogRequest
             {
                 UserId = userId,
                 Role = role,
                 Command = command,
                 CommandResult = RobotCommandResult.Retried,
-                Details = $"{reason} Retry attempt {attempt} failed."
+                Details = $"{reason} Attempt {attempt} failed."
             });
         }
     }

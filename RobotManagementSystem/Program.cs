@@ -137,7 +137,19 @@ public class Program
             options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
         
 
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("SignalRUser", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireRole(
+                    UserRole.Viewer.ToString(),
+                    UserRole.Commander.ToString(),
+                    UserRole.Auditor.ToString(),
+                    UserRole.Admin.ToString()
+                );
+            });
+        });
         
         var app = builder.Build();
         

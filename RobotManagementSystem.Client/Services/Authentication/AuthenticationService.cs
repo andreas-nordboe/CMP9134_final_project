@@ -51,7 +51,11 @@ public class AuthenticationService : IAuthenticationService
             _appState.SetLoggedInUserFromAuthentication(authResponse);
             _userSessionService.MonitorUserSession(authResponse);
             
-            await _robotHubCommunication.StartAsync();
+            if (authResponse.Role != nameof(UserRole.NoRole))
+            {
+                _robotHubCommunication.AllowStart();
+                await _robotHubCommunication.StartAsync();
+            }
             
             return authResponse;
         }
@@ -112,8 +116,12 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task LogoutUserAsync()
     {
-        await _dataStoreService.ClearAuthenticationDetailsAsync();
-        _appState.ClearUser();
         await _robotHubCommunication.StopAsync();
+
+        await _dataStoreService.ClearAuthenticationDetailsAsync();
+
+        _userSessionService.StopMonitoringUserSession();
+
+        _appState.ClearUser();
     }
 }

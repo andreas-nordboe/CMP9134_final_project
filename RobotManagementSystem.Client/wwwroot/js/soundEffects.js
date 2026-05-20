@@ -1,7 +1,21 @@
 window.robotSoundEffects = {
+    cache: {},
+
+    preload: function (...soundPaths) {
+        soundPaths.forEach(path => {
+            const audio = new Audio(path);
+            audio.volume = 0.45;
+            audio.preload = "auto";
+            audio.load();
+
+            this.cache[path] = audio;
+        });
+    },
+
     play: function (soundPath) {
-        const audio = new Audio(soundPath);
+        const audio = this.cache[soundPath] ?? new Audio(soundPath);
         audio.volume = 0.45;
+        audio.currentTime = 0;
 
         audio.play().catch((error) => {
             console.warn("Sound could not play:", soundPath, error);

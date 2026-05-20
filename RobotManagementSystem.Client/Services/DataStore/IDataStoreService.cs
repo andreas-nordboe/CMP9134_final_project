@@ -8,6 +8,8 @@ public interface IDataStoreService
     Task<AuthenticationResponse?> LoadAuthenticationDetailsAsync();
     Task ClearAuthenticationDetailsAsync();
     Task StoreShowMapCoordinatesAsync(bool showCoordinates);
+    Task StoreEnableSoundEffectsAsync(bool enableSoundEffects);
     Task<bool?> LoadShowMapCoordinatesAsync();
+    Task<bool?> LoadEnableSoundEffectsAsync();
     Task ClearShowMapCoordinatesAsync();
 }

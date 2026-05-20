@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
 using RobotManagementSystem.Client.Services;
@@ -9,6 +10,7 @@ using RobotManagementSystem.Client.Services.Sessions;
 using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Map;
 using RobotManagementSystem.Shared.Models.Robot;
+using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Components;
 
@@ -21,6 +23,7 @@ public partial class GridComponent : ComponentBase, IDisposable
     [Inject] private IRobotCommanderService _robotCommanderService { get; set; }
     [Inject] private IDataStoreService DataStoreService { get; set; } = default!;
     [Inject] private IMapService _mapService { get; set; } = default!;
+    [Inject] private ISoundService _soundService { get; set; } = default;
     [Inject] private IAppState _appState { get; set; }
     [Inject] private IUserSessionService _userSessionService { get; set; }
     [Inject] private ISnackbar _snackbar { get; set; }
@@ -37,6 +40,7 @@ public partial class GridComponent : ComponentBase, IDisposable
     private bool _hasSeenRobotMovingForPendingCommand;
     private DateTime? _lastTelemetryReceivedAt;
     private static readonly TimeSpan TelemetryGapReloadThreshold = TimeSpan.FromSeconds(3);
+    private bool _wasRobotOnChargingStation;
     [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
     
     // Sounds/effects
@@ -71,10 +75,17 @@ public partial class GridComponent : ComponentBase, IDisposable
 
         var storedShowCoordinates = await DataStoreService.LoadShowMapCoordinatesAsync();
         ShowCoordinates = storedShowCoordinates ?? false;
+        
+        var storedPlaySoundEffects = await DataStoreService.LoadEnableSoundEffectsAsync();
+        SoundEffectsEnabled = storedShowCoordinates ?? false;
 
         UseLightMapTheme = !_appState.IsDarkMode;
 
-        await _robotHubCommunication.StartAsync();
+        if (_appState.CurrentUser != null && _appState.CurrentUser.Role != UserRole.NoRole)
+        {
+            _robotHubCommunication.AllowStart();
+            await _robotHubCommunication.StartAsync();
+        }
 
         StateHasChanged();
 
@@ -249,6 +260,8 @@ public partial class GridComponent : ComponentBase, IDisposable
 
         MoveRobot(robotX, robotY);
 
+        await HandleChargeStationSoundEffect(robotX, robotY);
+
         if (PendingCommandTile != null)
         {
             var reachedPendingTarget =
@@ -275,6 +288,7 @@ public partial class GridComponent : ComponentBase, IDisposable
                 if (!_stuckWarningShown)
                 {
                     _snackbar.Add("Robot is stuck. Movement command was cancelled.", Severity.Warning);
+                    await _soundService.PlayErrorSoundAsync();
                     _stuckWarningShown = true;
 
                     await TriggerStuckFeedbackAsync();
@@ -284,6 +298,7 @@ public partial class GridComponent : ComponentBase, IDisposable
             {
                 ClearPendingCommand();
                 _snackbar.Add("Movement command cancelled because the robot battery is empty.", Severity.Error);
+                await _soundService.PlayErrorSoundAsync();
             }
             else if (_hasSeenRobotMovingForPendingCommand &&
                      robotTelemetry.Status != nameof(RobotStatus.MOVING))
@@ -294,6 +309,7 @@ public partial class GridComponent : ComponentBase, IDisposable
             {
                 ClearPendingCommand();
                 _snackbar.Add("Movement command timed out.", Severity.Warning);
+                await _soundService.PlayErrorSoundAsync();
             }
         }
         else
@@ -458,78 +474,92 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     protected async Task OnTileClicked(TileState tile)
     {
-    if (!_robotHubCommunication.IsConnected)
-    {
-        _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
-        return;
-    }
-
-    if (IsCommandProcessing)
-    {
-        _snackbar.Add("A movement command is already being processed.", Severity.Info);
-        return;
-    }
-
-    if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
-    {
-        _snackbar.Add("Robot is already moving!", Severity.Info);
-        return;
-    }
-
-    if (_robotHubCommunication.LatestTelemetry?.Battery <= 0)
-    {
-        _snackbar.Add("Robot battery is empty!", Severity.Error);
-        return;
-    }
-
-    if (tile.ContentType == GridTileType.Obstacle
-        || tile.OriginalContentType == GridTileType.Obstacle
-        || tile.ContentType == GridTileType.LidarHit)
-    {
-        _snackbar.Add("You can't move there!", Severity.Warning);
-        return;
-    }
-
-    try
-    {
-        IsCommandProcessing = true;
-        PendingCommandTile = tile;
-        _pendingCommandStartedAt = DateTime.UtcNow;
-        _hasSeenRobotMovingForPendingCommand = false;
-
-        _appState.SetPendingRobotCommandTarget(new Vector2D
+        if (_appState.CurrentUser != null &&
+            _appState.CurrentUser.Role == UserRole.NoRole
+            || _appState.CurrentUser.Role == UserRole.Viewer)
         {
-            X = tile.VectorPosition.X,
-            Y = tile.VectorPosition.Y
-        });
-
-        await InvokeAsync(StateHasChanged);
-
-        var response = await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+            _snackbar.Add("You are not authorised to move the robot.", Severity.Error);
+            await _soundService.PlayErrorSoundAsync();
+        }
+        
+        if (!_robotHubCommunication.IsConnected)
         {
-            X = tile.VectorPosition.X,
-            Y = tile.VectorPosition.Y
-        });
-
-        if (response == null || !response.Success)
-        {
-            ClearPendingCommand();
-            _snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
+            _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+            await _soundService.PlayErrorSoundAsync();
             return;
         }
 
-        _snackbar.Add($"Move command sent to ({tile.VectorPosition.X}, {tile.VectorPosition.Y}).", Severity.Success);
+        if (IsCommandProcessing)
+        {
+            _snackbar.Add("A movement command is already being processed.", Severity.Info);
+            await _soundService.PlayErrorSoundAsync();
+            return;
+        }
+
+        if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
+        {
+            _snackbar.Add("Robot is already moving!", Severity.Info);
+            await _soundService.PlayErrorSoundAsync();
+            return;
+        }
+
+        if (_robotHubCommunication.LatestTelemetry?.Battery <= 0)
+        {
+            _snackbar.Add("Robot battery is empty!", Severity.Error);
+            await _soundService.PlayErrorSoundAsync();
+            return;
+        }
+
+        if (tile.ContentType == GridTileType.Obstacle
+            || tile.OriginalContentType == GridTileType.Obstacle
+            || tile.ContentType == GridTileType.LidarHit)
+        {
+            _snackbar.Add("You can't move there!", Severity.Warning);
+            await _soundService.PlayErrorSoundAsync();
+            return;
+        }
+
+        try
+        {
+            IsCommandProcessing = true;
+            PendingCommandTile = tile;
+            _pendingCommandStartedAt = DateTime.UtcNow;
+            _hasSeenRobotMovingForPendingCommand = false;
+
+            _appState.SetPendingRobotCommandTarget(new Vector2D
+            {
+                X = tile.VectorPosition.X,
+                Y = tile.VectorPosition.Y
+            });
+
+            await InvokeAsync(StateHasChanged);
+
+            var response = await _robotCommanderService.MoveRobotAsync(new RobotNavigationRequest
+            {
+                X = tile.VectorPosition.X,
+                Y = tile.VectorPosition.Y
+            });
+
+            if (response == null || !response.Success)
+            {
+                ClearPendingCommand();
+                _snackbar.Add(response?.Message ?? "Move command failed.", Severity.Error);
+                return;
+            }
+
+            _snackbar.Add($"Move command sent to ({tile.VectorPosition.X}, {tile.VectorPosition.Y}).", Severity.Success);
+        }
+        catch
+        {
+            ClearPendingCommand();
+            _snackbar.Add("Could not send move command to robot! The simulation may currently be unavailable.", Severity.Error);
+            await _soundService.PlayErrorSoundAsync();
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
-    catch
-    {
-        ClearPendingCommand();
-        _snackbar.Add("Could not send move command to robot! The simulation may currently be unavailable.", Severity.Error);
-    }
-    finally
-    {
-        await InvokeAsync(StateHasChanged);
-    }
-}
     
     private string GetTileClass(TileState tile)
     {
@@ -676,10 +706,7 @@ public partial class GridComponent : ComponentBase, IDisposable
         if (SoundEffectsEnabled)
         {
             // Sourced from: https://opengameart.org/content/short-alarm
-            await JsRuntime.InvokeVoidAsync(
-                "robotSoundEffects.play",
-                "/sounds/alarm.ogg"
-            );
+            await _soundService.PlaySoundAsync("alarm.ogg");
         }
 
         await JsRuntime.InvokeVoidAsync("robotCrashEffects.explode");
@@ -692,7 +719,54 @@ public partial class GridComponent : ComponentBase, IDisposable
     
     private async Task OnShowCoordinatesChanged(bool value)
     {
+        if (ShowCoordinates == value)
+            return;
+
         ShowCoordinates = value;
+
         await DataStoreService.StoreShowMapCoordinatesAsync(value);
+
+        await InvokeAsync(StateHasChanged);
     }
+    
+    private async Task OnEnableSoundEffectsChanged(bool value)
+    {
+        if (SoundEffectsEnabled == value)
+            return;
+
+        SoundEffectsEnabled = value;
+
+        await DataStoreService.StoreEnableSoundEffectsAsync(value);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleChargeStationSoundEffect(int robotX, int robotY )
+    {
+        var isRobotOnChargingStation = robotX == 0 && robotY == 0;
+
+        if (isRobotOnChargingStation && !_wasRobotOnChargingStation)
+        {
+            await _soundService.PlaySoundAsync("charge-station.mp3");
+        }
+
+        _wasRobotOnChargingStation = isRobotOnChargingStation;
+    }
+    
+    private async Task OnShowCoordinatesKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is not ("Enter" or " "))
+            return;
+
+        await OnShowCoordinatesChanged(!ShowCoordinates);
+    }
+    
+    private async Task OnSoundEffectsKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is not ("Enter" or " "))
+            return;
+
+        await OnEnableSoundEffectsChanged(!SoundEffectsEnabled);
+    }
+    
 }
