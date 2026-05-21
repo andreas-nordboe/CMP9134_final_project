@@ -1,0 +1,75 @@
+@using RobotManagementSystem.Shared.Models.Components
+
+<div class="@MapShellClass">
+
+    <div class="robot-map-panel">
+
+        <div class="summary-header">
+            @*<div class="robot-map-toolbar-title">
+                <MudIcon Icon="@Icons.Material.Filled.Map"
+                         Size="Size.Small"
+                         Color="Color.Primary" />
+
+                <span>Robot Map</span>
+            </div>*@
+
+                <span>Map</span>
+
+
+            <div class="map-toggle-group">
+                <div @onkeydown="OnShowCoordinatesKeyDown">
+                    <MudSwitch T="bool"
+                               Value="ShowCoordinates"
+                               ValueChanged="OnShowCoordinatesChanged"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Label="Coordinates" />
+                </div>
+
+                <div @onkeydown="OnSoundEffectsKeyDown">
+                    <MudSwitch T="bool"
+                               Value="SoundEffectsEnabled"
+                               ValueChanged="OnEnableSoundEffectsChanged"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Label="Sound Effects" />
+                </div>
+            </div>
+        </div>
+
+        <div class="robot-grid"
+             style="grid-template-columns: repeat(@GridWidth, minmax(0, 1fr)); grid-template-rows: repeat(@GridHeight, minmax(0, 1fr));">
+
+            @foreach (var tile in Tiles)
+            {
+                <div @onclick="() => OnTileClicked(tile)"
+                     class="@GetTileClass(tile)">
+
+                    @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
+                    {
+                        <img src="@tile.ImageUrl"
+                             class="tile-image"
+                             alt="Robot" />
+                    }
+                    
+                    @if (tile.ContentType == GridTileType.ChargingStation)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.BatteryChargingFull"
+                                 Class="charging-station-icon" />
+                    }
+
+                    @if (ShowCoordinates)
+                    {
+                        <span class="tile-coordinates">
+                            @tile.VectorPosition.X,@tile.VectorPosition.Y
+                        </span>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,43 @@
+﻿services:
+  robotmanagementsystem:
+    image: robotmanagementsystem
+    build:
+      context: .
+      dockerfile: RobotManagementSystem/Dockerfile
+    ports:
+      - "5085:8080"
+    volumes:
+      - robot_data:/app/data
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      
+      # SQLite connection string
+      ConnectionStrings__Default: Data Source=/app/data/robotmanagementsystem.db
+        
+      # Robot simulation
+      RobotApi__BaseAddress: http://robotsim:5000
+      RobotApi__TelemetryAddress: ws://robotsim:5000/ws/telemetry
+      
+    depends_on:
+      - robotsim
+      
+      
+  robotmanagementsystem-client:
+    image: robotmanagementsystem-client
+    build:
+      context: .
+      dockerfile: RobotManagementSystem.Client/Dockerfile
+    ports:
+      - "5116:80"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - robotmanagementsystem
+    
+  robotsim:
+    image: ghcr.io/francescodelduchetto/cmp9134_2526_robotsim:latest
+    ports:
+      - "5000:5000"
+volumes:
+  robot_data:

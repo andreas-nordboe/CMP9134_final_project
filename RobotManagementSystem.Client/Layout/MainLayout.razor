@@ -1,0 +1,75 @@
+﻿@using RobotManagementSystem.Shared.Models.Robot
+@using RobotManagementSystem.Shared.Models.Users
+@inherits LayoutComponentBase
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<PageTitle>Ground Control Station</PageTitle>
+<MudThemeProvider Theme="_theme"  IsDarkMode="@AppState.IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudAppBar Color="@(AppState.IsDarkMode ? Color.Default : Color.Primary)" Elevation="1">
+        @if (AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleSidebar())"/>
+        }
+        <MudSpacer/>
+        <MudText Typo="Typo.h4" Style="font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;">
+            Ground Control Station
+        </MudText>
+        <MudSpacer/>
+        <MudIconButton @onclick="AppState.ToggleDarkMode" Icon="@(AppState.IsDarkMode ? @Icons.Material.Filled.DarkMode : @Icons.Material.Filled.WbSunny)" Color="Color.Inherit" Edge="Edge.End"/>
+    </MudAppBar>
+    @if (AppState.CurrentUser != null && AppState.CurrentUser != null && AppState.CurrentUser.IsLoggedIn)
+    {
+        <MudDrawer Variant="DrawerVariant.Persistent" Open="@_sidebarOpen" Overlay="false" ClipMode="DrawerClipMode.Docked" Elevation="5">
+            <NavMenu/>
+        </MudDrawer>
+    }
+    
+    <MudMainContent>
+        <div style="min-height: 56px;">
+           @if (@AppState.IsUserLoggedIn() && AppState.CurrentUser != null && AppState.CurrentUser.Role != UserRole.NoRole)
+           {
+               @if (AppState.ApiStatus == RobotApiStatus.Reconnecting)
+               {
+                   <div class="px-5 py-2">
+                       <MudAlert Severity="Severity.Warning"
+                                 Variant="Variant.Outlined"
+                                 ContentAlignment="HorizontalAlignment.Center">
+                           WARNING: Signal Lost. Reconnecting
+                       </MudAlert>
+                   </div>
+               }
+               else if (AppState.ApiStatus == RobotApiStatus.Disconnected)
+               {
+                   <div class="px-5 py-2">
+                       <MudAlert Icon="@Icons.Material.Filled.CloudOff"
+                                 Severity="Severity.Error"
+                                 Variant="Variant.Outlined"
+                                 ContentAlignment="HorizontalAlignment.Center">
+                           Robot simulation disconnected.
+                       </MudAlert>
+                   </div>
+               }
+           }
+           else if(@AppState.IsUserLoggedIn() && AppState.CurrentUser != null && AppState.CurrentUser.Role == UserRole.NoRole)
+           {
+               <div class="px-5 py-2">
+                   <MudAlert Severity="Severity.Error"
+                             Variant="Variant.Outlined"
+                             Icon="@Icons.Material.Filled.Lock"
+                             ContentAlignment="HorizontalAlignment.Center">
+                       Access denied. An administrator must grant you a role before you can access the Ground Control Station. You must also log out and in again for these changes to take effect.
+                   </MudAlert>
+                   
+               </div>
+           }
+        </div>
+        
+        @Body
+        
+    </MudMainContent>
+</MudLayout>

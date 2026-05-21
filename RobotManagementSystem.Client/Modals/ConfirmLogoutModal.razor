@@ -1,0 +1,32 @@
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            Log Out
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mt-2">
+            Are you sure you want to log out?
+        </MudText>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton id="reset-cancel-button"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Close"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton id="reset-confirm-button"
+                   Color="Color.Error"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Logout"
+                   OnClick="Confirm">
+            Log Out
+        </MudButton>
+    </DialogActions>
+</MudDialog>

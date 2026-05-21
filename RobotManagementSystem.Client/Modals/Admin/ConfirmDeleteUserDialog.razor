@@ -1,0 +1,9 @@
+<MudDialog>
+    <DialogContent>
+        <MudText>Are you sure you want to permanently delete <b>@UserAccount.Username</b>. This cannot be undone.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton id="delete-user-cancel-button" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="@Color.Error" StartIcon="@Icons.Material.Filled.Delete"Variant="Variant.Filled" OnClick="DeleteUser">Delete</MudButton>
+    </DialogActions>
+</MudDialog>

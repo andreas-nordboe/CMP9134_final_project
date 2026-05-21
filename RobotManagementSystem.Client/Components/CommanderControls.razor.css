@@ -1,0 +1,137 @@
+.commander-card {
+    width: 100%;
+    overflow: hidden;
+}
+
+.commander-tabs {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.commander-tabs .mud-tabs-panels {
+    min-height: 330px;
+    height: 330px;
+}
+
+.commander-section {
+    height: 100%;
+    min-height: 300px;
+    padding: 1rem 0.5rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.commander-help {
+    opacity: 0.75;
+    text-align: center;
+    margin-bottom: 1rem;
+    max-width: 360px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.direction-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 54px);
+    grid-template-rows: repeat(3, 54px);
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.direction-center {
+    height: 54px;
+    min-width: 54px;
+    padding: 0;
+    font-size: 0.75rem;
+}
+
+.command-buttons {
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.summary-online {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+}
+
+.summary-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+}
+
+.summary-value {
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.summary-small {
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.direction-center-empty {
+    width: 54px;
+    height: 54px;
+}
+
+.advanced-command-section {
+    height: 100%;
+    min-height: 300px;
+    padding: 1rem 0.5rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.coordinate-inputs {
+    width: 100%;
+    max-width: 420px;
+    justify-content: center;
+}
+
+.move-command-button {
+    margin-top: 1rem;
+    min-width: 170px;
+}
+
+.reset-command-area {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 1.25rem;
+
+    display: flex;
+    justify-content: center;
+}
+
+.keyboard-help-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 0.75rem;
+}
+
+.keyboard-help {
+    width: 100%;
+    text-align: center;
+    opacity: 0.75;
+}

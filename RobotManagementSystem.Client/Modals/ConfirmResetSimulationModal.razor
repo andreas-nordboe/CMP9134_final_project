@@ -1,0 +1,32 @@
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            This will reset the robot to the charging station, fully recharge it, and regenerate the map.
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mt-2">
+            Are you sure?
+        </MudText>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton id="reset-cancel-button"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Close"
+                   Variant="Variant.Filled"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton id="reset-confirm-button"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.RotateLeft"
+                   Variant="Variant.Filled"
+                   OnClick="Confirm">
+            Reset Simulation
+        </MudButton>
+    </DialogActions>
+</MudDialog>

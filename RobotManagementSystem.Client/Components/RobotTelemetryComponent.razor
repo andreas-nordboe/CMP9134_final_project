@@ -1,0 +1,156 @@
+@using RobotManagementSystem.Shared.Models.Robot
+@using RobotManagementSystem.Shared.Models.Users
+
+<MudPaper Class="telemetry-card pa-0" Outlined="true">
+
+    <div class="summary-header">
+        <span>Autonomous Robot Telemetry</span>
+
+        <div class="summary-online">
+            <MudIcon Icon="@Icons.Material.Filled.Circle"
+                     Color="@GetConnectionColor()"
+                     Size="Size.Small" />
+            <span>@ConnectionStatus</span>
+        </div>
+    </div>
+
+    @if (LatestTelemetry == null)
+    {
+        <div class="telemetry-empty">
+            
+            @if (AppState.CurrentUser != null && AppState.CurrentUser.Role != UserRole.NoRole)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.SensorsOff"
+                         Color="Color.Warning"
+                         Size="Size.Large"/>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.ReportGmailerrorred"
+                         Color="Color.Error"
+                         Size="Size.Large"/>
+            }
+            
+            
+
+            @if (AppState.CurrentUser != null && AppState.CurrentUser.Role != UserRole.NoRole)
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Waiting for telemetry from autonomous robot connection...
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Unable to establish a connection with the autonomous robot
+                </MudText>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="telemetry-grid">
+
+            <div class="telemetry-cell">
+                <MudIcon Icon="@Icons.Material.Filled.Place"
+                         Color="Color.Primary"
+                         Size="Size.Medium" />
+
+                <div class="summary-label">Position</div>
+
+                <div class="summary-value">
+                    (@LatestTelemetry.Position?.X, @LatestTelemetry.Position?.Y)
+                </div>
+            </div>
+
+            <div class="telemetry-cell">
+                <MudIcon Icon="@Icons.Material.Filled.Memory"
+                         Color="@GetRobotStatusColor()"
+                         Size="Size.Medium" />
+
+                <div class="summary-label">Status</div>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetRobotStatusColor()"
+                         Variant="Variant.Outlined">
+                    @LatestTelemetry.Status
+                </MudChip>
+            </div>
+
+            <div class="telemetry-cell">
+                <MudIcon Icon="@Icons.Material.Filled.BatteryChargingFull"
+                         Color="@GetBatteryColor()"
+                         Size="Size.Medium" />
+
+                <div class="summary-label">Battery Level</div>
+
+                <MudProgressLinear Value="@LatestTelemetry.Battery"
+                                   Color="@GetBatteryColor()"
+                                   Rounded="true"
+                                   Size="Size.Large"
+                                   Class="battery-bar" />
+
+                <div class="summary-value summary-small">
+                    @LatestTelemetry.Battery%
+                </div>
+            </div>
+
+            <div class="telemetry-cell">
+                <MudIcon Icon="@Icons.Material.Filled.Radar"
+                         Color="@GetLidarColor()"
+                         Size="Size.Medium" />
+
+                <div class="summary-label">Lidar</div>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetLidarColor()"
+                         Variant="Variant.Outlined">
+                    @LidarStatusText
+                </MudChip>
+
+                <div class="summary-value summary-small mt-1">
+                    @NearestObstacleText
+                </div>
+
+                <div class="summary-small muted-text">
+                    @LidarHitCountText
+                </div>
+            </div>
+        </div>
+        
+        <div class="proximity-strip">
+            <div class="proximity-strip-values">
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.N)"
+                         Variant="Variant.Outlined">
+                    N: @FormatProximity(LatestTelemetry.Sensors.N)
+                </MudChip>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.E)"
+                         Variant="Variant.Outlined">
+                    E: @FormatProximity(LatestTelemetry.Sensors.E)
+                </MudChip>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.S)"
+                         Variant="Variant.Outlined">
+                    S: @FormatProximity(LatestTelemetry.Sensors.S)
+                </MudChip>
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="@GetProximityColor(LatestTelemetry.Sensors.W)"
+                         Variant="Variant.Outlined">
+                    W: @FormatProximity(LatestTelemetry.Sensors.W)
+                </MudChip>
+            </div>
+        </div>
+    }
+
+</MudPaper>
