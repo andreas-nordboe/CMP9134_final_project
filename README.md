@@ -23,6 +23,7 @@
 - CI pipeline for build and test verification (integration and unit tests)
 - WebSocket connectivity that enable multiple users
 - Robot API status monitoring, snapshots and persited logging
+- Full automated test suite containing a total of 45 unit/integration tests
 
 ## High-level System Component Diagram
 
@@ -69,5 +70,7 @@ This confirms that the frontend is communicating with the backend services corre
 Run unit and integration tests:
 1.Clone this repository
 2. `cd` into the source code folder
-- run `dotnet test`
+3. run `dotnet test`
+4. Vefiy that all 45 tests pass;
 
+<img width="620" height="29" alt="image" src="https://github.com/user-attachments/assets/a852659c-bc09-42fa-9458-52774a99cfc5" />
