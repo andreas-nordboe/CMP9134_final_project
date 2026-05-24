@@ -30,7 +30,7 @@ public class MissionLogsController : ControllerBase
     }
     
     [HttpGet("all")]
-    [Authorize(Roles = "Admin,Commander,Viewer,Auditor")]
+    [Authorize(Roles = "Admin,Commander,Auditor")]
     public async Task<ActionResult<List<MissionLog>>> GetAllMissionLogs()
     {
         try
@@ -47,7 +47,7 @@ public class MissionLogsController : ControllerBase
     }
 
     [HttpPost("add")]
-    [Authorize(Roles = "Admin,Commander,Viewer,Auditor")]
+    [Authorize(Roles = "Admin,Commander,Auditor")]
     public async Task<ActionResult<MissionLog>> AddMissionLog([FromBody] AddMissionLogRequest missionLog)
     {
         try
