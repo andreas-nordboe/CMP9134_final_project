@@ -8,7 +8,7 @@ namespace RobotManagementSystem.Controllers;
 
 [ApiController]
 [Route("system-status-logs")]
-[Authorize (Roles = "Admin,Commander,Auditor")]
+[Authorize (Roles = "Admin,Auditor")]
 public class SystemStatusLogsController : ControllerBase
 {
     private readonly ILogger<SystemStatusLogsController> _logger;

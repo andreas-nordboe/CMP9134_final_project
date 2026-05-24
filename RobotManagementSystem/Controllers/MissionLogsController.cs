@@ -9,11 +9,6 @@ using RobotManagementSystem.Shared.Models.MissionLog;
 
 namespace RobotManagementSystem.Controllers;
 
-// Retrieves persisted telemetry logs for auditors 
-// GET /api/logs/commands
-// GET /api/logs/security
-// GET /api/logs/{id}
-
 [ApiController]
 [Route("mission-logs")]
 public class MissionLogsController : ControllerBase
@@ -30,7 +25,7 @@ public class MissionLogsController : ControllerBase
     }
     
     [HttpGet("all")]
-    [Authorize(Roles = "Admin,Commander,Auditor")]
+    [Authorize(Roles = "Admin,Auditor")]
     public async Task<ActionResult<List<MissionLog>>> GetAllMissionLogs()
     {
         try
@@ -43,28 +38,6 @@ public class MissionLogsController : ControllerBase
             _logger.LogError(e, e.Message);
             return StatusCode(StatusCodes.Status500InternalServerError, _apiFailureService.CreateApiError(ErrorCodes.FailedToListMissionLogs, ErrorMessages.FailedToListMissionLogs));
 
-        }
-    }
-
-    [HttpPost("add")]
-    [Authorize(Roles = "Admin,Commander,Auditor")]
-    public async Task<ActionResult<MissionLog>> AddMissionLog([FromBody] AddMissionLogRequest missionLog)
-    {
-        try
-        {
-            var newMissionLog = await _missionLogsService.AddMissionLog(missionLog);
-            return StatusCode((int)HttpStatusCode.Created, newMissionLog);
-        }
-        catch (ArgumentException argumentException)
-        {
-            _logger.LogWarning(argumentException, argumentException.Message);
-            
-            return BadRequest(_apiFailureService.CreateApiError(ErrorCodes.FailedToCreateMissionLog, ErrorMessages.FailedToCreateMissionLog));
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, e.Message);
-            return StatusCode(StatusCodes.Status500InternalServerError, _apiFailureService.CreateApiError(ErrorCodes.FailedToCreateMissionLog, ErrorMessages.FailedToCreateMissionLog));
         }
     }
 }
