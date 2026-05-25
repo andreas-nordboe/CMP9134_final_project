@@ -12,4 +12,5 @@ public interface IDataStoreService
     Task<bool?> LoadShowMapCoordinatesAsync();
     Task<bool?> LoadEnableSoundEffectsAsync();
     Task ClearShowMapCoordinatesAsync();
+    Task<AuthenticationResponse> GetAuthenticationDetailsAsync();
 }

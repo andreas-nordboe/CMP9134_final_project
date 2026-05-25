@@ -17,12 +17,12 @@ public class DataStoreServiceService : IDataStoreService
 
     public async Task StoreAuthenticationDetailsAsync(AuthenticationResponse authenticationDetails)
     {
-        await _localStorage.SetItemAsync(AuthenticationDetailsKey, authenticationDetails); // TODO Refactor hard-coded key (code smell)
+        await _localStorage.SetItemAsync(AuthenticationDetailsKey, authenticationDetails); 
     }
 
     public async Task<AuthenticationResponse?> LoadAuthenticationDetailsAsync()
     {
-        return await _localStorage.GetItemAsync<AuthenticationResponse>(AuthenticationDetailsKey); // TODO Refactor hard-coded key (code smell)
+        return await _localStorage.GetItemAsync<AuthenticationResponse>(AuthenticationDetailsKey);
     }
 
     public async Task ClearAuthenticationDetailsAsync()
@@ -53,5 +53,10 @@ public class DataStoreServiceService : IDataStoreService
     public async Task ClearShowMapCoordinatesAsync()
     {
         await _localStorage.RemoveItemAsync(ShowMapCoordinatesKey);
+    }
+
+    public async Task<AuthenticationResponse> GetAuthenticationDetailsAsync()
+    {
+        return await _localStorage.GetItemAsync<AuthenticationResponse>(AuthenticationDetailsKey);
     }
 }

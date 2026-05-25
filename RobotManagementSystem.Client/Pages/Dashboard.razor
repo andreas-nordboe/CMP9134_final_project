@@ -3,6 +3,8 @@
 @using RobotManagementSystem.Client.Services
 @using RobotManagementSystem.Shared.Models.Users
 @inject IAppState AppState
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <MudContainer MaxWidth="MaxWidth.False" Class="px-6 py-4 dashboard-page">
     <MudGrid Spacing="2" Class="dashboard-grid">

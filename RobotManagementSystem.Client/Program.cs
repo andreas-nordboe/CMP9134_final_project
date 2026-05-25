@@ -1,8 +1,10 @@
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
+using RobotManagementSystem.Client.AuthState;
 using RobotManagementSystem.Client.Services;
 using RobotManagementSystem.Client.Services.Admin;
 using RobotManagementSystem.Client.Services.Authentication;
@@ -54,6 +56,13 @@ public class Program
         builder.Services.AddScoped<IMissionLogService, MissionLogService>();
         builder.Services.AddScoped<ISystemStatusLogService, SystemStatusLogService>();
         builder.Services.AddScoped<ISoundService, SoundService>();
+        
+        builder.Services.AddAuthorizationCore();
+
+        builder.Services.AddScoped<CustomAuthStateProvider>();
+
+        builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
+            sp.GetRequiredService<CustomAuthStateProvider>());
         
         await builder.Build().RunAsync();
     }

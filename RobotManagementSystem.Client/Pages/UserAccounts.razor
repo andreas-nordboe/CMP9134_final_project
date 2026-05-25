@@ -6,7 +6,8 @@
 @inject IAppState appState
 @inject IDataStoreService _dataStore
 @implements IDisposable
-
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <MudPaper Class="user-accounts-card pa-0" Outlined="true">
 
