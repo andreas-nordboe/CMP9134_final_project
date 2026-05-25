@@ -25,7 +25,7 @@
 - Robot API status monitoring, snapshots and persited logging
 - Full automated test suite containing a total of 45 unit/integration tests
 
-## High-level System Component Diagram
+## High-Level System Component Diagram
 
 ```mermaid
 flowchart LR
