@@ -40,7 +40,6 @@
     user-select: none;
     cursor: pointer;
     position: relative;
-
     transition: background-color 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 

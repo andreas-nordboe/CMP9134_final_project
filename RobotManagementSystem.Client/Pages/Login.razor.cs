@@ -16,7 +16,7 @@ public partial class Login : ComponentBase
     [Inject]
     IAuthenticationService AuthenticationService { get; set; }
 
-    private async void LoginUser()
+    private async Task LoginUser()
     {
         
         var authResponse = await AuthenticationService.LoginUserAsync(LoginDetails);
@@ -24,7 +24,6 @@ public partial class Login : ComponentBase
         if (authResponse != null)
         {
             NavigationManager.NavigateTo("/");
-            StateHasChanged();
         }
         else
         {

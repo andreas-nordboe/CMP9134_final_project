@@ -14,5 +14,7 @@ FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
 
 COPY --from=build /app/publish/wwwroot .
+COPY RobotManagementSystem.Client/nginx.conf /etc/nginx/conf.d/default.conf
+
 
 EXPOSE 80

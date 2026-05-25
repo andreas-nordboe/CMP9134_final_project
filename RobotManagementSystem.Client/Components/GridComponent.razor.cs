@@ -41,6 +41,7 @@ public partial class GridComponent : ComponentBase, IDisposable
     private DateTime? _lastTelemetryReceivedAt;
     private static readonly TimeSpan TelemetryGapReloadThreshold = TimeSpan.FromSeconds(3);
     private bool _wasRobotOnChargingStation;
+    
     [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
     
     // Sounds/effects
@@ -77,8 +78,7 @@ public partial class GridComponent : ComponentBase, IDisposable
         ShowCoordinates = storedShowCoordinates ?? false;
         
         var storedPlaySoundEffects = await DataStoreService.LoadEnableSoundEffectsAsync();
-        SoundEffectsEnabled = storedShowCoordinates ?? false;
-
+        SoundEffectsEnabled = storedPlaySoundEffects ?? false;
         UseLightMapTheme = !_appState.IsDarkMode;
 
         if (_appState.CurrentUser != null && _appState.CurrentUser.Role != UserRole.NoRole)
@@ -373,7 +373,7 @@ public partial class GridComponent : ComponentBase, IDisposable
         var oldHits = Tiles.Where(t => t.ContentType == GridTileType.LidarHit || t.ContentType == GridTileType.LidarVisibility).ToList();
         foreach (var hit in oldHits)
         {
-            hit.ContentType = hit.OriginalContentType; // todo fix bug that turns obstacle into free space
+            hit.ContentType = hit.OriginalContentType; 
             hit.Label = null;
         }
     }
@@ -574,7 +574,7 @@ public partial class GridComponent : ComponentBase, IDisposable
             GridTileType.ChargingStation => "charging-station",
             _ => "free-space"
         });
-
+        
         if (tile.OriginalContentType == GridTileType.ChargingStation)
         {
             classes.Add("charging-station-base");

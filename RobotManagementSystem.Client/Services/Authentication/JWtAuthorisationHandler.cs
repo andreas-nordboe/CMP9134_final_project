@@ -17,26 +17,21 @@ public class JWtAuthorisationHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        // Try to get from memory first
-        var token = _appState.AuthenticationDetails?.AccessToken;
+        var auth = await _dataStoreService.GetAuthenticationDetailsAsync();
 
-        // If not in cache, try to get from local storage
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            var auth = await _dataStoreService.LoadAuthenticationDetailsAsync();
-
-            if (auth != null)
-            {
-                _appState.SetLoggedInUserFromAuthentication(auth);
-                token = auth.AccessToken;
-            }
-        }
+        var token = auth?.AccessToken;
 
         if (!string.IsNullOrWhiteSpace(token))
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
         }
-        
+
+        if (auth != null)
+        {
+            _appState.SetLoggedInUserFromAuthentication(auth);
+        }
+
         return await base.SendAsync(request, cancellationToken);
     }
 }
