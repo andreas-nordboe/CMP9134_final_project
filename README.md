@@ -1,4 +1,4 @@
-# Ground Control Station
+# Ground Control Station (GCS)
 
 <img width="1910" height="1248" alt="GroundControlStationMainpage" src="https://github.com/user-attachments/assets/cffd19eb-7cf8-4cf0-b2ad-97884aad0a79" />
 
@@ -43,22 +43,21 @@ User((User)) --> |Uses| Browser[Browser]
   end
    DB[("Database")]
   end
-  subgraph RobotContainer["Virtual Robot API"]
+  subgraph RobotContainer["Robot Simulation API"]
         Robot["Robot"]
   end
 
     Browser --> |HTTP/HTTPS| UI
     UI -->|HTTP| API
     UI <--> |WebSocket|Hub
-    API --> |SQL| DB
+    API --> |SQL / ORM| DB
     API <--> |HTTP / WebSocket| Robot
 ```
 
 
-## Testing Instructions
+## Setup Instructions
 
-Manual integration test
-1. Start Docker Desktop
+1. Start Docker Desktop / Docker Daemon
 2. Run 'docker compose up' in Command Line (Windows) or Terminal (macOS) to start the Docker Container
 3. Navigate to http://localhost:5116/
 4. Log in to root admin using: 'admin' password: 'password'
@@ -67,8 +66,12 @@ Manual integration test
 
 This confirms that the frontend is communicating with the backend services correctly.
 
-Run unit and integration tests:
-1.Clone this repository
+## Run unit and integration tests manually locally:
+This requires .NET 10, however, test have already been run in the CI/CD pipeline.
+
+Dependency required for local manual testing: [Download Microsoft .NET 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+
+1. Clone this repository
 2. `cd` into the source code folder
 3. run `dotnet test`
 4. Vefiy that all 45 tests pass;
