@@ -16,7 +16,7 @@
       ConnectionStrings__Default: Data Source=/app/data/robotmanagementsystem.db
         
       # Robot simulation
-      RobotApi__BaseAddress: http://robotsim:5000
+      RobotApi__BaseAddress: http://robotsim:5000/api/
       RobotApi__TelemetryAddress: ws://robotsim:5000/ws/telemetry
       
     depends_on:
