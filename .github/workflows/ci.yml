@@ -17,7 +17,11 @@ jobs:
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: |
+            10.0.105
+            10.0.300
+            9.0.x
+          cache: true
       
       - name: Display dotnet version
         run: dotnet --version
