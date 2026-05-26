@@ -28,7 +28,8 @@ public partial class GridComponent : ComponentBase, IDisposable
     [Inject] private IUserSessionService _userSessionService { get; set; }
     [Inject] private ISnackbar _snackbar { get; set; }
     private bool UseLightMapTheme { get; set; }
-    private bool ShowCoordinates { get; set; } = true;
+    private bool ShowCoordinates { get; set; } = false;
+    private bool ShowGroundTruthMap { get; set; } = true;
     private TileState? PendingCommandTile { get; set; }
     private bool IsCommandProcessing { get; set; }
     private bool _mapLoadedSuccessfully;
@@ -41,6 +42,46 @@ public partial class GridComponent : ComponentBase, IDisposable
     private DateTime? _lastTelemetryReceivedAt;
     private static readonly TimeSpan TelemetryGapReloadThreshold = TimeSpan.FromSeconds(3);
     private bool _wasRobotOnChargingStation;
+    private bool _mapOutageEffect;
+    
+    // Lidar rings
+    private bool _hasLidarData;
+
+    private const int LidarMaxRange = 10;
+    private const int LidarRingSpacing = 2;
+
+    private bool HasLidarRangeRings =>
+        !_mapOutageEffect &&
+        IsMapReady &&
+        _hasLidarData &&
+        _robotX.HasValue &&
+        _robotY.HasValue;
+    
+    // Proximity data
+    private bool _hasProximityData;
+    private const int ProximityMaxRange = 5;
+
+    private int? _robotX;
+    private int? _robotY;
+
+    private int _northProximity = ProximityMaxRange;
+    private int _eastProximity = ProximityMaxRange;
+    private int _southProximity = ProximityMaxRange;
+    private int _westProximity = ProximityMaxRange;
+    
+    
+    private bool IsMapReady =>
+        _mapLoadedSuccessfully &&
+        GridWidth > 0 &&
+        GridHeight > 0 &&
+        Tiles.Count == GridWidth * GridHeight;
+
+    private bool HasProximitySensors =>
+        !_mapOutageEffect &&
+        IsMapReady &&
+        _hasProximityData &&
+        _robotX.HasValue &&
+        _robotY.HasValue;
     
     [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
     
@@ -48,12 +89,13 @@ public partial class GridComponent : ComponentBase, IDisposable
     private bool _showStuckEffect;
     private DateTime? _lastStuckEffectAt;
     private static readonly TimeSpan StuckEffectCooldown = TimeSpan.FromSeconds(2);
-    private bool SoundEffectsEnabled { get; set; } = true;
+    private bool SoundEffectsEnabled { get; set; } = false;
     private bool _robotIsStuck;
     
     private string MapShellClass =>
         $"{(UseLightMapTheme ? "robot-map-shell robot-map-light" : "robot-map-shell")} " +
-        $"{(_suppressTileTransitions ? "no-tile-transitions" : "")}";
+        $"{(_suppressTileTransitions ? "no-tile-transitions" : "")} " +
+        $"{(_mapOutageEffect ? "map-outage-effect" : "")}";
     
     protected List<TileState> Tiles { get; set; } = new();
 
@@ -77,9 +119,13 @@ public partial class GridComponent : ComponentBase, IDisposable
         var storedShowCoordinates = await DataStoreService.LoadShowMapCoordinatesAsync();
         ShowCoordinates = storedShowCoordinates ?? false;
         
+        var storedShowGroundTruthMap = await DataStoreService.LoadShowGroundTruthMapAsync();
+        ShowGroundTruthMap = storedShowGroundTruthMap ?? true;
+        
         var storedPlaySoundEffects = await DataStoreService.LoadEnableSoundEffectsAsync();
         SoundEffectsEnabled = storedPlaySoundEffects ?? false;
         UseLightMapTheme = !_appState.IsDarkMode;
+        
 
         if (_appState.CurrentUser != null && _appState.CurrentUser.Role != UserRole.NoRole)
         {
@@ -146,17 +192,21 @@ public partial class GridComponent : ComponentBase, IDisposable
     
     private void OnConnectionStatusChanged(string status)
     {
-        if (status == RobotApiStatus.Disconnected ||
-            status == RobotApiStatus.Reconnecting)
+        InvokeAsync(() =>
         {
-            InvokeAsync(() =>
+            _mapOutageEffect =
+                status == RobotApiStatus.Disconnected ||
+                status == RobotApiStatus.Reconnecting;
+
+            if (_mapOutageEffect)
             {
                 _lastTelemetryReceivedAt = null;
                 ClearPendingCommand();
                 _reloadMapOnNextTelemetry = true;
-                StateHasChanged();
-            });
-        }
+            }
+
+            StateHasChanged();
+        });
     }
     
     private void ClearPendingCommand()
@@ -252,9 +302,20 @@ public partial class GridComponent : ComponentBase, IDisposable
         {
             await LoadMapAsync(forceReload: false);
         }
+        
+        if (!IsMapReady)
+        {
+            _hasProximityData = false;
+            return;
+        }
 
         var robotX = (int)robotTelemetry.Position.X;
         var robotY = (int)robotTelemetry.Position.Y;
+        
+        _robotX = robotX;
+        _robotY = robotY;
+
+        UpdateProximitySensors(robotTelemetry);
         
         _robotIsStuck = robotTelemetry.Status == nameof(RobotStatus.STUCK);
 
@@ -317,16 +378,18 @@ public partial class GridComponent : ComponentBase, IDisposable
             _stuckWarningShown = robotTelemetry.Status == nameof(RobotStatus.STUCK);
         }
 
-        var hasLidarData =
+        _hasLidarData =
             robotTelemetry.Sensors?.Lidar != null &&
             robotTelemetry.Sensors.Lidar.Count > 0;
 
-        if (!hasLidarData)
+        if (!_hasLidarData)
         {
+            ClearOldLidarHits();
             return;
         }
 
         ClearOldLidarHits();
+
 
         for (int angle = 0; angle < robotTelemetry.Sensors.Lidar.Count; angle++)
         {
@@ -371,10 +434,12 @@ public partial class GridComponent : ComponentBase, IDisposable
     private void ClearOldLidarHits()
     {
         var oldHits = Tiles.Where(t => t.ContentType == GridTileType.LidarHit || t.ContentType == GridTileType.LidarVisibility).ToList();
+
         foreach (var hit in oldHits)
         {
-            hit.ContentType = hit.OriginalContentType; 
+            hit.ContentType = hit.OriginalContentType;
             hit.Label = null;
+            hit.LidarIntensity = null;
         }
     }
 
@@ -399,12 +464,43 @@ public partial class GridComponent : ComponentBase, IDisposable
                 targetTile.ContentType == GridTileType.Obstacle)
             {
                 targetTile.ContentType = GridTileType.LidarHit;
+
+                var hitBandDistance = Math.Ceiling(step / LidarRingSpacing) * LidarRingSpacing;
+                hitBandDistance = Math.Clamp(hitBandDistance, LidarRingSpacing, LidarMaxRange);
+                
+                targetTile.LidarIntensity = hitBandDistance switch
+                {
+                    <= 2 => 1.00,
+                    <= 4 => 0.92,
+                    <= 6 => 0.82,
+                    <= 8 => 0.72,
+                    _ => 0.62
+                };
+
                 break;
             }
 
-            if (targetTile.ContentType == GridTileType.FreeSpace)
+            if (targetTile.ContentType == GridTileType.FreeSpace ||
+                targetTile.ContentType == GridTileType.LidarVisibility)
             {
                 targetTile.ContentType = GridTileType.LidarVisibility;
+
+                var bandDistance = Math.Ceiling(step / LidarRingSpacing) * LidarRingSpacing;
+                bandDistance = Math.Clamp(bandDistance, LidarRingSpacing, LidarMaxRange);
+                
+                
+                var bandOpacity = bandDistance switch
+                {
+                    <= 2 => 0.34,
+                    <= 4 => 0.25,
+                    <= 6 => 0.17,
+                    <= 8 => 0.11,
+                    _ => 0.07
+                };
+
+                targetTile.LidarIntensity = targetTile.LidarIntensity.HasValue
+                    ? Math.Max(targetTile.LidarIntensity.Value, bandOpacity)
+                    : bandOpacity;
             }
         }
     }
@@ -474,19 +570,20 @@ public partial class GridComponent : ComponentBase, IDisposable
 
     protected async Task OnTileClicked(TileState tile)
     {
-        if (_appState.CurrentUser != null &&
-            _appState.CurrentUser.Role == UserRole.NoRole
-            || _appState.CurrentUser.Role == UserRole.Viewer)
+        if (_appState.CurrentUser == null ||
+            _appState.CurrentUser.Role == UserRole.NoRole ||
+            _appState.CurrentUser.Role == UserRole.Viewer)
         {
             _snackbar.Add("You are not authorised to move the robot.", Severity.Error);
             await _soundService.PlayErrorSoundAsync();
+            return;
         }
         
         if (!_robotHubCommunication.IsConnected)
         {
-            _snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+            _snackbar.Add("Robot connection is unstable. Sending command so the server can retry and log it.", Severity.Warning);
             await _soundService.PlayErrorSoundAsync();
-            return;
+            //return;
         }
 
         if (IsCommandProcessing)
@@ -498,7 +595,7 @@ public partial class GridComponent : ComponentBase, IDisposable
 
         if (_robotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
         {
-            _snackbar.Add("Robot is already moving!", Severity.Info);
+            _snackbar.Add("Robot is already moving!", Severity.Warning);
             await _soundService.PlayErrorSoundAsync();
             return;
         }
@@ -514,9 +611,9 @@ public partial class GridComponent : ComponentBase, IDisposable
             || tile.OriginalContentType == GridTileType.Obstacle
             || tile.ContentType == GridTileType.LidarHit)
         {
-            _snackbar.Add("You can't move there!", Severity.Warning);
+            _snackbar.Add("This move may be blocked. Sending to server for validation and logging.", Severity.Warning);
             await _soundService.PlayErrorSoundAsync();
-            return;
+            // return;
         }
 
         try
@@ -567,7 +664,9 @@ public partial class GridComponent : ComponentBase, IDisposable
 
         classes.Add(tile.ContentType switch
         {
-            GridTileType.Obstacle => "obstacle",
+            GridTileType.Obstacle when ShowGroundTruthMap => "obstacle",
+            GridTileType.Obstacle => "free-space",
+
             GridTileType.Robot => "robot",
             GridTileType.LidarHit => "lidar-hit",
             GridTileType.LidarVisibility => "lidar-visibility",
@@ -729,6 +828,18 @@ public partial class GridComponent : ComponentBase, IDisposable
         await InvokeAsync(StateHasChanged);
     }
     
+    private async Task OnShowGroundTruthMapChanged(bool value)
+    {
+        if (ShowGroundTruthMap == value)
+            return;
+
+        ShowGroundTruthMap = value;
+
+        await DataStoreService.StoreShowGroundTruthMap(value);
+
+        await InvokeAsync(StateHasChanged);
+    }
+    
     private async Task OnEnableSoundEffectsChanged(bool value)
     {
         if (SoundEffectsEnabled == value)
@@ -767,6 +878,127 @@ public partial class GridComponent : ComponentBase, IDisposable
             return;
 
         await OnEnableSoundEffectsChanged(!SoundEffectsEnabled);
+    }
+    
+    private void UpdateProximitySensors(RobotTelemetry robotTelemetry)
+    {
+        if (robotTelemetry.Sensors == null)
+        {
+            _hasProximityData = false;
+            return;
+        }
+
+        _northProximity = robotTelemetry.Sensors.N;
+        _eastProximity = robotTelemetry.Sensors.E;
+        _southProximity = robotTelemetry.Sensors.S;
+        _westProximity = robotTelemetry.Sensors.W;
+
+        _hasProximityData = true;
+    }
+
+    private string GetSensorBeamClass(string direction, int distance)
+    {
+        var severityClass = distance switch
+        {
+            <= 1 => "danger",
+            <= 2 => "warning",
+            >= ProximityMaxRange => "clear",
+            _ => "info"
+        };
+
+        return $"proximity-beam proximity-beam-{direction.ToLowerInvariant()} proximity-beam-{severityClass}";
+    }
+
+    private string GetSensorBeamStyle(string direction, int distance)
+    {
+        if (!_robotX.HasValue || !_robotY.HasValue || GridWidth <= 0 || GridHeight <= 0)
+            return string.Empty;
+
+        var tileWidthPercent = 100d / GridWidth;
+        var tileHeightPercent = 100d / GridHeight;
+
+        var robotCenterX = (_robotX.Value + 0.5d) * tileWidthPercent;
+        var robotCenterY = (_robotY.Value + 0.5d) * tileHeightPercent;
+
+        var clampedDistance = Math.Clamp(distance, 0, ProximityMaxRange);
+
+        // 0 means blocked/very close, so still show a short warning beam.
+        var visibleDistance = distance <= 0
+            ? 0.75d
+            : Math.Max(1d, clampedDistance);
+
+        var lengthPercent = direction is "N" or "S"
+            ? visibleDistance * tileHeightPercent
+            : visibleDistance * tileWidthPercent;
+
+        var thicknessPercent = Math.Min(tileWidthPercent, tileHeightPercent) * 0.36d;
+        var halfThicknessPercent = thicknessPercent / 2d;
+
+        // Close objects are stronger. Clear directions are softer.
+        var distanceRatio = clampedDistance / (double)ProximityMaxRange;
+        var opacity = 0.95d - distanceRatio * 0.45d;
+
+        return
+            $"--sensor-x:{ToCssNumber(robotCenterX)}%;" +
+            $"--sensor-y:{ToCssNumber(robotCenterY)}%;" +
+            $"--sensor-length:{ToCssNumber(lengthPercent)}%;" +
+            $"--sensor-thickness:{ToCssNumber(thicknessPercent)}%;" +
+            $"--sensor-half-thickness:{ToCssNumber(halfThicknessPercent)}%;" +
+            $"--sensor-opacity:{ToCssNumber(opacity)};";
+    }
+
+    private static string ToCssNumber(double value)
+    {
+        return value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+    }
+    
+    private string GetTileStyle(TileState tile)
+    {
+        if (tile.LidarIntensity.HasValue)
+        {
+            return $"--lidar-opacity:{ToCssNumber(tile.LidarIntensity.Value)};";
+        }
+
+        return string.Empty;
+    }
+    
+    private IEnumerable<int> GetLidarRingDistances()
+    {
+        for (var distance = LidarRingSpacing; distance <= LidarMaxRange; distance += LidarRingSpacing)
+        {
+            yield return distance;
+        }
+    }
+
+    private string GetLidarRangeRingStyle(int distance)
+    {
+        if (!_robotX.HasValue || !_robotY.HasValue || GridWidth <= 0 || GridHeight <= 0)
+            return string.Empty;
+
+        var tileWidthPercent = 100d / GridWidth;
+        var tileHeightPercent = 100d / GridHeight;
+
+        var robotCenterX = (_robotX.Value + 0.5d) * tileWidthPercent;
+        var robotCenterY = (_robotY.Value + 0.5d) * tileHeightPercent;
+
+        var ringWidth = distance * tileWidthPercent * 2d;
+        var ringHeight = distance * tileHeightPercent * 2d;
+
+        var distanceRatio = Math.Clamp(distance / (double)LidarMaxRange, 0.0, 1.0);
+
+        // Exponential falloff: close rings are strong, far rings fade naturally.
+        var falloff = Math.Pow(1.0 - distanceRatio, 1.85);
+
+        var opacity = Math.Clamp(0.16 + falloff * 0.62, 0.16, 0.78);
+        var thickness = Math.Clamp(2.2 - distanceRatio * 0.9, 1.1, 2.2);
+
+        return
+            $"--lidar-ring-x:{ToCssNumber(robotCenterX)}%;" +
+            $"--lidar-ring-y:{ToCssNumber(robotCenterY)}%;" +
+            $"--lidar-ring-width:{ToCssNumber(ringWidth)}%;" +
+            $"--lidar-ring-height:{ToCssNumber(ringHeight)}%;" +
+            $"--lidar-ring-opacity:{ToCssNumber(opacity)};" +
+            $"--lidar-ring-thickness:{ToCssNumber(thickness)}px;";
     }
     
 }

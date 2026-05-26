@@ -191,4 +191,17 @@ public partial class RobotTelemetryComponent : ComponentBase, IDisposable
         RobotHubCommunication.ConnectionStatusChanged -= OnConnectionStatusChanged;
         RobotHubCommunication.TelemetryUpdated -= OnTelemetryUpdated;
     }
+    
+    private string GetProximityChipClass(int distance)
+    {
+        var severityClass = distance switch
+        {
+            <= 1 => "danger",
+            <= 2 => "warning",
+            >= ProximityMaxRange => "clear",
+            _ => "info"
+        };
+
+        return $"proximity-chip proximity-chip-{severityClass}";
+    }
 }

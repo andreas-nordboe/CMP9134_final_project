@@ -21,7 +21,7 @@ public class RobotApiHealthCheckerService : BackgroundService
             var robotStatusService = scope.ServiceProvider.GetRequiredService<IRobotStatusService>();
             
             await robotStatusService.GetRobotStatusAsync();
-            await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
     }
 }
