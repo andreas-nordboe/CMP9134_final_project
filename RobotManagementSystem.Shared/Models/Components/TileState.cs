@@ -8,4 +8,6 @@ public class TileState
     public GridTileType OriginalContentType { get; set; }
     public string? ImageUrl { get; set; }
     public string? Label { get; set; }
+    public double? LidarIntensity { get; set; }
+    public double? LidarRingStrength { get; set; }
 }

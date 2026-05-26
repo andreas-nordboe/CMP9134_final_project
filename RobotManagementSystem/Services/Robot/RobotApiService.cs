@@ -56,78 +56,21 @@
                     Message = ErrorMessages.RobotMoveCommandFailed
                 };
             }
-            
-            var map = await GetMapAsync();
-            
-            // I think it is safer to test that the map and map grid tiles exist before sending the request
-            if (map == null || map.Grid.Length == 0)
-            {
-                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
-                {
-                    UserId = userId,
-                    Role = role,
-                    Command = RobotCommand.Move,
-                    CommandResult = RobotCommandResult.Failure,
-                    Details = ErrorMessages.RobotMapDoesNotExist
-                });
-
-                return new RobotCommandResponse
-                {
-                    Success = false,
-                    Message = ErrorMessages.RobotMapDoesNotExist
-                };
-            }
-
-            // Check invalid coordinates
-            if (request.X < 0 || request.Y < 0 || request.X >= map.Width || request.Y >= map.Height || request.Y >= map.Grid.Length || request.X >= map.Grid[request.Y].Length)
-            {
-                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
-                {
-                    UserId = userId,
-                    Role = role,
-                    Command = RobotCommand.Move,
-                    CommandResult = RobotCommandResult.InvalidCoordinates,
-                    Details = $"{ErrorMessages.RobotAttemptedMove} ({request.X}, {request.Y})"
-                });
-
-                return new RobotCommandResponse
-                {
-                    Success = false,
-                    Message = ErrorMessages.RobotCoordinatesNotValid
-                };
-            }
-            
-            // Check if blocked by an obstacle
-            if (map.Grid[request.Y][request.X] == 1)
-            {
-                await _missionLogsService.AddMissionLog(new AddMissionLogRequest
-                {
-                    UserId = userId,
-                    Role = role,
-                    Command = RobotCommand.Move,
-                    CommandResult = RobotCommandResult.BlockedByObstacle,
-                    Details = $"{ErrorMessages.TriedToMoveToObstacle} ({request.X}, {request.Y})"
-                });
-
-                return new RobotCommandResponse
-                {
-                    Success = false,
-                    Message = ErrorMessages.RobotIsBlocked
-                };
-            }
 
             await _robotLock.WaitAsync();
 
             try
             {
                 await _commandRateLimiter.WaitAsync();
-                
-                var response = await SendWithRetryAsync(() =>
-                    _httpClient.PostAsJsonAsync("/api/move", request),
-                    userId,
-                    role,
-                    RobotCommand.Move
-                );
+
+                var retryResult = await SendMoveWithMapRetryAsync(request, userId, role);
+
+                if (retryResult.EarlyResponse != null)
+                {
+                    return retryResult.EarlyResponse;
+                }
+
+                var response = retryResult.Response;
 
                 if (response == null)
                 {
@@ -139,33 +82,31 @@
                         CommandResult = RobotCommandResult.Failure,
                         Details = ErrorMessages.RobotUnavaiableAfterRetrying
                     });
-                    
-                    return new RobotCommandResponse
-                    {
-                        Success = false,
-                        Message = ErrorMessages.RobotUnavaiableAfterRetrying
-                    };
-                }
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    await _missionLogsService.AddMissionLog(new AddMissionLogRequest
-                    {
-                        UserId = userId,
-                        Role = role,
-                        Command = RobotCommand.Move,
-                        CommandResult = RobotCommandResult.Failure,
-                        Details = $"{ErrorMessages.RobotApiReturnedStatusCode} {response.StatusCode}"
-                    });
 
-                    return new RobotCommandResponse
-                    {
-                        Success = false,
-                        Message =
-                            $"{ErrorMessages.RobotMoveCommandFailed} Response: {response.StatusCode}."
-                    };
+                    return null;
                 }
-                
+
+                using (response)
+                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                        {
+                            UserId = userId,
+                            Role = role,
+                            Command = RobotCommand.Move,
+                            CommandResult = RobotCommandResult.Failure,
+                            Details = $"{ErrorMessages.RobotApiReturnedStatusCode} {response.StatusCode}"
+                        });
+
+                        return new RobotCommandResponse
+                        {
+                            Success = false,
+                            Message = $"{ErrorMessages.RobotMoveCommandFailed} Response: {response.StatusCode}."
+                        };
+                    }
+                }
+
                 _robotApiStatusStore.ResetRetryAttempts();
 
                 await _missionLogsService.AddMissionLog(new AddMissionLogRequest
@@ -186,7 +127,6 @@
                         Y = request.Y
                     }
                 };
-
             }
             catch (Exception e)
             {
@@ -211,6 +151,149 @@
             {
                 _robotLock.Release();
             }
+        }
+        
+        private async Task<(HttpResponseMessage? Response, RobotCommandResponse? EarlyResponse)> SendMoveWithMapRetryAsync(RobotNavigationRequest request, int userId, UserRole role)
+        {
+            var delays = new[]
+            {
+                TimeSpan.Zero,
+                TimeSpan.FromMilliseconds(500),
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(4),
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(8)
+            };
+
+            for (var attempt = 0; attempt < delays.Length; attempt++)
+            {
+                var delay = delays[attempt];
+
+                if (delay > TimeSpan.Zero)
+                {
+                    await Task.Delay(delay);
+                }
+
+                var attemptNumber = attempt + 1;
+
+                var map = await GetMapAsync();
+
+                if (map == null || map.Grid.Length == 0)
+                {
+                    await LogRetryAttemptAsync(
+                        userId,
+                        role,
+                        RobotCommand.Move,
+                        attemptNumber,
+                        ErrorMessages.RobotMapDoesNotExist);
+
+                    _logger.LogWarning(
+                        "Robot map could not be retrieved. Retrying move flow. Attempt {Attempt}",
+                        attemptNumber);
+
+                    continue;
+                }
+
+                if (request.X < 0 ||
+                    request.Y < 0 ||
+                    request.X >= map.Width ||
+                    request.Y >= map.Height ||
+                    request.Y >= map.Grid.Length ||
+                    request.X >= map.Grid[request.Y].Length)
+                {
+                    await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                    {
+                        UserId = userId,
+                        Role = role,
+                        Command = RobotCommand.Move,
+                        CommandResult = RobotCommandResult.InvalidCoordinates,
+                        Details = $"{ErrorMessages.RobotAttemptedMove} ({request.X}, {request.Y})"
+                    });
+
+                    return (null, new RobotCommandResponse
+                    {
+                        Success = false,
+                        Message = ErrorMessages.RobotCoordinatesNotValid
+                    });
+                }
+
+                if (map.Grid[request.Y][request.X] == 1)
+                {
+                    await _missionLogsService.AddMissionLog(new AddMissionLogRequest
+                    {
+                        UserId = userId,
+                        Role = role,
+                        Command = RobotCommand.Move,
+                        CommandResult = RobotCommandResult.BlockedByObstacle,
+                        Details = $"{ErrorMessages.TriedToMoveToObstacle} ({request.X}, {request.Y})"
+                    });
+
+                    return (null, new RobotCommandResponse
+                    {
+                        Success = false,
+                        Message = ErrorMessages.RobotIsBlocked
+                    });
+                }
+
+                try
+                {
+                    var response = await _httpClient.PostAsJsonAsync("/api/move", request);
+
+                    if (IsTransientStatusCode(response.StatusCode))
+                    {
+                        await LogRetryAttemptAsync(
+                            userId,
+                            role,
+                            RobotCommand.Move,
+                            attemptNumber,
+                            $"{ErrorMessages.RobotApiUnavailable} Status code: {response.StatusCode}");
+
+                        _logger.LogWarning(
+                            "Robot move command returned transient status {StatusCode}. Retrying. Attempt {Attempt}",
+                            response.StatusCode,
+                            attemptNumber);
+
+                        response.Dispose();
+                        continue;
+                    }
+
+                    return (response, null);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    await LogRetryAttemptAsync(
+                        userId,
+                        role,
+                        RobotCommand.Move,
+                        attemptNumber,
+                        ErrorMessages.RobotApiTimeout);
+
+                    _logger.LogWarning(ex, ErrorMessages.RobotApiTimeoutRetrying);
+                }
+                catch (HttpRequestException ex)
+                {
+                    await LogRetryAttemptAsync(
+                        userId,
+                        role,
+                        RobotCommand.Move,
+                        attemptNumber,
+                        ErrorMessages.RobotApiConnectionError);
+
+                    _logger.LogWarning(ex, ErrorMessages.RobotApiConnectionError);
+                }
+            }
+
+            return (null, null);
+        }
+        
+        private static bool IsTransientStatusCode(HttpStatusCode statusCode)
+        {
+            return statusCode == HttpStatusCode.ServiceUnavailable ||
+                   statusCode == HttpStatusCode.RequestTimeout ||
+                   statusCode == HttpStatusCode.InternalServerError ||
+                   statusCode == HttpStatusCode.BadGateway ||
+                   statusCode == HttpStatusCode.GatewayTimeout;
         }
 
         public async Task<RobotCommandResponse?> ResetAsync(int userId, UserRole userRole)

@@ -25,6 +25,15 @@
                                Size="Size.Small"
                                Label="Coordinates" />
                 </div>
+                
+                <div>
+                    <MudSwitch T="bool"
+                               Value="ShowGroundTruthMap"
+                               ValueChanged="OnShowGroundTruthMapChanged"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Label="Ground Truth" />
+                </div>
 
                 <div @onkeydown="OnSoundEffectsKeyDown">
                     <MudSwitch T="bool"
@@ -43,6 +52,7 @@
             @foreach (var tile in Tiles)
             {
                 <div @onclick="() => OnTileClicked(tile)"
+                     style="@GetTileStyle(tile)"
                      class="@GetTileClass(tile)">
 
                     @if (!string.IsNullOrWhiteSpace(tile.ImageUrl))
@@ -65,6 +75,41 @@
                         </span>
                     }
 
+                </div>
+            }
+            
+            @if (HasLidarRangeRings)
+            {
+                @foreach (var distance in GetLidarRingDistances())
+                {
+                    <div class="lidar-range-ring"
+                         style="@GetLidarRangeRingStyle(distance)">
+                    </div>
+                }
+            }
+            
+            @if (HasProximitySensors)
+            {
+                <div class="proximity-overlay">
+                    <div class="@GetSensorBeamClass("N", _northProximity)"
+                         style="@GetSensorBeamStyle("N", _northProximity)">
+                        <span class="proximity-beam-label">N</span>
+                    </div>
+
+                    <div class="@GetSensorBeamClass("E", _eastProximity)"
+                         style="@GetSensorBeamStyle("E", _eastProximity)">
+                        <span class="proximity-beam-label">E</span>
+                    </div>
+
+                    <div class="@GetSensorBeamClass("S", _southProximity)"
+                         style="@GetSensorBeamStyle("S", _southProximity)">
+                        <span class="proximity-beam-label">S</span>
+                    </div>
+
+                    <div class="@GetSensorBeamClass("W", _westProximity)"
+                         style="@GetSensorBeamStyle("W", _westProximity)">
+                        <span class="proximity-beam-label">W</span>
+                    </div>
                 </div>
             }
 

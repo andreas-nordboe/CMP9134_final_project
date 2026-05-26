@@ -7,6 +7,7 @@ using RobotManagementSystem.Shared.Models.Components;
 using RobotManagementSystem.Shared.Models.Robot;
 using Microsoft.JSInterop;
 using RobotManagementSystem.Client.Modals;
+using RobotManagementSystem.Shared.Models.Users;
 
 namespace RobotManagementSystem.Client.Components;
 
@@ -196,11 +197,22 @@ public partial class CommanderControls : ComponentBase, IDisposable
 
     private async Task SendMoveCommandAsync(int x, int y)
     {
-        if (!RobotHubCommunication.IsConnected)
+        
+        if (AppState.CurrentUser == null ||
+            AppState.CurrentUser.Role == UserRole.NoRole ||
+            AppState.CurrentUser.Role == UserRole.Viewer)
         {
-            Snackbar.Add("Robot connection is unavailable. Please wait for reconnection.", Severity.Warning);
+            Snackbar.Add("You are not authorised to move the robot.", Severity.Error);
             await _soundService.PlayErrorSoundAsync();
             return;
+        }
+        
+        
+        if (!RobotHubCommunication.IsConnected)
+        {
+            Snackbar.Add("Robot connection is unstable. Sending command so the server can retry and log it.", Severity.Warning);            
+            await _soundService.PlayErrorSoundAsync();
+            //return;
         }
 
         if (IsProcessingCommand)
@@ -212,7 +224,7 @@ public partial class CommanderControls : ComponentBase, IDisposable
 
         if (RobotHubCommunication.LatestTelemetry?.Status == nameof(RobotStatus.MOVING))
         {
-            Snackbar.Add("Robot is already moving!", Severity.Info);
+            Snackbar.Add("Robot is already moving!", Severity.Warning);
             await _soundService.PlayErrorSoundAsync();
             return;
         }
@@ -228,18 +240,16 @@ public partial class CommanderControls : ComponentBase, IDisposable
 
         if (tile == null)
         {
-            Snackbar.Add("You can't move outside the map!", Severity.Warning);
+            Snackbar.Add("This move is outside the visible map. Sending to server for validation and logging.", Severity.Warning);
             await _soundService.PlayErrorSoundAsync();
-            return;
         }
-
-        if (tile.ContentType == GridTileType.Obstacle
-            || tile.OriginalContentType == GridTileType.Obstacle
-            || tile.ContentType == GridTileType.LidarHit)
+        else if (tile.ContentType == GridTileType.Obstacle
+                 || tile.OriginalContentType == GridTileType.Obstacle
+                 || tile.ContentType == GridTileType.LidarHit)
         {
-            Snackbar.Add("You can't move there!", Severity.Warning);
+            Snackbar.Add("This move may be blocked. Sending to server for validation and logging.", Severity.Warning);
             await _soundService.PlayErrorSoundAsync();
-            return;
+            // return;
         }
 
         try

@@ -57,20 +57,21 @@
 .robot-tile.robot {
     background-color: #1d4ed8;
     border-color: #60a5fa;
+    z-index: 7;
     box-shadow:
             inset 0 0 0 1px rgba(191, 219, 254, 0.45),
             0 0 12px rgba(37, 99, 235, 0.7);
 }
 
 .robot-tile.lidar-visibility {
-    background-color: rgba(8, 145, 178, 0.45);
-    border-color: rgba(103, 232, 249, 0.55);
-    box-shadow: inset 0 0 8px rgba(34, 211, 238, 0.25);
+    background-color: rgba(8, 145, 178, var(--lidar-opacity, 0.45));
+    border-color: rgba(103, 232, 249, calc(var(--lidar-opacity, 0.45) + 0.1));
+    box-shadow: inset 0 0 8px rgba(34, 211, 238, calc(var(--lidar-opacity, 0.45) * 0.55));
 }
 
 .robot-tile.lidar-hit {
-    background-color: #dc2626;
-    border-color: #f97316;
+    background-color: rgba(220, 38, 38, var(--lidar-opacity, 1));
+    border-color: rgba(249, 115, 22, 0.9);
     box-shadow:
             inset 0 0 8px rgba(127, 29, 29, 0.75),
             0 0 12px rgba(248, 113, 113, 0.65);
@@ -121,17 +122,30 @@
 }
 
 .robot-map-light .robot-tile.lidar-visibility {
-    background-color: rgba(14, 165, 233, 0.35);
-    border-color: rgba(2, 132, 199, 0.55);
-    box-shadow: inset 0 0 7px rgba(14, 165, 233, 0.22);
+    background:
+            radial-gradient(
+                    circle,
+                    rgba(2, 132, 199, calc(var(--lidar-opacity, 0.45) * 0.95)) 0%,
+                    rgba(14, 165, 233, calc(var(--lidar-opacity, 0.45) * 0.55)) 42%,
+                    rgba(14, 165, 233, calc(var(--lidar-opacity, 0.45) * 0.18)) 68%,
+                    transparent 76%
+            ),
+            rgba(14, 165, 233, calc(var(--lidar-opacity, 0.45) * 0.35));
+
+    border-color: rgba(2, 132, 199, calc(var(--lidar-opacity, 0.45) + 0.25));
+
+    box-shadow:
+            inset 0 0 0 1px rgba(2, 132, 199, calc(var(--lidar-opacity, 0.45) * 0.75)),
+            inset 0 0 9px rgba(14, 165, 233, calc(var(--lidar-opacity, 0.45) * 0.45));
 }
 
 .robot-map-light .robot-tile.lidar-hit {
-    background-color: #ef4444;
-    border-color: #b91c1c;
+    background-color: rgba(239, 68, 68, var(--lidar-opacity, 0.75));
+    border-color: rgba(185, 28, 28, calc(var(--lidar-opacity, 0.75) + 0.1));
+
     box-shadow:
-            inset 0 0 7px rgba(127, 29, 29, 0.45),
-            0 0 9px rgba(239, 68, 68, 0.42);
+            inset 0 0 7px rgba(127, 29, 29, calc(var(--lidar-opacity, 0.75) * 0.35)),
+            0 0 8px rgba(239, 68, 68, calc(var(--lidar-opacity, 0.75) * 0.32));
 }
 
 .robot-map-light .tile-image {
@@ -265,6 +279,7 @@
 
 .robot-tile.pending-command {
     border-color: #facc15;
+    z-index: 8;
     box-shadow:
             inset 0 0 0 1px rgba(250, 204, 21, 0.9),
             0 0 12px rgba(250, 204, 21, 0.75);
@@ -465,4 +480,335 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.robot-grid {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+
+.proximity-beam {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+
+    opacity: var(--sensor-opacity);
+    border-radius: 999px;
+
+    animation: proximity-sensor-pulse 1.35s ease-in-out infinite;
+}
+
+
+.robot-tile.robot {
+    z-index: 7;
+}
+
+.robot-tile.pending-command {
+    z-index: 8;
+}
+
+
+.proximity-beam-n {
+    left: calc(var(--sensor-x) - var(--sensor-half-thickness));
+    top: calc(var(--sensor-y) - var(--sensor-length));
+
+    width: var(--sensor-thickness);
+    height: var(--sensor-length);
+
+    background: linear-gradient(
+            to top,
+            rgba(var(--sensor-rgb), 0.85),
+            rgba(var(--sensor-rgb), 0.28),
+            rgba(var(--sensor-rgb), 0)
+    );
+
+    box-shadow:
+            0 0 10px rgba(var(--sensor-rgb), 0.45),
+            0 0 18px rgba(var(--sensor-rgb), 0.25);
+}
+
+.proximity-beam-s {
+    left: calc(var(--sensor-x) - var(--sensor-half-thickness));
+    top: var(--sensor-y);
+
+    width: var(--sensor-thickness);
+    height: var(--sensor-length);
+
+    background: linear-gradient(
+            to bottom,
+            rgba(var(--sensor-rgb), 0.85),
+            rgba(var(--sensor-rgb), 0.28),
+            rgba(var(--sensor-rgb), 0)
+    );
+
+    box-shadow:
+            0 0 10px rgba(var(--sensor-rgb), 0.45),
+            0 0 18px rgba(var(--sensor-rgb), 0.25);
+}
+
+.proximity-beam-e {
+    left: var(--sensor-x);
+    top: calc(var(--sensor-y) - var(--sensor-half-thickness));
+
+    width: var(--sensor-length);
+    height: var(--sensor-thickness);
+
+    background: linear-gradient(
+            to right,
+            rgba(var(--sensor-rgb), 0.85),
+            rgba(var(--sensor-rgb), 0.28),
+            rgba(var(--sensor-rgb), 0)
+    );
+
+    box-shadow:
+            0 0 10px rgba(var(--sensor-rgb), 0.45),
+            0 0 18px rgba(var(--sensor-rgb), 0.25);
+}
+
+.proximity-beam-w {
+    left: calc(var(--sensor-x) - var(--sensor-length));
+    top: calc(var(--sensor-y) - var(--sensor-half-thickness));
+
+    width: var(--sensor-length);
+    height: var(--sensor-thickness);
+
+    background: linear-gradient(
+            to left,
+            rgba(var(--sensor-rgb), 0.85),
+            rgba(var(--sensor-rgb), 0.28),
+            rgba(var(--sensor-rgb), 0)
+    );
+
+    box-shadow:
+            0 0 10px rgba(var(--sensor-rgb), 0.45),
+            0 0 18px rgba(var(--sensor-rgb), 0.25);
+}
+
+
+.proximity-beam-danger {
+    --sensor-rgb: 239, 68, 68;
+    z-index: 5;
+}
+
+.proximity-beam-warning {
+    --sensor-rgb: 233, 124, 14;
+}
+
+.proximity-beam-info {
+    --sensor-rgb: 250, 204, 21;
+}
+
+.proximity-beam-clear {
+    --sensor-rgb: 34, 197, 94;
+}
+
+
+.proximity-beam-label {
+    position: absolute;
+
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+    border: 1px solid rgba(var(--sensor-rgb), 0.65);
+
+    background-color: rgba(15, 23, 42, 0.88);
+    color: rgb(var(--sensor-rgb));
+
+    font-size: 0.65rem;
+    font-weight: 900;
+    line-height: 1;
+
+    box-shadow:
+            0 0 8px rgba(var(--sensor-rgb), 0.5),
+            inset 0 0 6px rgba(var(--sensor-rgb), 0.18);
+}
+.proximity-beam-n .proximity-beam-label {
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.proximity-beam-s .proximity-beam-label {
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.proximity-beam-e .proximity-beam-label {
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.proximity-beam-w .proximity-beam-label {
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+@keyframes proximity-sensor-pulse {
+    0%, 100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.35);
+    }
+}
+
+.map-outage-effect .robot-grid {
+    filter: saturate(0.45) contrast(1.2) brightness(0.75);
+}
+
+.map-outage-effect .robot-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+
+    background-image:
+            repeating-linear-gradient(
+                    0deg,
+                    rgba(255, 255, 255, 0.08) 0,
+                    rgba(255, 255, 255, 0.08) 1px,
+                    transparent 1px,
+                    transparent 4px
+            ),
+            repeating-linear-gradient(
+                    90deg,
+                    rgba(14, 165, 233, 0.08) 0,
+                    rgba(14, 165, 233, 0.08) 1px,
+                    transparent 1px,
+                    transparent 7px
+            );
+
+    mix-blend-mode: screen;
+    animation: map-static-lines 0.18s steps(2, end) infinite;
+}
+
+.map-outage-effect .robot-grid::after {
+    content: "SIGNAL LOST";
+    position: absolute;
+    inset: 0;
+    z-index: 81;
+    pointer-events: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: clamp(0.85rem, 2.2vw, 1.8rem);
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    color: rgba(248, 250, 252, 0.9);
+    text-shadow:
+            2px 0 rgba(239, 68, 68, 0.8),
+            -2px 0 rgba(14, 165, 233, 0.8),
+            0 0 12px rgba(0, 0, 0, 0.85);
+
+    background:
+            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.12), transparent 8%),
+            radial-gradient(circle at 80% 70%, rgba(255,255,255,0.10), transparent 10%),
+            rgba(15, 23, 42, 0.18);
+
+    animation: map-signal-flicker 0.9s infinite;
+}
+
+@keyframes map-static-lines {
+    0% {
+        transform: translateY(0);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: translateY(-3px);
+        opacity: 0.85;
+    }
+
+    100% {
+        transform: translateY(3px);
+        opacity: 0.65;
+    }
+}
+
+@keyframes map-signal-flicker {
+    0%, 100% {
+        opacity: 0.85;
+        transform: translateX(0);
+    }
+
+    12% {
+        opacity: 0.55;
+        transform: translateX(-1px);
+    }
+
+    24% {
+        opacity: 0.95;
+        transform: translateX(1px);
+    }
+
+    40% {
+        opacity: 0.7;
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateX(-2px);
+    }
+
+    78% {
+        opacity: 0.6;
+        transform: translateX(2px);
+    }
+}
+
+.lidar-range-ring {
+    position: absolute;
+    left: var(--lidar-ring-x);
+    top: var(--lidar-ring-y);
+    width: var(--lidar-ring-width);
+    height: var(--lidar-ring-height);
+
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    pointer-events: none;
+
+    z-index: 6;
+
+    border: var(--lidar-ring-thickness, 1.5px) solid
+    rgba(103, 232, 249, var(--lidar-ring-opacity, 0.45));
+
+    box-shadow:
+            0 0 6px rgba(34, 211, 238, calc(var(--lidar-ring-opacity, 0.45) * 0.35)),
+            inset 0 0 8px rgba(34, 211, 238, calc(var(--lidar-ring-opacity, 0.45) * 0.12));
+}
+
+.lidar-range-ring::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+
+    border: 1px dashed
+    rgba(103, 232, 249, calc(var(--lidar-ring-opacity, 0.45) * 0.45));
+}
+
+.robot-map-light .lidar-range-ring {
+    border-color: rgba(2, 132, 199, var(--lidar-ring-opacity, 0.45));
+
+    box-shadow:
+            0 0 5px rgba(2, 132, 199, calc(var(--lidar-ring-opacity, 0.45) * 0.28)),
+            inset 0 0 8px rgba(14, 165, 233, calc(var(--lidar-ring-opacity, 0.45) * 0.12));
+}
+
+.robot-map-light .lidar-range-ring::before {
+    border-color: rgba(2, 132, 199, calc(var(--lidar-ring-opacity, 0.45) * 0.42));
 }

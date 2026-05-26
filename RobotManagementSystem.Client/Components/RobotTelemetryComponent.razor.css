@@ -101,7 +101,33 @@
     width: 100%;
 }
 
-.proximity-strip-values .mud-chip {
+::deep .proximity-chip {
+    --sensor-rgb: 148, 163, 184;
+
     min-width: 82px;
     justify-content: center;
+
+    color: rgb(var(--sensor-rgb)) !important;
+    border-color: rgba(var(--sensor-rgb), 0.75) !important;
+    background-color: rgba(var(--sensor-rgb), 0.08) !important;
+}
+
+::deep .proximity-chip .mud-chip-content {
+    color: rgb(var(--sensor-rgb)) !important;
+}
+
+::deep .proximity-chip-danger {
+    --sensor-rgb: 239, 68, 68;
+}
+
+::deep .proximity-chip-warning {
+    --sensor-rgb: 233, 124, 14;
+}
+
+::deep .proximity-chip-info {
+    --sensor-rgb: 250, 204, 21;
+}
+
+::deep .proximity-chip-clear {
+    --sensor-rgb: 34, 197, 94;
 }

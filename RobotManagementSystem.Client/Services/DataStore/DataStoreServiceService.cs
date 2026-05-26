@@ -9,6 +9,7 @@ public class DataStoreServiceService : IDataStoreService
     private const string AuthenticationDetailsKey = "AuthenticationDetails";
     private const string ShowMapCoordinatesKey = "ShowMapCoordinates";
     private const string EnableSoundEffectsKey = "EnableSoundEffects";
+    private const string ShowGroundTruthMapKey = "ShowGroundTruthMap";
 
     public DataStoreServiceService(ILocalStorageService localStorage)
     {
@@ -58,5 +59,15 @@ public class DataStoreServiceService : IDataStoreService
     public async Task<AuthenticationResponse> GetAuthenticationDetailsAsync()
     {
         return await _localStorage.GetItemAsync<AuthenticationResponse>(AuthenticationDetailsKey);
+    }
+
+    public async Task StoreShowGroundTruthMap(bool showGroundTruthMap)
+    {
+        await _localStorage.SetItemAsync(ShowGroundTruthMapKey, showGroundTruthMap);
+    }
+
+    public async Task<bool?> LoadShowGroundTruthMapAsync()
+    {
+        return await _localStorage.GetItemAsync<bool?>(ShowGroundTruthMapKey);
     }
 }
