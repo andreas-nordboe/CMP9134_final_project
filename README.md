@@ -1,6 +1,6 @@
 # Ground Control Station (GCS)
 
-<img width="1910" height="1248" alt="GroundControlStationMainpage" src="https://github.com/user-attachments/assets/cffd19eb-7cf8-4cf0-b2ad-97884aad0a79" />
+<img width="1910" height="1248" alt="GroundControlStationUpdatedMap" src="https://github.com/user-attachments/assets/bcfa1025-f99d-411f-b24a-58b63a0a343a" />
 
 
 
@@ -59,12 +59,17 @@ User((User)) --> |Uses| Browser[Browser]
 
 1. Start Docker Desktop / Docker Daemon
 2. Run 'docker compose up' in Command Line (Windows) or Terminal (macOS) to start the Docker Container
-3. Navigate to http://localhost:5116/
+3. Navigate to the frontend at http://localhost:5116/
 4. Log in to root admin using: 'admin' password: 'password'
 5. Verify that map and robot telemetry loads, it should look like this:
-<img width="940" height="595" alt="image" src="https://github.com/user-attachments/assets/97295a35-b815-4f25-a3be-2db9e8b410b9" />
+<img width="1604" height="1076" alt="loadedmap" src="https://github.com/user-attachments/assets/e63fe6d2-e9eb-42e7-a702-cf7afeb31188" />
+
 
 This confirms that the frontend is communicating with the backend services correctly.
+
+## Test API using Swagger UI
+- After running the previous setup instructions, navigate to http://localhost:5085/
+- See [PR #33](https://github.com/andreas-nordboe/CMP9134_final_project/pull/33)  for more detailed information 
 
 ## Run unit and integration tests manually locally:
 This requires .NET 10, however, test have already been run in the CI/CD pipeline.
