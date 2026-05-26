@@ -21,7 +21,6 @@ jobs:
             10.0.105
             10.0.300
             9.0.x
-          cache: true
       
       - name: Display dotnet version
         run: dotnet --version
